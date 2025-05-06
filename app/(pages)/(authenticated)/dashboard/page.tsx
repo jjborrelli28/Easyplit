@@ -9,7 +9,7 @@ const DashboardPage = async () => {
   if (!token) redirect("/login");
 
   try {
-    const payload = verifyToken(token);
+    verifyToken(token);
   } catch {
     redirect("/login");
   }
