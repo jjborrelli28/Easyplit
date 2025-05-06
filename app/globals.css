@@ -26,7 +26,7 @@ body {
 }
 
 .input {
-  @apply block w-full mb-4 p-2 border border-gray-300 rounded;
+  @apply block w-full mb-4 p-2 border border-gray-300 rounded placeholder:text-gray-400;
 }
 
 .btn {

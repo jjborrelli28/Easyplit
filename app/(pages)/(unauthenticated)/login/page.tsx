@@ -3,14 +3,15 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-const RegisterPage = () => {
+const LoginPage = () => {
+  const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const router = useRouter();
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
-    const res = await fetch("/api/auth/register", {
+    const res = await fetch("/api/auth/login", {
       method: "POST",
       body: JSON.stringify({ email, password }),
     });
@@ -22,7 +23,7 @@ const RegisterPage = () => {
   return (
     <form
       onSubmit={handleLogin}
-      className="max-w-md mx-auto mt-10 p-4 bg-white rounded shadow"
+      className="max-w-md mx-auto mt-10 p-4 bg-gray-900 rounded shadow"
     >
       <h2 className="text-xl font-bold mb-4">Login</h2>
       <input
@@ -39,9 +40,9 @@ const RegisterPage = () => {
         onChange={(e) => setPassword(e.target.value)}
         className="input"
       />
-      <button className="btn">Register</button>
+      <button className="btn">Login</button>
     </form>
   );
 };
 
-export default RegisterPage;
+export default LoginPage;

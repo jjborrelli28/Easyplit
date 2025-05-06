@@ -3,14 +3,15 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
-const LoginPage = () => {
+const RegisterPage = () => {
+  const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const router = useRouter();
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
-    const res = await fetch("/api/auth/login", {
+    const res = await fetch("/api/auth/register", {
       method: "POST",
       body: JSON.stringify({ email, password }),
     });
@@ -22,9 +23,9 @@ const LoginPage = () => {
   return (
     <form
       onSubmit={handleLogin}
-      className="max-w-md mx-auto mt-10 p-4 bg-white rounded shadow"
+      className="max-w-md mx-auto mt-10 p-4 bg-gray-900 rounded shadow"
     >
-      <h2 className="text-xl font-bold mb-4">Login</h2>
+      <h2 className="text-xl font-bold mb-4">Register</h2>
       <input
         type="email"
         placeholder="Email"
@@ -39,9 +40,9 @@ const LoginPage = () => {
         onChange={(e) => setPassword(e.target.value)}
         className="input"
       />
-      <button className="btn">Login</button>
+      <button className="btn">Register</button>
     </form>
   );
 };
 
-export default LoginPage;
+export default RegisterPage;
