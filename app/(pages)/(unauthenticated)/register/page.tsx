@@ -6,6 +6,7 @@ import { useState } from "react";
 const RegisterPage = () => {
   const router = useRouter();
 
+  const [alias, setAlias] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -13,7 +14,7 @@ const RegisterPage = () => {
     e.preventDefault();
     const res = await fetch("/api/auth/register", {
       method: "POST",
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({ alias, email, password }),
     });
 
     if (res.ok) router.push("/dashboard");
@@ -26,6 +27,13 @@ const RegisterPage = () => {
       className="max-w-md mx-auto mt-10 p-4 bg-gray-900 rounded shadow"
     >
       <h2 className="text-xl font-bold mb-4">Register</h2>
+      <input
+        type="text"
+        placeholder="Alias"
+        value={alias}
+        onChange={(e) => setAlias(e.target.value)}
+        className="input"
+      />
       <input
         type="email"
         placeholder="Email"
