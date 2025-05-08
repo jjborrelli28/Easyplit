@@ -7,7 +7,7 @@ const VerifyResultPage = () => {
   const status = searchParams.get("status");
 
   return (
-    <div className="max-w-xl mx-auto mt-10 text-center">
+    <div className="mx-auto mt-10 max-w-xl text-center">
       {status === "success" ? (
         <>
           <h1 className="text-2xl font-bold text-green-600">

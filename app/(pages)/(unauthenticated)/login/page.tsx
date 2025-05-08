@@ -23,9 +23,9 @@ const LoginPage = () => {
   return (
     <form
       onSubmit={handleLogin}
-      className="max-w-md mx-auto mt-10 p-4 bg-gray-900 rounded shadow"
+      className="mx-auto mt-10 max-w-md rounded bg-gray-900 p-4 shadow"
     >
-      <h2 className="text-xl font-bold mb-4">Login</h2>
+      <h2 className="mb-4 text-xl font-bold">Login</h2>
       <input
         type="email"
         placeholder="Email"

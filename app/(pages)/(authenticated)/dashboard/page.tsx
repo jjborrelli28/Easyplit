@@ -26,7 +26,7 @@ const DashboardPage = async () => {
   if (!user) redirect("/login");
 
   return (
-    <div className="max-w-2xl mx-auto mt-10">
+    <div className="mx-auto mt-10 max-w-2xl">
       <h1 className="text-2xl font-bold">Dashboard</h1>
       <p>Bienvenido, {user.alias}</p>
     </div>

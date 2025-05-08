@@ -11,7 +11,7 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-gray-900 justify-end p-4">
+    <header className="justify-end bg-gray-900 p-4">
       <nav className="container flex justify-end">
         <button onClick={logout} className="btn">
           Logout
