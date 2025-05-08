@@ -10,6 +10,10 @@ export const POST = async (req: Request) => {
     if (!user || !(await comparePassword(password, user.password)))
         return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
 
+    if (!user.emailVerified) {
+        return NextResponse.json({ error: 'Email not verified' }, { status: 403 });
+    }
+
     const token = generateToken(user.id);
     const res = NextResponse.json({ message: 'Logged in' });
 
