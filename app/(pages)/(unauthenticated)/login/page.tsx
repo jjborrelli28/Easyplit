@@ -41,6 +41,9 @@ const LoginPage = () => {
         className="input"
       />
       <button className="btn">Login</button>
+      <a href="/api/auth/0/login" className="btn">
+        Login con Google
+      </a>
     </form>
   );
 };

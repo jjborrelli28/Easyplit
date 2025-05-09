@@ -17,7 +17,11 @@ export const POST = async (req: Request) => {
     const token = generateToken(user.id);
     const res = NextResponse.json({ message: 'Logged in' });
 
-    res.cookies.set('token', token, { httpOnly: true });
+    res.cookies.set('token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        path: '/',
+    });
 
     return res;
 }
