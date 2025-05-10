@@ -19,12 +19,14 @@
     "uuid": "^11.1.0"
   },
   "devDependencies": {
+    "@svgr/webpack": "^8.1.0",
     "@tailwindcss/postcss": "^4",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^20",
     "@types/nodemailer": "^6.4.17",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/webpack": "^5.28.5",
     "autoprefixer": "^10.4.21",
     "eslint": "9.25.1",
     "eslint-config-next": "15.3.1",

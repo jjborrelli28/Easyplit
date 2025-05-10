@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import NextLink from "next/link";
 
 const RegisterPage = () => {
   const router = useRouter();
@@ -10,46 +11,76 @@ const RegisterPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
-  async function handleLogin(e: React.FormEvent) {
+  async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
     const res = await fetch("/api/auth/register", {
       method: "POST",
       body: JSON.stringify({ alias, email, password }),
+      headers: {
+        "Content-Type": "application/json",
+      },
     });
 
     if (res.ok) router.push("/dashboard");
-    else alert("Error");
+    else alert("Ocurrió un error al registrarse");
   }
 
   return (
-    <form
-      onSubmit={handleLogin}
-      className="mx-auto mt-10 max-w-md rounded bg-gray-900 p-4 shadow"
-    >
-      <h2 className="mb-4 text-xl font-bold">Register</h2>
-      <input
-        type="text"
-        placeholder="Alias"
-        value={alias}
-        onChange={(e) => setAlias(e.target.value)}
-        className="input"
-      />
-      <input
-        type="email"
-        placeholder="Email"
-        value={email}
-        onChange={(e) => setEmail(e.target.value)}
-        className="input"
-      />
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
-        className="input"
-      />
-      <button className="btn">Register</button>
-    </form>
+    <div className="flex min-h-screen items-center justify-center bg-gray-950 px-4">
+      <div className="w-full max-w-md space-y-6 rounded-md border border-gray-800 bg-gray-900 p-8 shadow-md">
+        <h1 className="text-3xl font-bold text-white">Crear cuenta</h1>
+        <form onSubmit={handleRegister} className="space-y-4">
+          <input
+            type="text"
+            placeholder="Nombre de usuario"
+            value={alias}
+            onChange={(e) => setAlias(e.target.value)}
+            className="w-full rounded-md bg-gray-800 p-3 text-white placeholder-gray-500 outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+          <input
+            type="email"
+            placeholder="Correo electrónico"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full rounded-md bg-gray-800 p-3 text-white placeholder-gray-500 outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+          <input
+            type="password"
+            placeholder="Contraseña"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full rounded-md bg-gray-800 p-3 text-white placeholder-gray-500 outline-none focus:ring-2 focus:ring-blue-500"
+            required
+          />
+          <button
+            type="submit"
+            className="w-full cursor-pointer rounded-md bg-blue-600 px-6 py-3 font-semibold text-white transition-colors duration-300 hover:bg-blue-700"
+          >
+            Registrarse
+          </button>
+        </form>
+
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-700" />
+          </div>
+          <div className="relative flex justify-center text-sm">
+            <span className="bg-gray-900 px-4 font-semibold text-gray-700">
+              O
+            </span>
+          </div>
+        </div>
+
+        <div className="text-center text-xs text-gray-400">
+          ¿Ya tenés cuenta?{" "}
+          <NextLink href="/login" className="text-blue-500 hover:underline">
+            Iniciar sesión
+          </NextLink>
+        </div>
+      </div>
+    </div>
   );
 };
 

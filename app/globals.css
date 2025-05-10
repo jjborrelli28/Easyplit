@@ -26,9 +26,9 @@ body {
 }
 
 .input {
-  @apply block w-full mb-4 p-2 border border-gray-300 rounded placeholder:text-gray-400;
+  @apply mb-4 block w-full rounded border border-gray-300 p-2 placeholder:text-gray-400;
 }
 
 .btn {
-  @apply px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700;
+  @apply rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700;
 }
