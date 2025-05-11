@@ -2,7 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import NextLink from "next/link";
+
+import { Button } from "@/components/Button";
 
 const RegisterPage = () => {
   const router = useRouter();
@@ -54,12 +55,9 @@ const RegisterPage = () => {
             className="w-full rounded-md bg-gray-800 p-3 text-white placeholder-gray-500 outline-none focus:ring-2 focus:ring-blue-500"
             required
           />
-          <button
-            type="submit"
-            className="w-full cursor-pointer rounded-md bg-blue-600 px-6 py-3 font-semibold text-white transition-colors duration-300 hover:bg-blue-700"
-          >
+          <Button type="submit" fullWidth>
             Registrarse
-          </button>
+          </Button>
         </form>
 
         <div className="relative">
@@ -75,9 +73,9 @@ const RegisterPage = () => {
 
         <div className="text-center text-xs text-gray-400">
           ¿Ya tenés cuenta?{" "}
-          <NextLink href="/login" className="text-blue-500 hover:underline">
+          <Button href="/login" unstyled>
             Iniciar sesión
-          </NextLink>
+          </Button>
         </div>
       </div>
     </div>

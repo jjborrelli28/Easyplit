@@ -1,11 +1,12 @@
 "use client";
 
 import Image from "next/image";
-import NextLink from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import googleLogo from "@/public/assets/logos/Google.svg?url";
+
+import { Button } from "@/components/Button";
 
 const LoginPage = () => {
   const router = useRouter();
@@ -49,25 +50,19 @@ const LoginPage = () => {
               required
             />
             <div>
-              <button
-                type="submit"
-                className="m-0 w-full cursor-pointer rounded-md bg-blue-600 px-6 py-3 font-semibold text-white transition-colors duration-300 hover:bg-blue-700"
-              >
+              <Button type="submit" fullWidth>
                 Iniciar sesión
-              </button>
-              <NextLink href="" className="text-xs text-blue-600">
+              </Button>
+              <Button href="#" unstyled className="text-xs">
                 ¿Has olvidado la contraseña?
-              </NextLink>
+              </Button>
             </div>
           </form>
 
           <div className="flex flex-col gap-y-2">
-            <NextLink
-              href="/register"
-              className="10 m-0 w-full cursor-pointer rounded-md border border-blue-950 bg-transparent px-6 py-3 text-center font-semibold text-white transition-colors duration-300 hover:bg-blue-950"
-            >
+            <Button href="/register" variant="outlined" fullWidth>
               Crear cuenta
-            </NextLink>
+            </Button>
           </div>
 
           <div className="relative">
@@ -81,13 +76,15 @@ const LoginPage = () => {
             </div>
           </div>
 
-          <NextLink
+          <Button
             href="/api/auth/0/login"
-            className="m-0 flex w-full cursor-pointer items-center justify-center gap-x-4 rounded-md border border-gray-700 px-6 py-3 text-center font-semibold text-white transition-colors duration-300 hover:bg-gray-700"
+            variant="outlined"
+            color="secondary"
+            fullWidth
           >
             <Image alt="Google" src={googleLogo} height={20} width={20} />
             <span>Iniciar sesión con Google</span>
-          </NextLink>
+          </Button>
         </div>
       </div>
     </div>
