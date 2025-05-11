@@ -6,7 +6,7 @@ import clsx from "clsx";
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
-  error?: string;
+  error?: null | string;
   className?: string;
 }
 
@@ -34,6 +34,7 @@ const Input = ({ label, error, className, ...props }: InputProps) => {
           {label}
         </label>
       )}
+
       <input
         onFocus={handleFocus}
         onBlur={handleFocus}

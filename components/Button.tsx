@@ -61,7 +61,7 @@ const Button = ({
     !unstyled && [
       baseStyles,
       colorStyles[color][variant],
-      fullWidth && "w-full",
+      fullWidth ? "w-full" : "w-fit",
     ],
     className,
   );

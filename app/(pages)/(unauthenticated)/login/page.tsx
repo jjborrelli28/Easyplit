@@ -2,7 +2,9 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { type FormEvent, useState } from "react";
+
+import clsx from "clsx";
 
 import googleLogo from "@/public/assets/logos/Google.svg?url";
 
@@ -13,9 +15,11 @@ const LoginPage = () => {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [error, setError] = useState<null | string>(null);
 
-  async function handleLogin(e: React.FormEvent) {
+  async function handleLogin(e: FormEvent) {
     e.preventDefault();
+
     const res = await fetch("/api/auth/login", {
       method: "POST",
       body: JSON.stringify({ email, password }),
@@ -24,13 +28,17 @@ const LoginPage = () => {
       },
     });
 
-    if (res.ok) router.push("/dashboard");
-    else alert("Email o contraseña incorrectos");
+    if (res.ok) {
+      router.push("/dashboard");
+    } else {
+      const data = await res.json();
+      setError(data.error || "Email o contraseña incorrectos");
+    }
   }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-950 px-4">
-      <div className="w-full max-w-md space-y-6 rounded-md border border-gray-800 bg-gray-900 p-8 shadow-md">
+      <div className="w-full max-w-md space-y-6 rounded-xl border border-gray-800 bg-gray-900 p-8 shadow-xl">
         <h1 className="text-3xl font-bold text-white">Iniciar sesión</h1>
         <div className="space-y-4">
           <div>
@@ -56,7 +64,21 @@ const LoginPage = () => {
               <Button type="submit" fullWidth className="mt-7">
                 Iniciar sesión
               </Button>
+
+              <div
+                className={clsx(
+                  "grid-rows-auto grid grid-rows-[0fr] opacity-0 transition-[grid-template-rows,opacity]",
+                  error && "grid-rows-[1fr] opacity-100",
+                )}
+              >
+                <div className="overflow-hidden">
+                  <p className="mt-1 mb-2 rounded border border-red-500 px-3 py-2 text-xs text-red-500">
+                    {error}
+                  </p>
+                </div>
+              </div>
             </form>
+
             <Button href="#" unstyled className="text-xs">
               ¿Has olvidado la contraseña?
             </Button>
