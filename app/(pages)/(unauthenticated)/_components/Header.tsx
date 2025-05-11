@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 
-import { Button } from "@/components/Button";
+import Button from "@/components/Button";
 
 const Header = () => {
   const pathname = usePathname();

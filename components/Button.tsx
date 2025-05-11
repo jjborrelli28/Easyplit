@@ -49,7 +49,7 @@ const colorStyles: Record<Color, Record<Variant, string>> = {
   },
 };
 
-export const Button = ({
+const Button = ({
   variant = "contained",
   color = "primary",
   className,
@@ -72,3 +72,5 @@ export const Button = ({
 
   return <button className={combinedClass} {...(props as ButtonAsButton)} />;
 };
+
+export default Button;

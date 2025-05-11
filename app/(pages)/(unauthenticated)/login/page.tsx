@@ -6,7 +6,8 @@ import { useState } from "react";
 
 import googleLogo from "@/public/assets/logos/Google.svg?url";
 
-import { Button } from "@/components/Button";
+import Button from "@/components/Button";
+import Input from "@/components/Input";
 
 const LoginPage = () => {
   const router = useRouter();
@@ -32,38 +33,38 @@ const LoginPage = () => {
       <div className="w-full max-w-md space-y-6 rounded-md border border-gray-800 bg-gray-900 p-8 shadow-md">
         <h1 className="text-3xl font-bold text-white">Iniciar sesión</h1>
         <div className="space-y-4">
-          <form onSubmit={handleLogin} className="space-y-4">
-            <input
-              type="email"
-              placeholder="Usuario ó E-mail"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full rounded-md bg-gray-800 p-3 text-white placeholder-gray-500 outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-            <input
-              type="password"
-              placeholder="Contraseña"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full rounded-md bg-gray-800 p-3 text-white placeholder-gray-500 outline-none focus:ring-2 focus:ring-blue-500"
-              required
-            />
-            <div>
-              <Button type="submit" fullWidth>
+          <div>
+            <form onSubmit={handleLogin} className="flex flex-col gap-y-1">
+              <Input
+                id="email"
+                label="Usuario ó E-mail"
+                placeholder="Usuario ó E-mail"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+              />
+              <Input
+                id="password"
+                type="password"
+                label="Contraseña"
+                placeholder="Contraseña"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
+
+              <Button type="submit" fullWidth className="mt-7">
                 Iniciar sesión
               </Button>
-              <Button href="#" unstyled className="text-xs">
-                ¿Has olvidado la contraseña?
-              </Button>
-            </div>
-          </form>
-
-          <div className="flex flex-col gap-y-2">
-            <Button href="/register" variant="outlined" fullWidth>
-              Crear cuenta
+            </form>
+            <Button href="#" unstyled className="text-xs">
+              ¿Has olvidado la contraseña?
             </Button>
           </div>
+
+          <Button href="/register" variant="outlined" fullWidth>
+            Crear cuenta
+          </Button>
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
