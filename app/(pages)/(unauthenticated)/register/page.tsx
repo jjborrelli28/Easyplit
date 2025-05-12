@@ -5,8 +5,18 @@ import { type FormEvent, useState } from "react";
 
 import clsx from "clsx";
 
+import { parseZodErrors } from "@/lib/validations/helpers";
+import { registerSchema } from "@/lib/validations/schemas";
+
 import Button from "@/components/Button";
 import Input from "@/components/Input";
+
+const errorsInitialState = {
+  alias: "",
+  email: "",
+  password: "",
+  response: "",
+};
 
 const RegisterPage = () => {
   const router = useRouter();
@@ -14,10 +24,26 @@ const RegisterPage = () => {
   const [alias, setAlias] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<null | string>(null);
+  const [errors, setErrors] = useState(errorsInitialState);
 
   async function handleRegister(e: FormEvent) {
     e.preventDefault();
+
+    const result = registerSchema.safeParse({ alias, email, password });
+
+    if (!result.success) {
+      const errors = parseZodErrors(result.error);
+      const { alias, email, password } = errors;
+
+      setErrors({
+        ...errorsInitialState,
+        alias: alias ?? "",
+        email: email ?? "",
+        password: password ?? "",
+      });
+
+      return;
+    }
 
     const res = await fetch("/api/auth/register", {
       method: "POST",
@@ -29,9 +55,25 @@ const RegisterPage = () => {
 
     if (res.ok) {
       router.push("/auth/verify-email/sent");
+
+      setErrors(errorsInitialState);
     } else {
       const data = await res.json();
-      setError(data.error || "Ocurrió un error al registrarse");
+      const { error, errors } = data;
+
+      if (errors) {
+        setErrors({
+          ...errorsInitialState,
+          alias: errors.alias ?? "",
+          email: errors.email ?? "",
+          password: errors.password ?? "",
+        });
+      } else {
+        setErrors({
+          ...errorsInitialState,
+          response: error || "Ocurrió un error al registrarse",
+        });
+      }
     }
   }
 
@@ -44,11 +86,13 @@ const RegisterPage = () => {
           <form onSubmit={handleRegister} className="flex flex-col gap-y-1">
             <Input
               id="alias"
+              type="text"
               label="Nombre ó alias"
               placeholder="Nombre ó alias"
               value={alias}
               onChange={(e) => setAlias(e.target.value)}
               required
+              error={errors.alias}
             />
             <Input
               id="email"
@@ -58,6 +102,7 @@ const RegisterPage = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              error={errors.email}
             />
             <Input
               id="password"
@@ -67,6 +112,7 @@ const RegisterPage = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
+              error={errors.password}
             />
             <Button type="submit" fullWidth className="mt-7">
               Registrarse
@@ -75,12 +121,12 @@ const RegisterPage = () => {
             <div
               className={clsx(
                 "grid-rows-auto grid grid-rows-[0fr] opacity-0 transition-[grid-template-rows,opacity]",
-                error && "grid-rows-[1fr] opacity-100",
+                errors.response && "grid-rows-[1fr] opacity-100",
               )}
             >
               <div className="overflow-hidden">
                 <p className="mt-1 mb-2 rounded border border-red-500 px-3 py-2 text-xs text-red-500">
-                  {error}
+                  {errors.response}
                 </p>
               </div>
             </div>

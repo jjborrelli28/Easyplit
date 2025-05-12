@@ -6,15 +6,17 @@ import { parseZodErrors } from '@/lib/validations/helpers';
 import { loginSchema } from '@/lib/validations/schemas';
 
 export const POST = async (req: Request) => {
-    const { email, password } = await req.json();
+    const body = await req.json();
 
-    const result = loginSchema.safeParse({ email, password });
+    const result = loginSchema.safeParse(body);
 
     if (!result.success) {
         const errors = parseZodErrors(result.error);
 
         return NextResponse.json({ errors }, { status: 400 });
     }
+
+    const { email, password } = result.data;
 
     const user = await prisma.user.findUnique({ where: { email } });
 
