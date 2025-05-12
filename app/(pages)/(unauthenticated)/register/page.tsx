@@ -5,6 +5,7 @@ import { type FormEvent, useState } from "react";
 
 import clsx from "clsx";
 
+import useRegister from "@/lib/hooks/useRegister";
 import { parseZodErrors } from "@/lib/validations/helpers";
 import { registerSchema } from "@/lib/validations/schemas";
 
@@ -20,6 +21,7 @@ const errorsInitialState = {
 
 const RegisterPage = () => {
   const router = useRouter();
+  const { mutate, isPending } = useRegister();
 
   const [alias, setAlias] = useState("");
   const [email, setEmail] = useState("");
@@ -29,7 +31,8 @@ const RegisterPage = () => {
   async function handleRegister(e: FormEvent) {
     e.preventDefault();
 
-    const result = registerSchema.safeParse({ alias, email, password });
+    const body = { alias, email, password };
+    const result = registerSchema.safeParse(body);
 
     if (!result.success) {
       const errors = parseZodErrors(result.error);
@@ -45,36 +48,29 @@ const RegisterPage = () => {
       return;
     }
 
-    const res = await fetch("/api/auth/register", {
-      method: "POST",
-      body: JSON.stringify({ alias, email, password }),
-      headers: {
-        "Content-Type": "application/json",
+    mutate(body, {
+      onSuccess: () => {
+        setErrors(errorsInitialState);
+        router.push("/auth/verify-email/sent");
+      },
+      onError: (error) => {
+        const { errors, error: message } = error.response?.data || {};
+
+        if (errors) {
+          setErrors({
+            ...errorsInitialState,
+            alias: errors.alias ?? "",
+            email: errors.email ?? "",
+            password: errors.password ?? "",
+          });
+        } else {
+          setErrors({
+            ...errorsInitialState,
+            response: message ?? "Ocurrió un error inesperado al registrarse",
+          });
+        }
       },
     });
-
-    if (res.ok) {
-      router.push("/auth/verify-email/sent");
-
-      setErrors(errorsInitialState);
-    } else {
-      const data = await res.json();
-      const { error, errors } = data;
-
-      if (errors) {
-        setErrors({
-          ...errorsInitialState,
-          alias: errors.alias ?? "",
-          email: errors.email ?? "",
-          password: errors.password ?? "",
-        });
-      } else {
-        setErrors({
-          ...errorsInitialState,
-          response: error || "Ocurrió un error al registrarse",
-        });
-      }
-    }
   }
 
   return (
@@ -114,7 +110,12 @@ const RegisterPage = () => {
               required
               error={errors.password}
             />
-            <Button type="submit" fullWidth className="mt-7">
+            <Button
+              type="submit"
+              fullWidth
+              className="mt-7"
+              loading={isPending}
+            >
               Registrarse
             </Button>
 

@@ -10,29 +10,25 @@ import { registerSchema } from "@/lib/validations/schemas";
 
 export const POST = async (req: Request) => {
     const body = await req.json();
-
     const result = registerSchema.safeParse(body);
 
     if (!result.success) {
         const errors = parseZodErrors(result.error);
-
         return NextResponse.json({ errors }, { status: 400 });
     }
 
     const { alias, email, password } = result.data;
-
     const exists = await prisma.user.findUnique({ where: { email } });
 
     if (exists) {
         return NextResponse.json(
-            { errors: { email: exists.emailVerified ? "Ya existe un usuario con este email" : 'Usuario creado con este email, falta verificación' } },
+            { errors: { email: `Ya existe un usuario con este email${!exists.emailVerified ? ', falta verificar el mismo' : ''}` } },
             { status: 400 },
         );
     }
 
     const verifyToken = uuidv4();
     const hashed = await hashPassword(password);
-
     const user = await prisma.user.create({
         data: { alias, email, password: hashed, verifyToken },
     });
@@ -41,13 +37,13 @@ export const POST = async (req: Request) => {
         await sendVerificationEmail(email, verifyToken);
     } catch (error) {
         return NextResponse.json(
-            { error: "Failed to send verification email" },
+            { error: "Error al enviar el correo de verificación" },
             { status: 500 },
         );
     }
 
     return NextResponse.json({
-        message: "User created. Please check your email to verify your address.",
+        message: "Usuario creado. Por favor, compruebe su correo electrónico para verificar su dirección",
         user: {
             id: user.id,
             email: user.email,

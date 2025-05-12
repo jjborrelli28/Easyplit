@@ -7,12 +7,13 @@ import { type FormEvent, useState } from "react";
 import clsx from "clsx";
 import { CircleAlert } from "lucide-react";
 
+import useLogin from "@/lib/hooks/useLogin";
 import { parseZodErrors } from "@/lib/validations/helpers";
 import { loginSchema } from "@/lib/validations/schemas";
-import googleLogo from "@/public/assets/logos/Google.svg?url";
 
 import Button from "@/components/Button";
 import Input from "@/components/Input";
+import googleLogo from "@/public/assets/logos/Google.svg?url";
 
 const errorsInitialState = {
   email: "",
@@ -22,6 +23,7 @@ const errorsInitialState = {
 
 const LoginPage = () => {
   const router = useRouter();
+  const { mutate, isPending } = useLogin();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -30,7 +32,8 @@ const LoginPage = () => {
   async function handleLogin(e: FormEvent) {
     e.preventDefault();
 
-    const result = loginSchema.safeParse({ email, password });
+    const body = { email, password };
+    const result = loginSchema.safeParse(body);
 
     if (!result.success) {
       const errors = parseZodErrors(result.error);
@@ -45,35 +48,29 @@ const LoginPage = () => {
       return;
     }
 
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      body: JSON.stringify({ email, password }),
-      headers: {
-        "Content-Type": "application/json",
+    mutate(body, {
+      onSuccess: () => {
+        setErrors(errorsInitialState);
+        router.push("/dashboard");
+      },
+      onError: (error) => {
+        const { errors, error: message } = error.response?.data || {};
+
+        if (errors) {
+          setErrors({
+            ...errorsInitialState,
+            email: errors.email ?? "",
+            password: errors.password ?? "",
+          });
+        } else {
+          setErrors({
+            ...errorsInitialState,
+            response:
+              message ?? "Ocurrió un error inesperado al iniciar sesión",
+          });
+        }
       },
     });
-
-    if (res.ok) {
-      setErrors(errorsInitialState);
-
-      router.push("/dashboard");
-    } else {
-      const data = await res.json();
-      const { error, errors } = data;
-
-      if (errors) {
-        setErrors({
-          ...errorsInitialState,
-          email: errors.email ?? "",
-          password: errors.password ?? "",
-        });
-      } else {
-        setErrors({
-          ...errorsInitialState,
-          response: error || "Email o contraseña incorrectos",
-        });
-      }
-    }
   }
 
   return (
