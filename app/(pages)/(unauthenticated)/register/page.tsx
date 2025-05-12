@@ -43,9 +43,9 @@ const RegisterPage = () => {
         <div className="space-y-4">
           <form onSubmit={handleRegister} className="flex flex-col gap-y-1">
             <Input
-              id="user"
-              label="Nombre de usuario"
-              placeholder="Nombre de usuario"
+              id="alias"
+              label="Nombre ó alias"
+              placeholder="Nombre ó alias"
               value={alias}
               onChange={(e) => setAlias(e.target.value)}
               required

@@ -5,20 +5,45 @@ import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 
 import clsx from "clsx";
+import { CircleAlert } from "lucide-react";
 
+import { parseZodErrors } from "@/lib/validations/helpers";
+import { loginSchema } from "@/lib/validations/schemas";
 import googleLogo from "@/public/assets/logos/Google.svg?url";
 
 import Button from "@/components/Button";
 import Input from "@/components/Input";
 
+const errorsInitialState = {
+  email: "",
+  password: "",
+  response: "",
+};
+
 const LoginPage = () => {
   const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<null | string>(null);
+  const [errors, setErrors] = useState(errorsInitialState);
 
   async function handleLogin(e: FormEvent) {
     e.preventDefault();
+
+    const result = loginSchema.safeParse({ email, password });
+
+    if (!result.success) {
+      const errors = parseZodErrors(result.error);
+      const { email, password } = errors;
+
+      setErrors({
+        ...errorsInitialState,
+        email: email ?? "",
+        password: password ?? "",
+      });
+
+      return;
+    }
 
     const res = await fetch("/api/auth/login", {
       method: "POST",
@@ -29,10 +54,25 @@ const LoginPage = () => {
     });
 
     if (res.ok) {
+      setErrors(errorsInitialState);
+
       router.push("/dashboard");
     } else {
       const data = await res.json();
-      setError(data.error || "Email o contraseña incorrectos");
+      const { error, errors } = data;
+
+      if (errors) {
+        setErrors({
+          ...errorsInitialState,
+          email: errors.email ?? "",
+          password: errors.password ?? "",
+        });
+      } else {
+        setErrors({
+          ...errorsInitialState,
+          response: error || "Email o contraseña incorrectos",
+        });
+      }
     }
   }
 
@@ -45,11 +85,13 @@ const LoginPage = () => {
             <form onSubmit={handleLogin} className="flex flex-col gap-y-1">
               <Input
                 id="email"
-                label="Usuario ó E-mail"
-                placeholder="Usuario ó E-mail"
+                type="email"
+                label="Correo electrónico"
+                placeholder="Correo electrónico"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                error={errors.email}
               />
               <Input
                 id="password"
@@ -59,6 +101,7 @@ const LoginPage = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
+                error={errors.password}
               />
 
               <Button type="submit" fullWidth className="mt-7">
@@ -68,12 +111,13 @@ const LoginPage = () => {
               <div
                 className={clsx(
                   "grid-rows-auto grid grid-rows-[0fr] opacity-0 transition-[grid-template-rows,opacity]",
-                  error && "grid-rows-[1fr] opacity-100",
+                  errors.response && "grid-rows-[1fr] opacity-100",
                 )}
               >
                 <div className="overflow-hidden">
-                  <p className="mt-1 mb-2 rounded border border-red-500 px-3 py-2 text-xs text-red-500">
-                    {error}
+                  <p className="mt-2 mb-3 flex items-center gap-x-1.5 rounded border border-red-500 px-3 py-2 text-xs text-red-500">
+                    <CircleAlert className="h-3.5 w-3.5 text-red-500" />{" "}
+                    {errors.response}
                   </p>
                 </div>
               </div>
