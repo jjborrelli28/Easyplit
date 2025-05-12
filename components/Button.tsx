@@ -2,9 +2,10 @@
 
 import type { Url } from "next/dist/shared/lib/router/router";
 import Link, { type LinkProps } from "next/link";
-import type { ButtonHTMLAttributes } from "react";
+import type { ButtonHTMLAttributes, PropsWithChildren } from "react";
 
 import clsx from "clsx";
+import Spinner from "./Spinner";
 
 type Variant = "contained" | "outlined";
 type Color = "primary" | "secondary" | "danger";
@@ -14,6 +15,8 @@ interface BaseProps {
   color?: Color;
   fullWidth?: boolean;
   unstyled?: boolean;
+  loading?: boolean;
+  disabled?: boolean;
 }
 
 interface ButtonAsLink extends BaseProps, LinkProps {
@@ -26,10 +29,10 @@ interface ButtonAsButton
   href?: Url;
 }
 
-type ButtonProps = ButtonAsButton | ButtonAsLink;
+type ButtonProps = PropsWithChildren<ButtonAsButton | ButtonAsLink>;
 
 const baseStyles =
-  "rounded-md px-4 py-2 font-semibold transition-colors duration-200 cursor-pointer flex justify-center items-center gap-3";
+  "rounded-md px-4 py-2 font-semibold transition-colors duration-200 flex justify-center items-center gap-3";
 
 const colorStyles: Record<Color, Record<Variant, string>> = {
   primary: {
@@ -55,6 +58,9 @@ const Button = ({
   className,
   fullWidth,
   unstyled,
+  loading,
+  disabled,
+  children,
   ...props
 }: ButtonProps) => {
   const combinedClass = clsx(
@@ -62,15 +68,30 @@ const Button = ({
       baseStyles,
       colorStyles[color][variant],
       fullWidth ? "w-full" : "w-fit",
+      disabled ? "cursor-not-allowed" : "cursor-pointer",
     ],
     className,
   );
 
+  const isDisabled = disabled || loading;
+
   if (props?.href) {
-    return <Link className={combinedClass} {...(props as ButtonAsLink)} />;
+    return (
+      <Link className={combinedClass} {...(props as ButtonAsLink)}>
+        {children}
+      </Link>
+    );
   }
 
-  return <button className={combinedClass} {...(props as ButtonAsButton)} />;
+  return (
+    <button
+      className={combinedClass}
+      disabled={isDisabled}
+      {...(props as ButtonAsButton)}
+    >
+      {loading ? <Spinner /> : children}
+    </button>
+  );
 };
 
 export default Button;
