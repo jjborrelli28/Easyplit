@@ -74,9 +74,9 @@ const RegisterPage = () => {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-950 px-4">
-      <div className="w-full max-w-md space-y-6 rounded-xl border border-gray-800 bg-gray-900 p-8 shadow-xl">
-        <h1 className="text-3xl font-bold text-white">Crear cuenta</h1>
+    <main className="flex min-h-screen items-center justify-center px-4">
+      <div className="w-full max-w-md space-y-6 rounded-xl border border-gray-800 p-8 shadow-xl">
+        <h1 className="text-3xl font-bold">Crear cuenta</h1>
 
         <div className="space-y-4">
           <form onSubmit={handleRegister} className="flex flex-col gap-y-1">
@@ -138,7 +138,7 @@ const RegisterPage = () => {
               <div className="w-full border-t border-gray-700" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="bg-gray-900 px-4 font-semibold text-gray-700">
+              <span className="bg-background px-4 font-semibold text-gray-700">
                 O
               </span>
             </div>
@@ -152,7 +152,7 @@ const RegisterPage = () => {
           </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 };
 

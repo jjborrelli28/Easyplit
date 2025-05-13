@@ -74,9 +74,9 @@ const LoginPage = () => {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-950 px-4">
-      <div className="w-full max-w-md space-y-6 rounded-xl border border-gray-800 bg-gray-900 p-8 shadow-xl">
-        <h1 className="text-3xl font-bold text-white">Iniciar sesión</h1>
+    <main className="flex min-h-screen items-center justify-center px-4">
+      <div className="w-full max-w-md space-y-6 rounded-xl border border-gray-800 p-8 shadow-xl">
+        <h1 className="text-3xl font-bold">Iniciar sesión</h1>
         <div className="space-y-4">
           <div>
             <form onSubmit={handleLogin} className="flex flex-col gap-y-1">
@@ -125,7 +125,12 @@ const LoginPage = () => {
             </Button>
           </div>
 
-          <Button href="/register" variant="outlined" fullWidth>
+          <Button
+            href="/register"
+            variant="outlined"
+            color="secondary"
+            fullWidth
+          >
             Crear cuenta
           </Button>
 
@@ -134,7 +139,7 @@ const LoginPage = () => {
               <div className="w-full border-t border-gray-700" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="bg-gray-900 px-4 font-semibold text-gray-700">
+              <span className="bg-background px-4 font-semibold text-gray-700">
                 O
               </span>
             </div>
@@ -143,7 +148,7 @@ const LoginPage = () => {
           <Button
             href="/api/auth/0/login"
             variant="outlined"
-            color="secondary"
+            color="tertiary"
             fullWidth
           >
             <Image alt="Google" src={googleLogo} height={20} width={20} />
@@ -151,7 +156,7 @@ const LoginPage = () => {
           </Button>
         </div>
       </div>
-    </div>
+    </main>
   );
 };
 

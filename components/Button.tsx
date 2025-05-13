@@ -7,12 +7,18 @@ import type { ButtonHTMLAttributes, PropsWithChildren } from "react";
 import clsx from "clsx";
 import Spinner from "./Spinner";
 
-type Variant = "contained" | "outlined";
-type Color = "primary" | "secondary" | "danger";
+type Variants = "contained" | "outlined";
+export type Colors =
+  | "primary"
+  | "secondary"
+  | "tertiary"
+  | "success"
+  | "warning"
+  | "danger";
 
 interface BaseProps {
-  variant?: Variant;
-  color?: Color;
+  variant?: Variants;
+  color?: Colors;
   fullWidth?: boolean;
   unstyled?: boolean;
   loading?: boolean;
@@ -34,21 +40,36 @@ type ButtonProps = PropsWithChildren<ButtonAsButton | ButtonAsLink>;
 const baseStyles =
   "rounded-md px-4 py-2 font-semibold transition-colors duration-200 flex justify-center items-center gap-3";
 
-const colorStyles: Record<Color, Record<Variant, string>> = {
+const colorStyles: Record<Colors, Record<Variants, string>> = {
   primary: {
-    contained: "bg-blue-700 text-white hover:bg-blue-600",
+    contained: "bg-primary text-white hover:brightness-110",
     outlined:
-      "border border-blue-700 text-white hover:bg-blue-600 hover:border-blue-600",
+      "border border-primary text-primary hover:bg-primary hover:text-white",
   },
   secondary: {
-    contained: "bg-gray-700 text-white hover:bg-gray-600",
+    contained: "bg-secondary text-white hover:brightness-110",
     outlined:
-      "border border-gray-700 text-white hover:bg-gray-600 hover:border-gray-600",
+      "border border-secondary text-secondary hover:bg-secondary hover:border-secondary hover:text-white",
+  },
+  tertiary: {
+    contained: "bg-tertiary text-foreground hover:brightness-110",
+    outlined:
+      "border border-tertiary text-foreground hover:bg-tertiary hover:text-black",
+  },
+  success: {
+    contained: "bg-success text-white hover:brightness-110",
+    outlined:
+      "border border-success text-success hover:bg-success hover:text-white",
+  },
+  warning: {
+    contained: "bg-warning text-white hover:brightness-110",
+    outlined:
+      "border border-warning text-warning hover:bg-warning hover:text-white",
   },
   danger: {
-    contained: "bg-red-700 text-white hover:bg-red-600",
+    contained: "bg-danger text-white hover:brightness-110",
     outlined:
-      "border border-red-700 text-white ed-600 hover:bg-red-600 hover:border-red-600",
+      "border border-danger text-danger hover:bg-danger hover:text-white",
   },
 };
 
@@ -68,12 +89,15 @@ const Button = ({
       baseStyles,
       colorStyles[color][variant],
       fullWidth ? "w-full" : "w-fit",
+      loading && "pointer-events-none",
       disabled ? "cursor-not-allowed" : "cursor-pointer",
     ],
     className,
   );
 
   const isDisabled = disabled || loading;
+  const spinnerColor =
+    color === "tertiary" ? "black" : variant === "contained" ? "white" : color;
 
   if (props?.href) {
     return (
@@ -89,7 +113,7 @@ const Button = ({
       disabled={isDisabled}
       {...(props as ButtonAsButton)}
     >
-      {loading ? <Spinner /> : children}
+      {loading ? <Spinner color={spinnerColor} /> : children}
     </button>
   );
 };

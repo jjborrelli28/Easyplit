@@ -25,9 +25,9 @@ const Input = ({ label, error, className, ...props }: InputProps) => {
         <label
           htmlFor={props.id || props.name}
           className={clsx(
-            "absolute left-0 transform transition-all duration-300",
+            "absolute left-0 transform font-semibold transition-all duration-300",
             onFocus || props?.value
-              ? "translate-x-1 -translate-y-6 text-sm"
+              ? "text-primary translate-x-1 -translate-y-6 text-sm"
               : "text-md translate-x-3 translate-y-2.5 text-lg",
           )}
         >
@@ -39,9 +39,9 @@ const Input = ({ label, error, className, ...props }: InputProps) => {
         onFocus={handleFocus}
         onBlur={handleFocus}
         className={clsx(
-          "w-full rounded-md border bg-gray-800 p-3 text-white placeholder-gray-500 transition duration-300 outline-none focus:ring-1 focus:ring-blue-600",
+          "text-foreground border-foreground ring-primary focus:border-primary w-full rounded-md border p-3 placeholder-gray-500 transition duration-300 outline-none focus:ring-1",
           label && !onFocus && "placeholder:text-transparent",
-          error ? "border-red-500" : "border-transparent",
+          error ? "border-danger" : "border-transparent",
           className,
         )}
         {...props}
@@ -54,7 +54,7 @@ const Input = ({ label, error, className, ...props }: InputProps) => {
         )}
       >
         <div className="overflow-hidden">
-          <p className="mt-1 ml-1 text-xs text-red-500">{error}</p>
+          <p className="text-danger mt-1 ml-1 text-xs">{error}</p>
         </div>
       </div>
     </fieldset>

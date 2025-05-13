@@ -1,14 +1,18 @@
+import type { ReactNode } from "react";
+
 import Header from "./_components/Header";
 
-export default function RootLayout({
+const AuthenticatedLayout = ({
   children,
 }: Readonly<{
-  children: React.ReactNode;
-}>) {
+  children: ReactNode;
+}>) => {
   return (
     <>
       <Header />
       {children}
     </>
   );
-}
+};
+
+export default AuthenticatedLayout;

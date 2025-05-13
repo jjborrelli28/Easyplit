@@ -1,35 +1,34 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
+import type { ReactNode } from "react";
 
+import ThemeInitializer from "@/components/ThemeInitializer";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
 export const metadata: Metadata = {
-  title: "Splitzy",
-  description: "Description App", // TODO
+  title: "Easyplit",
+  description:
+    "Easyplit te ayuda a dividir gastos con amigos, grupos o parejas de forma simple y rápida. Registrá, organizá y saldá cuentas sin complicaciones.",
 };
 
-export default function RootLayout({
+const RootLayout = ({
   children,
 }: Readonly<{
-  children: React.ReactNode;
-}>) {
+  children: ReactNode;
+}>) => {
   return (
-    <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50`}
-      >
+    <html lang="es">
+      <body className={`${inter.variable} antialiased`}>
+        <ThemeInitializer />
         {children}
       </body>
     </html>
   );
-}
+};
+
+export default RootLayout;
