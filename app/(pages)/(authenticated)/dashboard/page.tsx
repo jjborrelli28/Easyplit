@@ -4,6 +4,8 @@ import { redirect } from "next/navigation";
 import { verifyToken } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+import PageContainer from "@/components/PageContainer";
+
 const DashboardPage = async () => {
   const token = (await cookies()).get("token")?.value;
 
@@ -26,10 +28,11 @@ const DashboardPage = async () => {
   if (!user) redirect("/login");
 
   return (
-    <div className="mx-auto mt-10 max-w-2xl">
-      <h1 className="text-2xl font-bold">Dashboard</h1>
+    <PageContainer>
+      <h1 className="text-3xl font-bold">Dashboard</h1>
+
       <p>Bienvenido, {user.alias}</p>
-    </div>
+    </PageContainer>
   );
 };
 

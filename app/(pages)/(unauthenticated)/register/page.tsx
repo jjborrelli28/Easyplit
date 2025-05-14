@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 
@@ -11,6 +12,7 @@ import { registerSchema } from "@/lib/validations/schemas";
 
 import Button from "@/components/Button";
 import Input from "@/components/Input";
+import PageContainer from "@/components/PageContainer";
 
 const errorsInitialState = {
   alias: "",
@@ -74,7 +76,7 @@ const RegisterPage = () => {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-4">
+    <PageContainer>
       <div className="border-highlighted-background w-full max-w-md space-y-6 border p-8 shadow-xl">
         <h1 className="text-3xl font-bold">Crear cuenta</h1>
 
@@ -110,6 +112,7 @@ const RegisterPage = () => {
               required
               error={errors.password}
             />
+
             <Button
               type="submit"
               fullWidth
@@ -138,21 +141,21 @@ const RegisterPage = () => {
               <div className="border-foreground/60 w-full border-t" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="bg-background text-foreground/60 dark:text-foreground/60 px-4 font-semibold">
+              <span className="bg-background text-foreground/60 px-4 font-semibold">
                 O
               </span>
             </div>
           </div>
 
           <div className="text-foreground/60 text-center text-xs">
-            ¿Ya tenés cuenta?{" "}
-            <Button href="/login" unstyled>
+            ¿Ya tenés cuenta?
+            <Link href="/login" className="text-primary">
               Iniciar sesión
-            </Button>
+            </Link>
           </div>
         </div>
       </div>
-    </main>
+    </PageContainer>
   );
 };
 

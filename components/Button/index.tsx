@@ -5,7 +5,8 @@ import Link, { type LinkProps } from "next/link";
 import type { ButtonHTMLAttributes, PropsWithChildren } from "react";
 
 import clsx from "clsx";
-import Spinner from "./Spinner";
+
+import Spinner from "../Spinner";
 
 type Variants = "contained" | "outlined";
 export type Colors = "primary" | "secondary" | "success" | "warning" | "danger";

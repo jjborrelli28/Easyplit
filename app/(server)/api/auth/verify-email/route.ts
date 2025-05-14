@@ -12,11 +12,11 @@ export async function GET(req: Request) {
     const user = await prisma.user.findFirst({ where: { verifyToken } });
 
     if (!user)
-        return NextResponse.json({ error: "Token no válido" }, { status: 400 });
+        return NextResponse.json({ error: "Token inválido" }, { status: 400 });
 
     if (user.emailVerified) {
         return NextResponse.redirect(
-            `${process.env.NEXT_PUBLIC_APP_URL}/verify-result?status=already_verified`
+            `${process.env.NEXT_PUBLIC_APP_URL}/auth/verify-email/result?status=already_verified`
         );
     }
 
@@ -30,11 +30,11 @@ export async function GET(req: Request) {
         });
 
         return NextResponse.redirect(
-            `${process.env.NEXT_PUBLIC_APP_URL}/verify-result?status=success`
+            `${process.env.NEXT_PUBLIC_APP_URL}/auth/verify-email/result?status=success`
         );
     } catch {
         return NextResponse.redirect(
-            `${process.env.NEXT_PUBLIC_APP_URL}/verify-result?status=error`
+            `${process.env.NEXT_PUBLIC_APP_URL}/auth/verify-email/result?status=error`
         );
     }
 }

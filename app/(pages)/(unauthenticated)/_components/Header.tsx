@@ -1,12 +1,11 @@
 "use client";
 
-import { usePathname } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 import Button from "@/components/Button";
 import ThemeToggle from "@/theme/ThemeToggle";
-
-import Link from "next/link";
 
 const Header = () => {
   const pathname = usePathname();

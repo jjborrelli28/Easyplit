@@ -16,6 +16,7 @@ const useLogin = () => {
     return useMutation<LoginResponse, any, LoginInput>({
         mutationFn: async (data) => {
             const res = await api.post("/auth/login", data);
+
             return res.data;
         },
     });

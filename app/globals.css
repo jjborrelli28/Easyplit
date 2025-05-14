@@ -15,6 +15,8 @@
     --success: #19944a;
     --warning: #d4a900;
     --danger: #c13232;
+
+    --header: 72px;
   }
   .dark {
     --background: #191919;
@@ -41,6 +43,30 @@
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
+}
+
+@layer utilities {
+  .pt-header {
+    padding-top: var(--header);
+  }
+  .pb-header {
+    padding-bottom: var(--header);
+  }
+  .py-header {
+    padding-top: var(--header);
+    padding-bottom: var(--header);
+  }
+
+  .mt-header {
+    margin-top: var(--header);
+  }
+  .mb-header {
+    margin-bottom: var(--header);
+  }
+  .my-header {
+    margin-top: var(--header);
+    margin-bottom: var(--header);
+  }
 }
 
 body {

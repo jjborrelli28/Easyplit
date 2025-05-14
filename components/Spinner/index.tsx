@@ -1,6 +1,6 @@
 import clsx from "clsx";
 
-import type { Colors } from "./Button";
+import type { Colors } from "../Button";
 
 type SpinnerColors = Colors | "background" | "foreground";
 

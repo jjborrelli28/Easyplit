@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 
@@ -13,6 +14,7 @@ import { loginSchema } from "@/lib/validations/schemas";
 
 import Button from "@/components/Button";
 import Input from "@/components/Input";
+import PageContainer from "@/components/PageContainer";
 import googleLogo from "@/public/assets/logos/Google.svg?url";
 
 const errorsInitialState = {
@@ -74,9 +76,10 @@ const LoginPage = () => {
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-4">
+    <PageContainer>
       <div className="border-highlighted-background w-full max-w-md space-y-6 border p-8 shadow-xl">
         <h1 className="text-3xl font-bold">Iniciar sesión</h1>
+
         <div className="space-y-4">
           <div>
             <form onSubmit={handleLogin} className="flex flex-col gap-y-1">
@@ -101,7 +104,12 @@ const LoginPage = () => {
                 error={errors.password}
               />
 
-              <Button type="submit" fullWidth className="mt-7">
+              <Button
+                type="submit"
+                fullWidth
+                className="mt-7"
+                loading={isPending}
+              >
                 Iniciar sesión
               </Button>
 
@@ -113,16 +121,16 @@ const LoginPage = () => {
               >
                 <div className="overflow-hidden">
                   <p className="border-danger text-danger mt-2 mb-3 flex items-center gap-x-1.5 border px-3 py-2 text-xs">
-                    <CircleAlert className="text-danger h-3.5 w-3.5" />{" "}
+                    <CircleAlert className="text-danger h-3.5 w-3.5" />
                     {errors.response}
                   </p>
                 </div>
               </div>
             </form>
 
-            <Button href="#" unstyled className="text-xs">
+            <Link href="#" className="text-foreground/60 text-xs">
               ¿Has olvidado la contraseña?
-            </Button>
+            </Link>
           </div>
 
           <Button href="/register" variant="outlined" fullWidth>
@@ -147,11 +155,12 @@ const LoginPage = () => {
             fullWidth
           >
             <Image alt="Google" src={googleLogo} height={20} width={20} />
+
             <span>Iniciar sesión con Google</span>
           </Button>
         </div>
       </div>
-    </main>
+    </PageContainer>
   );
 };
 
