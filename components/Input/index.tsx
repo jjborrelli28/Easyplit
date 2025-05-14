@@ -39,7 +39,7 @@ const Input = ({ label, error, className, ...props }: InputProps) => {
         onFocus={handleFocus}
         onBlur={handleFocus}
         className={clsx(
-          "text-foreground border-b-foreground focus:border-b-primary w-full border p-3 transition duration-300 outline-none focus:ring-0",
+          "text-foreground border-b-foreground focus:border-b-primary w-full border bg-transparent p-3 transition duration-300 outline-none focus:ring-0",
           !label
             ? "placeholder-foreground/50"
             : onFocus

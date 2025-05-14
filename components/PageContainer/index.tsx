@@ -2,7 +2,7 @@ import type { HTMLAttributes } from "react";
 
 import clsx from "clsx";
 
-interface PageContainerProps extends HTMLAttributes<HTMLElement> {}
+type PageContainerProps = HTMLAttributes<HTMLElement>;
 
 const PageContainer = ({
   children,

@@ -22,6 +22,8 @@ export const sendVerificationEmail = async (email: string, verifyToken: string) 
     try {
         await transporter.sendMail(mailOptions);
     } catch (error) {
+        console.log('Error al enviar el correo electrónico de verificación:', error)
+
         throw new Error('Error al enviar el correo electrónico de verificación');
     }
 };
