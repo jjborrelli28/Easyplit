@@ -16,7 +16,7 @@ export const sendVerificationEmail = async (email: string, verifyToken: string) 
         to: email,
         subject: 'Verificación de correo electrónico en Easyplit',
         text: `Verifique su correo electrónico haciendo clic en el enlace: ${verificationUrl}`,
-        html: `<p>Verifique su correo electrónico haciendo clic en el siguiente enlace: <a href="${verificationUrl}">Verificar Ahora!</a></p>`,
+        html: `<p>Verifique su correo electrónico haciendo clic en el siguiente enlace: <a href="${verificationUrl}">¡Verificar Ahora!</a></p>`,
     };
 
     try {

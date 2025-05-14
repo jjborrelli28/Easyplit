@@ -1,6 +1,8 @@
 
 import { useMutation } from "@tanstack/react-query";
 
+import type { AxiosError } from "axios";
+
 import api from '@/lib/axios';
 
 interface LoginInput {
@@ -13,7 +15,7 @@ interface LoginResponse {
 }
 
 const useLogin = () => {
-    return useMutation<LoginResponse, any, LoginInput>({
+    return useMutation<LoginResponse, AxiosError, LoginInput>({
         mutationFn: async (data) => {
             const res = await api.post("/auth/login", data);
 

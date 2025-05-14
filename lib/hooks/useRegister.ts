@@ -1,5 +1,7 @@
 import { useMutation } from '@tanstack/react-query';
 
+import type { AxiosError } from "axios";
+
 import api from '@/lib/axios';
 
 interface RegisterInput {
@@ -13,7 +15,7 @@ interface RegisterResponse {
 }
 
 const useRegister = () => {
-    return useMutation<RegisterResponse, any, RegisterInput>({
+    return useMutation<RegisterResponse, AxiosError, RegisterInput>({
         mutationFn: async (data) => {
             const response = await api.post('/auth/register', data);
 
