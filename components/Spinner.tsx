@@ -2,14 +2,15 @@ import clsx from "clsx";
 
 import type { Colors } from "./Button";
 
-type SpinnerColors = Colors | "black" | "white";
+type SpinnerColors = Colors | "background" | "foreground";
 
 const spinnerColors = {
   black: "border-black",
   white: "border-white",
+  background: "border-background",
+  foreground: "border-foreground",
   primary: "border-primary",
   secondary: "border-secondary",
-  tertiary: "border-foreground",
   success: "border-success",
   warning: "border-warning",
   danger: "border-danger",

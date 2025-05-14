@@ -6,7 +6,6 @@ import Button from "@/components/Button";
 const colors = [
   "primary",
   "secondary",
-  "tertiary",
   "success",
   "warning",
   "danger",

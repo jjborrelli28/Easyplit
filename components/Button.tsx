@@ -8,13 +8,7 @@ import clsx from "clsx";
 import Spinner from "./Spinner";
 
 type Variants = "contained" | "outlined";
-export type Colors =
-  | "primary"
-  | "secondary"
-  | "tertiary"
-  | "success"
-  | "warning"
-  | "danger";
+export type Colors = "primary" | "secondary" | "success" | "warning" | "danger";
 
 interface BaseProps {
   variant?: Variants;
@@ -42,35 +36,29 @@ const baseStyles =
 
 const colorStyles: Record<Colors, Record<Variants, string>> = {
   primary: {
-    contained: "bg-primary text-white hover:bg-primary/90",
+    contained: "bg-primary text-background hover:bg-primary/90",
     outlined:
-      "border border-primary text-primary hover:bg-primary hover:text-white",
+      "border border-primary text-primary hover:bg-primary hover:text-background",
   },
   secondary: {
-    contained: "bg-secondary text-white hover:bg-secondary/90",
+    contained: "bg-secondary text-background hover:bg-secondary/90",
     outlined:
-      "border border-secondary text-secondary hover:bg-secondary hover:border-secondary hover:text-white",
-  },
-  tertiary: {
-    contained:
-      "bg-black text-white hover:bg-black/90 dark:border-black dark:border",
-    outlined:
-      "border border-foreground text-foreground hover:bg-foreground hover:text-background",
+      "border border-secondary text-secondary hover:bg-secondary hover:text-background",
   },
   success: {
-    contained: "bg-success text-white hover:bg-success/90",
+    contained: "bg-success text-background hover:bg-success/90",
     outlined:
-      "border border-success text-success hover:bg-success hover:text-white",
+      "border border-success text-success hover:bg-success hover:text-background",
   },
   warning: {
-    contained: "bg-warning text-white hover:bg-warning/90",
+    contained: "bg-warning text-background hover:bg-warning/90",
     outlined:
-      "border border-warning text-warning hover:bg-warning hover:text-white",
+      "border border-warning text-warning hover:bg-warning hover:text-background",
   },
   danger: {
-    contained: "bg-danger text-white hover:bg-danger/90",
+    contained: "bg-danger text-background hover:bg-danger/90",
     outlined:
-      "border border-danger text-danger hover:bg-danger hover:text-white",
+      "border border-danger text-danger hover:bg-danger hover:text-background",
   },
 };
 
@@ -97,7 +85,7 @@ const Button = ({
   );
 
   const isDisabled = disabled || loading;
-  const spinnerColor = variant === "contained" ? "white" : color;
+  const spinnerColor = variant === "contained" ? "background" : color;
 
   if (props?.href) {
     return (

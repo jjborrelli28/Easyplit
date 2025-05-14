@@ -125,12 +125,7 @@ const LoginPage = () => {
             </Button>
           </div>
 
-          <Button
-            href="/register"
-            variant="outlined"
-            color="tertiary"
-            fullWidth
-          >
+          <Button href="/register" variant="outlined" fullWidth>
             Crear cuenta
           </Button>
 

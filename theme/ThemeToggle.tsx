@@ -33,7 +33,7 @@ const ThemeToggle = () => {
     <button
       onClick={handleToggle}
       aria-label="Change theme"
-      className="bg-primary relative flex h-8 w-16 items-center rounded-full px-1 transition-colors duration-300"
+      className="bg-highlighted-background border-primary relative flex h-8 w-16 items-center rounded-full border px-1 transition-colors duration-300"
     >
       <div
         className={clsx(
@@ -45,15 +45,15 @@ const ThemeToggle = () => {
       >
         <span
           className={clsx(
-            "bg-background z-10 h-6 w-6 rounded-full shadow-md transition-transform duration-300 ease-in-out",
+            "bg-primary z-10 h-6 w-6 rounded-full shadow-md transition-transform duration-300 ease-in-out",
             isChanging && "animate-pulse-width",
           )}
         />
       </div>
 
       <div className="relative z-20 flex w-full justify-between px-1">
-        <Sun size={16} className="text-foreground" />
-        <Moon size={16} className="text-white" />
+        <Sun size={16} className="text-white" />
+        <Moon size={16} className="text-black" />
       </div>
     </button>
   );

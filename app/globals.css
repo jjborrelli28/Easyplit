@@ -3,32 +3,37 @@
 
 @layer base {
   :root {
-    --background: #fff;
-    --foreground: #000;
     --black: #000;
-    --white: #eee9f5;
-    --primary: #44355b;
-    --secondary: #4a4550;
-    --success: #2e7d32;
-    --warning: #a86f14;
-    --danger: #a33a16;
+    --white: #fefffa;
+
+    --background: #fff;
+    --highlighted-background: #e5e5e5;
+    --foreground: #191919;
+    --highlighted-foreground: #0f0f0f;
+    --primary: #a1cc2a;
+    --secondary: #191919;
+    --success: #19944a;
+    --warning: #d4a900;
+    --danger: #c13232;
   }
   .dark {
-    --background: #221e22;
-    --foreground: #eee9f5;
-    --black: #221e22;
-    --white: #eee9f5;
-    --primary: #44355b;
-    --secondary: #4a4550;
-    --success: #2e7d32;
-    --warning: #a86f14;
-    --danger: #a33a16;
+    --background: #191919;
+    --highlighted-background: #0f0f0f;
+    --foreground: #fefffa;
+    --highlighted-foreground: #f2ffcc;
+    --primary: #caff33;
+    --secondary: #fefffa;
+    --success: #22c55e;
+    --warning: #facc15;
+    --danger: #ef4444;
   }
 }
 
 @theme inline {
   --color-background: var(--background);
+  --color-highlighted-background: var(--highlighted-background);
   --color-foreground: var(--foreground);
+  --color-highlighted-foreground: var(--highlighted-foreground);
   --color-black: var(--black);
   --color-white: var(--white);
   --color-primary: var(--primary);
@@ -42,22 +47,6 @@ body {
   font-family: var(--font-inter), sans-serif;
   background: var(--background);
   color: var(--foreground);
-}
-
-@keyframes pulse-width {
-  0% {
-    width: 24px;
-  }
-  50% {
-    width: 100%;
-  }
-  100% {
-    width: 24px;
-  }
-}
-
-.animate-pulse-width {
-  animation: pulse-width 300ms ease-in-out forwards;
 }
 
 @keyframes justify-end-to-start {
@@ -90,4 +79,20 @@ body {
 
 .animate-justify-start-to-end {
   animation: justify-start-to-end 300ms ease-in-out forwards;
+}
+
+@keyframes pulse-width {
+  0% {
+    width: 24px;
+  }
+  50% {
+    width: 100%;
+  }
+  100% {
+    width: 24px;
+  }
+}
+
+.animate-pulse-width {
+  animation: pulse-width 300ms ease-in-out forwards;
 }
