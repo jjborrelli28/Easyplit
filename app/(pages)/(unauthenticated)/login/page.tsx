@@ -128,7 +128,7 @@ const LoginPage = () => {
           <Button
             href="/register"
             variant="outlined"
-            color="secondary"
+            color="tertiary"
             fullWidth
           >
             Crear cuenta
@@ -148,7 +148,7 @@ const LoginPage = () => {
           <Button
             href="/api/auth/0/login"
             variant="outlined"
-            color="tertiary"
+            color="secondary"
             fullWidth
           >
             <Image alt="Google" src={googleLogo} height={20} width={20} />

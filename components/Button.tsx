@@ -38,36 +38,37 @@ interface ButtonAsButton
 type ButtonProps = PropsWithChildren<ButtonAsButton | ButtonAsLink>;
 
 const baseStyles =
-  "rounded-md px-4 py-2 font-semibold transition-colors duration-200 flex justify-center items-center gap-3";
+  " px-4 py-2 font-semibold transition-colors duration-200 flex justify-center items-center gap-3";
 
 const colorStyles: Record<Colors, Record<Variants, string>> = {
   primary: {
-    contained: "bg-primary text-white hover:brightness-110",
+    contained: "bg-primary text-white hover:bg-primary/90",
     outlined:
       "border border-primary text-primary hover:bg-primary hover:text-white",
   },
   secondary: {
-    contained: "bg-secondary text-white hover:brightness-110",
+    contained: "bg-secondary text-white hover:bg-secondary/90",
     outlined:
       "border border-secondary text-secondary hover:bg-secondary hover:border-secondary hover:text-white",
   },
   tertiary: {
-    contained: "bg-tertiary text-foreground hover:brightness-110",
+    contained:
+      "bg-black text-white hover:bg-black/90 dark:border-black dark:border",
     outlined:
-      "border border-tertiary text-foreground hover:bg-tertiary hover:text-black",
+      "border border-foreground text-foreground hover:bg-foreground hover:text-background",
   },
   success: {
-    contained: "bg-success text-white hover:brightness-110",
+    contained: "bg-success text-white hover:bg-success/90",
     outlined:
       "border border-success text-success hover:bg-success hover:text-white",
   },
   warning: {
-    contained: "bg-warning text-white hover:brightness-110",
+    contained: "bg-warning text-white hover:bg-warning/90",
     outlined:
       "border border-warning text-warning hover:bg-warning hover:text-white",
   },
   danger: {
-    contained: "bg-danger text-white hover:brightness-110",
+    contained: "bg-danger text-white hover:bg-danger/90",
     outlined:
       "border border-danger text-danger hover:bg-danger hover:text-white",
   },
@@ -96,8 +97,7 @@ const Button = ({
   );
 
   const isDisabled = disabled || loading;
-  const spinnerColor =
-    color === "tertiary" ? "black" : variant === "contained" ? "white" : color;
+  const spinnerColor = variant === "contained" ? "white" : color;
 
   if (props?.href) {
     return (
@@ -109,6 +109,7 @@ const Button = ({
 
   return (
     <button
+      aria-hidden={loading ? "true" : "false"}
       className={combinedClass}
       disabled={isDisabled}
       {...(props as ButtonAsButton)}

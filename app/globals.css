@@ -1,37 +1,41 @@
 @import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-  --primary: #4f46e5;
-  --secondary: #22d3ee;
-  --tertiary: #d1d5db;
-  --success: #10b981;
-  --warning: #f59e0b;
-  --danger: #ef4444;
-  --info: #3b82f6;
-  --gradient-accent-1: #4f46e5;
-  --gradient-accent-2: #22d3ee;
+@layer base {
+  :root {
+    --background: #fff;
+    --foreground: #000;
+    --black: #000;
+    --white: #eee9f5;
+    --primary: #44355b;
+    --secondary: #4a4550;
+    --success: #2e7d32;
+    --warning: #a86f14;
+    --danger: #a33a16;
+  }
+  .dark {
+    --background: #221e22;
+    --foreground: #eee9f5;
+    --black: #221e22;
+    --white: #eee9f5;
+    --primary: #44355b;
+    --secondary: #4a4550;
+    --success: #2e7d32;
+    --warning: #a86f14;
+    --danger: #a33a16;
+  }
 }
 
-.dark {
-  --background: #0a0a0a;
-  --foreground: #e5e7eb;
-  --primary: #818cf8;
-  --secondary: #67e8f9;
-  --tertiary: #374151;
-  --success: #34d399;
-  --warning: #fbbf24;
-  --danger: #f87171;
-  --info: #60a5fa;
-  --gradient-accent-1: #818cf8;
-  --gradient-accent-2: #67e8f9;
-}
-
-html {
-  transition:
-    background-color 0.3s,
-    color 0.3s;
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-black: var(--black);
+  --color-white: var(--white);
+  --color-primary: var(--primary);
+  --color-secondary: var(--secondary);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
 }
 
 body {
@@ -40,131 +44,50 @@ body {
   color: var(--foreground);
 }
 
-@layer utilities {
-  /* Background + Border + Text helpers */
-  .bg-background {
-    background-color: var(--background);
+@keyframes pulse-width {
+  0% {
+    width: 24px;
   }
-  .border-background {
-    border-color: var(--background);
+  50% {
+    width: 100%;
   }
-  .bg-foreground {
-    background-color: var(--foreground);
+  100% {
+    width: 24px;
   }
-  .border-foreground {
-    border-color: var(--foreground);
-  }
+}
 
-  /* Primary */
-  .bg-primary {
-    background-color: var(--primary);
-  }
-  .hover\:bg-primary:hover {
-    background-color: var(--primary);
-  }
-  .text-primary {
-    color: var(--primary);
-  }
-  .border-primary {
-    border-color: var(--primary);
-  }
-  .focus\:border-primary:focus {
-    border-color: var(--primary);
-  }
-  .ring-primary {
-    --tw-ring-color: var(--primary);
-  }
+.animate-pulse-width {
+  animation: pulse-width 300ms ease-in-out forwards;
+}
 
-  /* Secondary */
-  .bg-secondary {
-    background-color: var(--secondary);
+@keyframes justify-end-to-start {
+  0% {
+    justify-content: flex-end;
   }
-  .hover\:bg-secondary:hover {
-    background-color: var(--secondary);
+  75% {
+    justify-content: flex-start;
   }
-  .text-secondary {
-    color: var(--secondary);
+  100% {
+    justify-content: flex-start;
   }
-  .border-secondary {
-    border-color: var(--secondary);
-  }
+}
 
-  /* Tertiary */
-  .bg-tertiary {
-    background-color: var(--tertiary);
-  }
-  .hover\:bg-tertiary:hover {
-    background-color: var(--tertiary);
-  }
-  .text-tertiary {
-    color: var(--tertiary);
-  }
-  .border-tertiary {
-    border-color: var(--tertiary);
-  }
+.animate-justify-end-to-start {
+  animation: justify-end-to-start 300ms ease-in-out forwards;
+}
 
-  /* Success */
-  .bg-success {
-    background-color: var(--success);
+@keyframes justify-start-to-end {
+  0% {
+    justify-content: flex-start;
   }
-  .hover\:bg-success:hover {
-    background-color: var(--success);
+  75% {
+    justify-content: flex-end;
   }
-  .text-success {
-    color: var(--success);
+  100% {
+    justify-content: flex-end;
   }
-  .border-success {
-    border-color: var(--success);
-  }
+}
 
-  /* Warning */
-  .bg-warning {
-    background-color: var(--warning);
-  }
-  .hover\:bg-warning:hover {
-    background-color: var(--warning);
-  }
-  .text-warning {
-    color: var(--warning);
-  }
-  .border-warning {
-    border-color: var(--warning);
-  }
-
-  /* Danger */
-  .bg-danger {
-    background-color: var(--danger);
-  }
-  .hover\:bg-danger:hover {
-    background-color: var(--danger);
-  }
-  .text-danger {
-    color: var(--danger);
-  }
-  .border-danger {
-    border-color: var(--danger);
-  }
-
-  /* Info */
-  .bg-info {
-    background-color: var(--info);
-  }
-  .hover\:bg-info:hover {
-    background-color: var(--info);
-  }
-  .text-info {
-    color: var(--info);
-  }
-  .border-info {
-    border-color: var(--info);
-  }
-
-  /* Gradients */
-  .bg-gradient-accent {
-    background-image: linear-gradient(
-      135deg,
-      var(--gradient-accent-1),
-      var(--gradient-accent-2)
-    );
-  }
+.animate-justify-start-to-end {
+  animation: justify-start-to-end 300ms ease-in-out forwards;
 }

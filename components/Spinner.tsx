@@ -9,7 +9,7 @@ const spinnerColors = {
   white: "border-white",
   primary: "border-primary",
   secondary: "border-secondary",
-  tertiary: "border-tertiary",
+  tertiary: "border-foreground",
   success: "border-success",
   warning: "border-warning",
   danger: "border-danger",
