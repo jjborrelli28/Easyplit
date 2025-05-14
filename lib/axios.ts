@@ -6,3 +6,5 @@ const axiosInstance = axios.create({
 });
 
 export default axiosInstance;
+
+export type AuthError<T> = { response: { data: { error: string, errors: T } } }

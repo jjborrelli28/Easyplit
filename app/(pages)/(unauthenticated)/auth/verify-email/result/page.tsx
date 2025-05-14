@@ -1,6 +1,4 @@
-"use client";
-
-import { redirect, useSearchParams } from "next/navigation";
+import { notFound } from "next/navigation";
 import type { ReactElement } from "react";
 
 import clsx from "clsx";
@@ -30,13 +28,17 @@ const states: Record<States, { color: string; icon: ReactElement }> = {
   },
 };
 
-const VerifyEmailResultPage = () => {
-  const searchParams = useSearchParams();
+interface VerifyEmailResultPageProps {
+  searchParams: Promise<{ status?: States }>;
+}
 
-  const status = searchParams.get("status");
+const VerifyEmailResultPage = async ({
+  searchParams,
+}: VerifyEmailResultPageProps) => {
+  const { status } = await searchParams;
 
   if (!status || !["success", "already_verified", "error"].includes(status)) {
-    redirect("/login");
+    notFound();
   }
 
   return (
@@ -44,16 +46,16 @@ const VerifyEmailResultPage = () => {
       <div
         className={clsx(
           "flex max-w-2xl border-2 shadow-xl",
-          states[status as States].color,
+          states[status].color,
         )}
       >
         <div
           className={clsx(
             "flex items-center border-r-2 p-8",
-            states[status as States].color,
+            states[status].color,
           )}
         >
-          {states[status as States].icon}
+          {states[status].icon}
         </div>
 
         {status === "success" ? (
