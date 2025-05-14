@@ -9,7 +9,7 @@
     --background: #fff;
     --highlighted-background: #e5e5e5;
     --foreground: #191919;
-    --highlighted-foreground: #0f0f0f;
+    --highlighted-foreground: #333333;
     --primary: #a1cc2a;
     --secondary: #191919;
     --success: #19944a;
@@ -18,7 +18,7 @@
   }
   .dark {
     --background: #191919;
-    --highlighted-background: #0f0f0f;
+    --highlighted-background: #333333;
     --foreground: #fefffa;
     --highlighted-foreground: #f2ffcc;
     --primary: #caff33;

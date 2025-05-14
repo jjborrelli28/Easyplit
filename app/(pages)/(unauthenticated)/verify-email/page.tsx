@@ -26,7 +26,7 @@ const VerifyResultPage = () => {
     <main className="container mx-auto flex min-h-screen flex-1 flex-col items-center justify-center">
       <div
         className={clsx(
-          "flex max-w-2xl rounded-xl border-2 text-center shadow-xl",
+          "flex max-w-2xl border-2 text-center shadow-xl",
           borderColors[status as States],
         )}
       >

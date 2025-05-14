@@ -39,9 +39,13 @@ const Input = ({ label, error, className, ...props }: InputProps) => {
         onFocus={handleFocus}
         onBlur={handleFocus}
         className={clsx(
-          "text-foreground border-foreground ring-primary focus:border-primary w-full rounded-md border p-3 placeholder-gray-500 transition duration-300 outline-none focus:ring-1",
-          label && !onFocus && "placeholder:text-transparent",
-          error ? "border-danger" : "border-transparent",
+          "text-foreground border-b-foreground focus:border-b-primary w-full border p-3 transition duration-300 outline-none focus:ring-0",
+          !label
+            ? "placeholder-foreground/50"
+            : onFocus
+              ? "placeholder-highlighted-background"
+              : "placeholder:text-transparent",
+          error ? "!border-danger" : "border-transparent",
           className,
         )}
         {...props}

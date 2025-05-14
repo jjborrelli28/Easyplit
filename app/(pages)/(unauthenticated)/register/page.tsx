@@ -75,7 +75,7 @@ const RegisterPage = () => {
 
   return (
     <main className="flex min-h-screen items-center justify-center px-4">
-      <div className="w-full max-w-md space-y-6 rounded-xl border border-gray-800 p-8 shadow-xl">
+      <div className="border-highlighted-background w-full max-w-md space-y-6 border p-8 shadow-xl">
         <h1 className="text-3xl font-bold">Crear cuenta</h1>
 
         <div className="space-y-4">
@@ -126,7 +126,7 @@ const RegisterPage = () => {
               )}
             >
               <div className="overflow-hidden">
-                <p className="mt-1 mb-2 rounded border border-red-500 px-3 py-2 text-xs text-red-500">
+                <p className="border-danger text-danger mt-1 mb-2 border px-3 py-2 text-xs">
                   {errors.response}
                 </p>
               </div>
@@ -135,16 +135,16 @@ const RegisterPage = () => {
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-700" />
+              <div className="border-foreground/60 w-full border-t" />
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="bg-background px-4 font-semibold text-gray-700">
+              <span className="bg-background text-foreground/60 dark:text-foreground/60 px-4 font-semibold">
                 O
               </span>
             </div>
           </div>
 
-          <div className="text-center text-xs">
+          <div className="text-foreground/60 text-center text-xs">
             ¿Ya tenés cuenta?{" "}
             <Button href="/login" unstyled>
               Iniciar sesión
