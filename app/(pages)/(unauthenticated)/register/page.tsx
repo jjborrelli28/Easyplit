@@ -10,6 +10,7 @@ import useRegister from "@/lib/hooks/useRegister";
 import { parseZodErrors } from "@/lib/validations/helpers";
 import { registerSchema } from "@/lib/validations/schemas";
 
+import AuthDivider from "@/components/AuthDivider";
 import Button from "@/components/Button";
 import Input from "@/components/Input";
 import PageContainer from "@/components/PageContainer";
@@ -136,19 +137,10 @@ const RegisterPage = () => {
             </div>
           </form>
 
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="border-foreground/60 w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="bg-background text-foreground/60 px-4 font-semibold">
-                O
-              </span>
-            </div>
-          </div>
+          <AuthDivider />
 
           <div className="text-foreground/60 text-center text-xs">
-            ¿Ya tenés cuenta?
+            ¿Ya tenés cuenta?{" "}
             <Link href="/login" className="text-primary">
               Iniciar sesión
             </Link>

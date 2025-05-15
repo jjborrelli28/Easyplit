@@ -12,6 +12,7 @@ import useLogin from "@/lib/hooks/useLogin";
 import { parseZodErrors } from "@/lib/validations/helpers";
 import { loginSchema } from "@/lib/validations/schemas";
 
+import AuthDivider from "@/components/AuthDivider";
 import Button from "@/components/Button";
 import Input from "@/components/Input";
 import PageContainer from "@/components/PageContainer";
@@ -137,16 +138,7 @@ const LoginPage = () => {
             Crear cuenta
           </Button>
 
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="border-foreground/60 w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="bg-background text-foreground/60 px-4 font-semibold">
-                O
-              </span>
-            </div>
-          </div>
+          <AuthDivider />
 
           <Button
             href="/api/auth/0/login"
