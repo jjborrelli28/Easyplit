@@ -10,7 +10,17 @@ const meta = {
   argTypes: {
     color: {
       control: { type: "select" },
-      options: ['black', 'white', 'background', 'foreground', "primary", "secondary", "success", "warning", "danger"],
+      options: [
+        "black",
+        "white",
+        "background",
+        "foreground",
+        "primary",
+        "secondary",
+        "success",
+        "warning",
+        "danger",
+      ],
     },
   },
   args: {},

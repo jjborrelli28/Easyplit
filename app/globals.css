@@ -3,8 +3,8 @@
 
 @layer base {
   :root {
-    --black: #000;
-    --white: #fefffa;
+    --black: #191919;
+    --white: #fff;
 
     --background: #fff;
     --highlighted-background: #e5e5e5;
@@ -19,6 +19,8 @@
     --header: 72px;
   }
   .dark {
+    --white: #fefffa;
+
     --background: #191919;
     --highlighted-background: #333333;
     --foreground: #fefffa;
