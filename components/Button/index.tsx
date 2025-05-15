@@ -33,7 +33,7 @@ interface ButtonAsButton
 export type ButtonProps = PropsWithChildren<ButtonAsButton | ButtonAsLink>;
 
 const BASE_STYLES =
-  " px-4 py-2 font-semibold transition-colors duration-200 flex justify-center items-center gap-3";
+  "relative box-border flex min-w-[80px] items-center justify-center gap-3 px-4 py-2 font-semibold transition-colors duration-200";
 
 const COLORS: Record<Colors, Record<Variants, string>> = {
   primary: {
@@ -102,7 +102,14 @@ const Button = ({
       disabled={isDisabled}
       {...(props as ButtonAsButton)}
     >
-      {loading ? <Spinner variant={variant} color={color} /> : children}
+      {loading && (
+        <Spinner
+          color={variant === "contained" ? "background" : color}
+          className="absolute"
+        />
+      )}
+
+      <span className={clsx(loading && "text-transparent")}>{children}</span>
     </button>
   );
 };

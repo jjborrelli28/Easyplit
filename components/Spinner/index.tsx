@@ -17,19 +17,17 @@ const COLORS = {
 };
 
 const Spinner = ({
-  variant = "contained",
   color = "primary",
   className,
 }: {
   color?: SpinnerColors;
   className?: string;
-  variant?: "contained" | "outlined";
 }) => {
   return (
     <span
       className={clsx(
-        "h-6 w-6 animate-spin rounded-full border-2 !border-t-transparent",
-        variant === "outlined" ? COLORS.background : COLORS[color],
+        "flex h-6 w-6 animate-spin rounded-full border-2 !border-t-transparent",
+        COLORS[color],
         className,
       )}
     />
