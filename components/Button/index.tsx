@@ -30,12 +30,12 @@ interface ButtonAsButton
   href?: Url;
 }
 
-type ButtonProps = PropsWithChildren<ButtonAsButton | ButtonAsLink>;
+export type ButtonProps = PropsWithChildren<ButtonAsButton | ButtonAsLink>;
 
-const baseStyles =
+const BASE_STYLES =
   " px-4 py-2 font-semibold transition-colors duration-200 flex justify-center items-center gap-3";
 
-const colorStyles: Record<Colors, Record<Variants, string>> = {
+const COLORS: Record<Colors, Record<Variants, string>> = {
   primary: {
     contained: "bg-primary text-background hover:bg-primary/90",
     outlined:
@@ -76,8 +76,8 @@ const Button = ({
 }: ButtonProps) => {
   const combinedClass = clsx(
     !unstyled && [
-      baseStyles,
-      colorStyles[color][variant],
+      BASE_STYLES,
+      COLORS[color][variant],
       fullWidth ? "w-full" : "w-fit",
       loading && "pointer-events-none",
       disabled ? "cursor-not-allowed" : "cursor-pointer",
@@ -86,7 +86,6 @@ const Button = ({
   );
 
   const isDisabled = disabled || loading;
-  const spinnerColor = variant === "contained" ? "background" : color;
 
   if (props?.href) {
     return (
@@ -103,7 +102,7 @@ const Button = ({
       disabled={isDisabled}
       {...(props as ButtonAsButton)}
     >
-      {loading ? <Spinner color={spinnerColor} /> : children}
+      {loading ? <Spinner variant={variant} color={color} /> : children}
     </button>
   );
 };

@@ -4,7 +4,7 @@ import type { Colors } from "../Button";
 
 type SpinnerColors = Colors | "background" | "foreground";
 
-const spinnerColors = {
+const COLORS = {
   black: "border-black",
   white: "border-white",
   background: "border-background",
@@ -17,17 +17,19 @@ const spinnerColors = {
 };
 
 const Spinner = ({
+  variant = "contained",
   color = "primary",
   className,
 }: {
   color?: SpinnerColors;
   className?: string;
+  variant?: "contained" | "outlined";
 }) => {
   return (
     <span
       className={clsx(
         "h-6 w-6 animate-spin rounded-full border-2 !border-t-transparent",
-        spinnerColors[color],
+        variant === "outlined" ? COLORS.background : COLORS[color],
         className,
       )}
     />
