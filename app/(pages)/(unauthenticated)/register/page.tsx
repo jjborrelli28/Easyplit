@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useState } from "react";
 
-import clsx from "clsx";
+import { CircleAlert } from "lucide-react";
 
 import useRegister from "@/lib/hooks/useRegister";
 import { parseZodErrors } from "@/lib/validations/helpers";
@@ -12,6 +12,7 @@ import { registerSchema } from "@/lib/validations/schemas";
 
 import AuthDivider from "@/components/AuthDivider";
 import Button from "@/components/Button";
+import Collapse from "@/components/Collapse";
 import Input from "@/components/Input";
 import PageContainer from "@/components/PageContainer";
 
@@ -123,18 +124,13 @@ const RegisterPage = () => {
               Registrarse
             </Button>
 
-            <div
-              className={clsx(
-                "grid-rows-auto grid grid-rows-[0fr] opacity-0 transition-[grid-template-rows,opacity]",
-                errors.response && "grid-rows-[1fr] opacity-100",
-              )}
-            >
-              <div className="overflow-hidden">
-                <p className="border-danger text-danger mt-1 mb-2 border px-3 py-2 text-xs">
-                  {errors.response}
-                </p>
-              </div>
-            </div>
+            <Collapse show={!!errors.response}>
+              <p className="border-danger text-danger mt-1 mb-2 border px-3 py-2 text-xs">
+                <CircleAlert className="text-danger h-3.5 w-3.5" />
+
+                {errors.response}
+              </p>
+            </Collapse>
           </form>
 
           <AuthDivider />

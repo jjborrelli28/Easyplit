@@ -4,6 +4,8 @@ import { useState, type InputHTMLAttributes } from "react";
 
 import clsx from "clsx";
 
+import Collapse from "../Collapse";
+
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: null | string;
@@ -51,16 +53,9 @@ const Input = ({ label, error, className, ...props }: InputProps) => {
         {...props}
       />
 
-      <div
-        className={clsx(
-          "grid-rows-auto grid grid-rows-[0fr] opacity-0 transition-[grid-template-rows,opacity]",
-          error && "grid-rows-[1fr] opacity-100",
-        )}
-      >
-        <div className="overflow-hidden">
-          <p className="text-danger mt-1 ml-1 text-xs">{error}</p>
-        </div>
-      </div>
+      <Collapse show={!!error}>
+        <p className="text-danger mt-1 ml-1 text-xs">{error}</p>
+      </Collapse>
     </fieldset>
   );
 };
