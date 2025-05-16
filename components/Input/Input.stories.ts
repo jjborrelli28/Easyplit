@@ -10,6 +10,7 @@ const meta = {
   tags: ["autodocs"],
   argTypes: {},
   args: {
+    id: 'example',
     label: "Label example",
     placeholder: "Placeholder example",
     onChange: fn(),

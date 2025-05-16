@@ -42,7 +42,7 @@ const VerifyEmailResultPage = async ({
   }
 
   return (
-    <PageContainer>
+    <PageContainer centered>
       <div
         className={clsx(
           "flex max-w-2xl border-2 shadow-xl",

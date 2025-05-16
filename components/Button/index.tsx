@@ -33,7 +33,7 @@ interface ButtonAsButton
 export type ButtonProps = PropsWithChildren<ButtonAsButton | ButtonAsLink>;
 
 const BASE_STYLES =
-  "relative box-border flex min-w-[80px] items-center justify-center gap-3 px-4 py-2 font-semibold transition-colors duration-200";
+  "relative box-border flex min-w-[80px] items-center justify-center gap-3 px-4 py-2 font-semibold transition-colors duration-300";
 
 const COLORS: Record<Colors, Record<Variants, string>> = {
   primary: {

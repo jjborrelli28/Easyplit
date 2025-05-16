@@ -78,7 +78,7 @@ const RegisterPage = () => {
   }
 
   return (
-    <PageContainer>
+    <PageContainer centered>
       <div className="border-highlighted-background w-full max-w-md space-y-6 border p-8 shadow-xl">
         <h1 className="text-3xl font-bold">Crear cuenta</h1>
 
@@ -124,7 +124,7 @@ const RegisterPage = () => {
               Registrarse
             </Button>
 
-            <Collapse show={!!errors.response}>
+            <Collapse open={!!errors.response}>
               <p className="border-danger text-danger mt-1 mb-2 border px-3 py-2 text-xs">
                 <CircleAlert className="text-danger h-3.5 w-3.5" />
 

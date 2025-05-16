@@ -7,7 +7,7 @@ import PageContainer from "@/components/PageContainer";
 
 const VerifyEmailSentPage = () => {
   return (
-    <PageContainer>
+    <PageContainer centered>
       <div className="border-success w-full max-w-2xl space-y-8 border-2 p-8 shadow-xl">
         <div className="flex items-center gap-2.5">
           <CheckCircle className="text-success h-10 w-10" />

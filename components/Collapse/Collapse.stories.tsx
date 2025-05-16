@@ -4,24 +4,29 @@ import { Meta, StoryObj } from "@storybook/react";
 import Collapse from ".";
 import Button from "../Button";
 
-const meta: Meta<typeof Collapse> = {
+const meta = {
   title: "Components/Collapse",
   component: Collapse,
-};
+  parameters: {},
+  tags: ["autodocs"],
+  argTypes: {},
+  args: {},
+} satisfies Meta<typeof Collapse>;
+
 export default meta;
 
 type Story = StoryObj<typeof Collapse>;
 
 export const Example: Story = {
   args: {
-    show: false,
+    open: false,
   },
 
   render: (args) => {
-    const [{ show }, updateArgs] = useArgs();
+    const [{ open }, updateArgs] = useArgs();
 
     const handleToggleCollapse = () => {
-      updateArgs({ show: !show });
+      updateArgs({ open: !open });
     };
 
     return (
@@ -32,7 +37,7 @@ export const Example: Story = {
 
         <hr className="border-foreground" />
 
-        <Collapse {...args} show={show}>
+        <Collapse {...args} open={open}>
           <p className="text-foreground border-highlighted-foreground border p-4">
             Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
             eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim

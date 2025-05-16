@@ -2,17 +2,21 @@ import type { HTMLAttributes } from "react";
 
 import clsx from "clsx";
 
-type PageContainerProps = HTMLAttributes<HTMLElement>;
+interface PageContainerProps extends HTMLAttributes<HTMLElement> {
+  centered?: boolean;
+}
 
 const PageContainer = ({
   children,
+  centered,
   className,
   ...restProps
 }: PageContainerProps) => {
   return (
     <main
       className={clsx(
-        "py-header container mx-auto flex min-h-screen flex-col items-center justify-center px-4",
+        "py-header container mx-auto flex min-h-screen flex-col px-4",
+        centered && "items-center justify-center",
         className,
       )}
       {...restProps}

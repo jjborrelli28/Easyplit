@@ -78,7 +78,7 @@ const LoginPage = () => {
   }
 
   return (
-    <PageContainer>
+    <PageContainer centered>
       <div className="border-highlighted-background w-full max-w-md space-y-6 border p-8 shadow-xl">
         <h1 className="text-3xl font-bold">Iniciar sesión</h1>
 
@@ -115,7 +115,7 @@ const LoginPage = () => {
                 Iniciar sesión
               </Button>
 
-              <Collapse show={!!errors.response}>
+              <Collapse open={!!errors.response}>
                 <p className="border-danger text-danger mt-2 mb-3 flex items-center gap-x-1.5 border px-3 py-2 text-xs">
                   <CircleAlert className="text-danger h-3.5 w-3.5" />
 

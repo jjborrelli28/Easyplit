@@ -9,10 +9,17 @@ import Collapse from "../Collapse";
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: null | string;
+  fullWidth?: boolean;
   className?: string;
 }
 
-const Input = ({ label, error, className, ...props }: InputProps) => {
+const Input = ({
+  label,
+  error,
+  fullWidth = true,
+  className,
+  ...props
+}: InputProps) => {
   const [onFocus, setOnFocus] = useState(false);
 
   const handleFocus = () => {
@@ -21,7 +28,11 @@ const Input = ({ label, error, className, ...props }: InputProps) => {
 
   return (
     <fieldset
-      className={clsx("relative flex w-full flex-col", label && "pt-7")}
+      className={clsx(
+        "relative flex flex-col",
+        label && "pt-7",
+        fullWidth ? "w-full" : "w-fit",
+      )}
     >
       {label && (
         <label
@@ -53,7 +64,7 @@ const Input = ({ label, error, className, ...props }: InputProps) => {
         {...props}
       />
 
-      <Collapse show={!!error}>
+      <Collapse open={!!error}>
         <p className="text-danger mt-1 ml-1 text-xs">{error}</p>
       </Collapse>
     </fieldset>
