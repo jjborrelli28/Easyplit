@@ -3,7 +3,7 @@ import { useMutation } from '@tanstack/react-query';
 import api, { type AuthError } from '@/lib/axios';
 
 interface RegisterInput {
-    alias: string;
+    name: string;
     email: string;
     password: string;
 }

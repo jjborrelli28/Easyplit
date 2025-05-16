@@ -12,9 +12,9 @@ export const POST = () => {
 
         return res;
     } catch (error) {
-        console.error('Error al cerrar sesión:', error);
+        console.error(error);
 
-        return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
+        return NextResponse.json({ error: 'Error interno del servidor al intentar cerrar sesión' }, { status: 500 });
     }
 };
 

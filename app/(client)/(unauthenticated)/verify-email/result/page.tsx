@@ -45,13 +45,13 @@ const VerifyEmailResultPage = async ({
     <PageContainer centered>
       <div
         className={clsx(
-          "flex max-w-2xl border-2 shadow-xl",
+          "flex w-full max-w-md flex-col border-1 text-center shadow-xl",
           states[status].color,
         )}
       >
         <div
           className={clsx(
-            "flex items-center border-r-2 p-8",
+            "flex justify-center border-b-1 p-8",
             states[status].color,
           )}
         >

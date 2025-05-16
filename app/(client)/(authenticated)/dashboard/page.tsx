@@ -22,7 +22,7 @@ const DashboardPage = async () => {
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
-    select: { alias: true },
+    select: { name: true },
   });
 
   if (!user) redirect("/login");
@@ -31,7 +31,7 @@ const DashboardPage = async () => {
     <PageContainer>
       <h1 className="text-3xl font-bold">Dashboard</h1>
 
-      <p>Bienvenido, {user.alias}</p>
+      <p>Bienvenido, {user.name}</p>
     </PageContainer>
   );
 };

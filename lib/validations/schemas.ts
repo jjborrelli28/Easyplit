@@ -1,7 +1,19 @@
 import { z } from "zod";
 
 // Rules
-const alias = z.string().min(3, "El alias debe tener al menos 3 caracteres");
+const name = z
+    .string()
+    .min(3, "El nombre debe tener al menos 3 caracteres")
+    .refine(
+        (val) =>
+            val
+                .trim()
+                .split(" ")
+                .every((word) => /^[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+$/.test(word)),
+        {
+            message: "Cada nombre debe comenzar con mayúscula",
+        }
+    );
 const email = z.string().email("El correo electrónico no es válido");
 const password = z
     .string()
@@ -11,7 +23,7 @@ const password = z
 
 // Schemas
 export const registerSchema = z.object({
-    alias,
+    name,
     email,
     password,
 });
@@ -20,3 +32,12 @@ export const loginSchema = z.object({
     email,
     password,
 });
+
+export const forgotPasswordSchema = z.object({
+    email,
+});
+
+export const resetPasswordSchema = z.object({
+    password,
+});
+

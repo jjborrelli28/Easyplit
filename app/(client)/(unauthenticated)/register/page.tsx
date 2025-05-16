@@ -17,7 +17,7 @@ import Input from "@/components/Input";
 import PageContainer from "@/components/PageContainer";
 
 const errorsInitialState = {
-  alias: "",
+  name: "",
   email: "",
   password: "",
   response: "",
@@ -27,24 +27,24 @@ const RegisterPage = () => {
   const router = useRouter();
   const { mutate, isPending } = useRegister();
 
-  const [alias, setAlias] = useState("");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState(errorsInitialState);
 
-  async function handleRegister(e: FormEvent) {
+  const handleRegister = async (e: FormEvent) => {
     e.preventDefault();
 
-    const body = { alias, email, password };
+    const body = { name, email, password };
     const result = registerSchema.safeParse(body);
 
     if (!result.success) {
       const errors = parseZodErrors(result.error);
-      const { alias, email, password } = errors;
+      const { name, email, password } = errors;
 
       setErrors({
         ...errorsInitialState,
-        alias: alias ?? "",
+        name: name ?? "",
         email: email ?? "",
         password: password ?? "",
       });
@@ -55,7 +55,8 @@ const RegisterPage = () => {
     mutate(body, {
       onSuccess: () => {
         setErrors(errorsInitialState);
-        router.push("/auth/verify-email/sent");
+
+        router.push("/verify-email/sent");
       },
       onError: (error) => {
         const { errors, error: message } = error.response?.data || {};
@@ -63,7 +64,7 @@ const RegisterPage = () => {
         if (errors) {
           setErrors({
             ...errorsInitialState,
-            alias: errors.alias ?? "",
+            name: errors.name ?? "",
             email: errors.email ?? "",
             password: errors.password ?? "",
           });
@@ -75,24 +76,24 @@ const RegisterPage = () => {
         }
       },
     });
-  }
+  };
 
   return (
     <PageContainer centered>
-      <div className="border-h-background w-full max-w-md space-y-6 border p-8 shadow-xl">
+      <div className="border-h-background w-full max-w-md space-y-8 border p-8 shadow-xl">
         <h1 className="text-3xl font-bold">Crear cuenta</h1>
 
         <div className="space-y-4">
           <form onSubmit={handleRegister} className="flex flex-col gap-y-1">
             <Input
-              id="alias"
+              id="name"
               type="text"
-              label="Nombre ó alias"
-              placeholder="Nombre ó alias"
-              value={alias}
-              onChange={(e) => setAlias(e.target.value)}
+              label="Nombre"
+              placeholder="Nombre"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               required
-              error={errors.alias}
+              error={errors.name}
             />
             <Input
               id="email"
@@ -125,7 +126,7 @@ const RegisterPage = () => {
             </Button>
 
             <Collapse open={!!errors.response}>
-              <p className="border-danger text-danger mt-1 mb-2 border px-3 py-2 text-xs">
+              <p className="border-danger text-danger mt-2 mb-3 flex items-center gap-x-1.5 border px-3 py-2 text-xs">
                 <CircleAlert className="text-danger h-3.5 w-3.5" />
 
                 {errors.response}
@@ -135,7 +136,7 @@ const RegisterPage = () => {
 
           <AuthDivider />
 
-          <div className="text-foreground/60 text-center text-xs">
+          <div className="text-foreground/75 text-center text-xs">
             ¿Ya tenés cuenta?{" "}
             <Link href="/login" className="text-primary">
               Iniciar sesión

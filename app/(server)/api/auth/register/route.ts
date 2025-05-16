@@ -18,34 +18,33 @@ export const POST = async (req: Request) => {
             return NextResponse.json({ errors }, { status: 400 });
         }
 
-        const { alias, email, password } = result.data;
+        const { name, email, password } = result.data;
         const exists = await prisma.user.findUnique({ where: { email } });
 
         if (exists) {
             return NextResponse.json(
                 {
                     errors: {
-                        email: `Ya existe un usuario con este email${!exists.emailVerified ? ", falta verificar el mismo" : ""
+                        email: `Ya existe un usuario con este correo electrónico${!exists.emailVerified ? ", falta verificar el mismo" : ""
                             }`,
                     },
                 },
-                { status: 400 }
+                { status: 400 },
             );
         }
 
         const verifyToken = uuidv4();
         const hashed = await hashPassword(password);
         const user = await prisma.user.create({
-            data: { alias, email, password: hashed, verifyToken },
+            data: { name, email, password: hashed, verifyToken },
         });
 
         try {
             await sendVerificationEmail(email, verifyToken);
         } catch (error) {
-            console.error("Error al enviar correo:", error);
             return NextResponse.json(
-                { error: "Error al enviar el correo de verificación" },
-                { status: 500 }
+                { error: "Error al enviar el correo electrónico de verificación" },
+                { status: 500 },
             );
         }
 
@@ -55,16 +54,15 @@ export const POST = async (req: Request) => {
             user: {
                 id: user.id,
                 email: user.email,
-                alias: user.alias,
+                name: user.name,
             },
         });
     } catch (error) {
-        console.error("Error en registro:", error);
+        console.error(error)
 
         return NextResponse.json(
-            { error: "Error interno del servidor" },
-            { status: 500 }
+            { error: "Error interno del servidor al intentar registrarse", },
+            { status: 500 },
         );
     }
 };
-

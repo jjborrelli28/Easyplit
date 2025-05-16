@@ -23,7 +23,7 @@ export const POST = async (req: Request) => {
         }
 
         if (!user.emailVerified) {
-            return NextResponse.json({ error: 'Email no verificado' }, { status: 403 });
+            return NextResponse.json({ error: 'Correo electrónico no verificado' }, { status: 403 });
         }
 
         const token = generateToken(user.id);
@@ -37,8 +37,8 @@ export const POST = async (req: Request) => {
 
         return res;
     } catch (error) {
-        console.error('Error en login:', error);
+        console.error(error)
 
-        return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
+        return NextResponse.json({ error: 'Error interno del servidor al intentar iniciar sesión' }, { status: 500 });
     }
 };

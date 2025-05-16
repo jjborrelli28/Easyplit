@@ -11,7 +11,7 @@ export const SuccessMessage = () => {
         <p>Ya podés iniciar sesión.</p>
       </div>
 
-      <Button href="/login" color="success">
+      <Button href="/login" color="success" fullWidth>
         Iniciar sesión
       </Button>
     </div>
@@ -29,7 +29,7 @@ export const AlreadyVerified = () => {
         <p>Tu email ya estaba verificado, podés iniciar sesión.</p>
       </div>
 
-      <Button href="/login" color="warning">
+      <Button href="/login" color="warning" fullWidth>
         Iniciar sesión
       </Button>
     </div>
@@ -47,7 +47,7 @@ export const ErrorMessage = () => {
         <p>El enlace no es válido o ya fue usado.</p>
       </div>
 
-      <Button href="/register" color="danger">
+      <Button href="/register" color="danger" fullWidth>
         Volve a intentarlo
       </Button>
     </div>

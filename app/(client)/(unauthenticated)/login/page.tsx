@@ -33,7 +33,7 @@ const LoginPage = () => {
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState(errorsInitialState);
 
-  async function handleLogin(e: FormEvent) {
+  const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
 
     const body = { email, password };
@@ -55,6 +55,7 @@ const LoginPage = () => {
     mutate(body, {
       onSuccess: () => {
         setErrors(errorsInitialState);
+
         router.push("/dashboard");
       },
       onError: (error) => {
@@ -75,11 +76,11 @@ const LoginPage = () => {
         }
       },
     });
-  }
+  };
 
   return (
     <PageContainer centered>
-      <div className="border-h-background w-full max-w-md space-y-6 border p-8 shadow-xl">
+      <div className="border-h-background w-full max-w-md space-y-8 border p-8 shadow-xl">
         <h1 className="text-3xl font-bold">Iniciar sesión</h1>
 
         <div className="space-y-4">
@@ -124,7 +125,10 @@ const LoginPage = () => {
               </Collapse>
             </form>
 
-            <Link href="#" className="text-foreground/60 text-xs">
+            <Link
+              href="/forgot-password"
+              className="text-foreground/75 text-xs"
+            >
               ¿Has olvidado la contraseña?
             </Link>
           </div>

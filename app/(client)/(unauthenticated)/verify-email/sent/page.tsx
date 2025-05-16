@@ -8,9 +8,9 @@ import PageContainer from "@/components/PageContainer";
 const VerifyEmailSentPage = () => {
   return (
     <PageContainer centered>
-      <div className="border-success w-full max-w-2xl space-y-8 border-2 p-8 shadow-xl">
-        <div className="flex items-center gap-2.5">
-          <CheckCircle className="text-success h-10 w-10" />
+      <div className="border-success w-full max-w-md space-y-8 border-1 p-8 text-center shadow-xl">
+        <div className="flex flex-col items-center gap-y-8">
+          <CheckCircle className="text-success h-12 w-12" />
 
           <h1 className="text-success text-3xl font-semibold">
             ¡Verificá tu correo!
@@ -23,7 +23,7 @@ const VerifyEmailSentPage = () => {
           no deseado o spam).
         </p>
 
-        <Button href="/" color="success">
+        <Button href="/" color="success" fullWidth>
           Volver al inicio
         </Button>
       </div>

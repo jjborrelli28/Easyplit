@@ -22,7 +22,7 @@ export const GET = async (req: Request) => {
             client_id: process.env.AUTH0_CLIENT_ID,
             client_secret: process.env.AUTH0_CLIENT_SECRET,
             code,
-            redirect_uri: `${process.env.NEXT_PUBLIC_APP_URL}/api/auth/0/callback`,
+            redirect_uri: `${process.env.NEXT_PUBLIC_API_URL}/auth/0/callback`,
         }),
     });
 
@@ -48,7 +48,7 @@ export const GET = async (req: Request) => {
         user = await prisma.user.create({
             data: {
                 email: profile.email,
-                alias: profile.name || profile.email,
+                name: profile.name || profile.email,
                 password: '', // Empty, because you do not log in with password
                 emailVerified: true,
             },
