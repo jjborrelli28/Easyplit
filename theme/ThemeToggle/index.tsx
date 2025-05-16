@@ -33,7 +33,7 @@ const ThemeToggle = () => {
     <button
       onClick={handleToggle}
       aria-label="Change theme"
-      className="bg-highlighted-background border-primary relative flex h-8 w-16 items-center rounded-full border px-1 transition-colors duration-300"
+      className="bg-highlighted-background border-primary relative flex h-8 w-16 cursor-pointer items-center rounded-full border px-1 transition-colors duration-300"
     >
       <div
         className={clsx(

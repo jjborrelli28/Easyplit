@@ -38,7 +38,7 @@ export const Example: Story = {
         <hr className="border-foreground" />
 
         <Collapse {...args} open={open}>
-          <p className="text-foreground border-highlighted-foreground border p-4">
+          <p className="text-foreground border-h-foreground border p-4">
             Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
             eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim
             ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut

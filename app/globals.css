@@ -7,9 +7,9 @@
     --white: #fff;
 
     --background: #fff;
-    --highlighted-background: #e5e5e5;
+    --h-background: #e5e5e5;
     --foreground: #191919;
-    --highlighted-foreground: #333333;
+    --h-foreground: #333333;
     --primary: #a1cc2a;
     --secondary: #191919;
     --success: #19944a;
@@ -22,9 +22,9 @@
     --white: #fefffa;
 
     --background: #191919;
-    --highlighted-background: #333333;
+    --h-background: #333333;
     --foreground: #fefffa;
-    --highlighted-foreground: #f2ffcc;
+    --h-foreground: #f2ffcc;
     --primary: #caff33;
     --secondary: #fefffa;
     --success: #22c55e;
@@ -35,9 +35,9 @@
 
 @theme inline {
   --color-background: var(--background);
-  --color-highlighted-background: var(--highlighted-background);
+  --color-h-background: var(--h-background);
   --color-foreground: var(--foreground);
-  --color-highlighted-foreground: var(--highlighted-foreground);
+  --color-h-foreground: var(--h-foreground);
   --color-black: var(--black);
   --color-white: var(--white);
   --color-primary: var(--primary);
@@ -78,7 +78,7 @@ body {
 }
 
 input:-webkit-autofill {
-  box-shadow: inset 0 0 0 1000px var(--highlighted-background) !important;
+  box-shadow: inset 0 0 0 1000px var(--h-background) !important;
   border-top: none;
   border-left: none;
   border-right: none;

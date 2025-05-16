@@ -56,7 +56,7 @@ const Input = ({
           !label
             ? "placeholder-foreground/50"
             : onFocus
-              ? "placeholder-highlighted-background"
+              ? "placeholder-h-background"
               : "placeholder:text-transparent",
           error ? "!border-danger" : "border-transparent",
           className,
