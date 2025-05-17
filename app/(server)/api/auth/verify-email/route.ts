@@ -33,13 +33,15 @@ export const GET = async (req: Request) => {
             },
         });
 
-        NextResponse.json({ message: 'Email verificado' });
+        NextResponse.json({ message: "Correo electrónico verificado" });
 
         return NextResponse.redirect(
             `${process.env.NEXT_PUBLIC_APP_URL}/verify-email/result?status=success`,
         );
     } catch (error) {
         console.error(error);
+
+        NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
 
         return NextResponse.redirect(
             `${process.env.NEXT_PUBLIC_APP_URL}/verify-email/result?status=error`,

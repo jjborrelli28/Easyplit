@@ -14,7 +14,9 @@ const NotFoundPage = () => {
           </p>
         </div>
 
-        <Button href="/">Volver al inicio</Button>
+        <Button href="/" fullWidth>
+          Volver al inicio
+        </Button>
       </div>
     </PageContainer>
   );

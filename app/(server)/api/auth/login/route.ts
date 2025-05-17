@@ -1,9 +1,9 @@
-import { NextResponse } from 'next/server';
+import { NextResponse } from "next/server";
 
-import { comparePassword, generateToken } from '@/lib/auth';
-import { prisma } from '@/lib/prisma';
-import { parseZodErrors } from '@/lib/validations/helpers';
-import { loginSchema } from '@/lib/validations/schemas';
+import { comparePassword, generateToken } from "@/lib/auth";
+import { prisma } from "@/lib/prisma";
+import { parseZodErrors } from "@/lib/validations/helpers";
+import { loginSchema } from "@/lib/validations/schemas";
 
 export const POST = async (req: Request) => {
     try {
@@ -19,26 +19,35 @@ export const POST = async (req: Request) => {
         const user = await prisma.user.findUnique({ where: { email } });
 
         if (!user || !(await comparePassword(password, user.password))) {
-            return NextResponse.json({ error: 'Credenciales inválidas' }, { status: 401 });
+            return NextResponse.json(
+                { error: "Credenciales inválidas" },
+                { status: 401 },
+            );
         }
 
         if (!user.emailVerified) {
-            return NextResponse.json({ error: 'Correo electrónico no verificado' }, { status: 403 });
+            return NextResponse.json(
+                { error: "Correo electrónico no verificado" },
+                { status: 403 },
+            );
         }
 
         const token = generateToken(user.id);
-        const res = NextResponse.json({ message: 'Sesión iniciada' });
+        const res = NextResponse.json({ message: "Sesión iniciada" });
 
-        res.cookies.set('token', token, {
+        res.cookies.set("token", token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            path: '/',
+            secure: process.env.NODE_ENV === "production",
+            path: "/",
         });
 
         return res;
     } catch (error) {
-        console.error(error)
+        console.error(error);
 
-        return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
+        return NextResponse.json(
+            { error: "Error interno del servidor" },
+            { status: 500 },
+        );
     }
 };

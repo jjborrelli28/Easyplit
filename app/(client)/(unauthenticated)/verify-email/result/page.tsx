@@ -45,18 +45,11 @@ const VerifyEmailResultPage = async ({
     <PageContainer centered>
       <div
         className={clsx(
-          "flex w-full max-w-md flex-col border-1 text-center shadow-xl",
+          "flex w-full max-w-md flex-col items-center space-y-8 border-1 p-8 text-center shadow-xl",
           states[status].color,
         )}
       >
-        <div
-          className={clsx(
-            "flex justify-center border-b-1 p-8",
-            states[status].color,
-          )}
-        >
-          {states[status].icon}
-        </div>
+        {states[status].icon}
 
         {status === "success" ? (
           <SuccessMessage />
