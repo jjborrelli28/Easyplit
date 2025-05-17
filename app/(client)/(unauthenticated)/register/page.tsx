@@ -6,7 +6,7 @@ import { type FormEvent, useState } from "react";
 
 import { CircleAlert } from "lucide-react";
 
-import useRegister from "@/lib/hooks/useRegister";
+import useRegister from "@/lib/hooks/auth/useRegister";
 import { parseZodErrors } from "@/lib/validations/helpers";
 import { registerSchema } from "@/lib/validations/schemas";
 

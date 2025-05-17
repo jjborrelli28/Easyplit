@@ -6,7 +6,7 @@ import { useState, type FormEvent } from "react";
 
 import { CircleAlert } from "lucide-react";
 
-import useForgotPassword from "@/lib/hooks/useForgotPassword";
+import useForgotPassword from "@/lib/hooks/auth/useForgotPassword";
 import { parseZodErrors } from "@/lib/validations/helpers";
 import { forgotPasswordSchema } from "@/lib/validations/schemas";
 

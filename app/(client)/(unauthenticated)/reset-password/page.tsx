@@ -7,7 +7,7 @@ import { type FormEvent, useState } from "react";
 import clsx from "clsx";
 import { CheckCircle, CircleAlert } from "lucide-react";
 
-import useResetPassword from "@/lib/hooks/useResetPassword";
+import useResetPassword from "@/lib/hooks/auth/useResetPassword";
 import { parseZodErrors } from "@/lib/validations/helpers";
 import { resetPasswordSchema } from "@/lib/validations/schemas";
 

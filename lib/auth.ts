@@ -13,8 +13,14 @@ export const comparePassword = (password: string, hash: string) =>
 export const generateToken = (userId: string) =>
     jwt.sign({ userId }, JWT_SECRET, { expiresIn: "7d" });
 
+export interface AuthUser {
+    userId: string;
+    iat: number;
+    exp: number;
+}
+
 export const verifyToken = (token: string) =>
-    jwt.verify(token, JWT_SECRET) as { userId: string };
+    jwt.verify(token, JWT_SECRET) as AuthUser;
 
 export const getUserFromCookie = async () => {
     try {
@@ -27,7 +33,7 @@ export const getUserFromCookie = async () => {
 
         return user;
     } catch (error) {
-        console.error(error)
+        console.error(error);
 
         return null;
     }

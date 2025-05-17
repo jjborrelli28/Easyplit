@@ -4,23 +4,43 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 
-import { useAuthQuery } from "@/lib/hooks/useAuth";
+import { useAuthQuery } from "@/lib/hooks/auth/useAuth";
 
 import ThemeToggle from "@/theme/ThemeToggle";
 
 import Button from "@/components/Button";
-import useLogout from "@/lib/hooks/useLogout";
+import useLogout from "@/lib/hooks/auth/useLogout";
 
 const Header = () => {
-  const { data: user } = useAuthQuery();
-  const { mutate: logout } = useLogout();
+  const { data } = useAuthQuery();
+  const { mutate: logout, isPending } = useLogout();
 
   const router = useRouter();
   const pathname = usePathname();
 
-  const isAuthenticated = !!user;
   const isLogin = pathname === "/login";
   const isRegister = pathname === "/register";
+
+  const handleLogout = () => {
+    logout(undefined, {
+      onSuccess: () => {
+        router.push("/login");
+      },
+    });
+  };
+
+  const authenticatedLinks = (
+    <>
+      <Button
+        onClick={handleLogout}
+        unstyled
+        className="cursor-pointer"
+        loading={isPending}
+      >
+        Cerrar sesión
+      </Button>
+    </>
+  );
 
   const unauthenticatedLinks = (
     <>
@@ -32,14 +52,6 @@ const Header = () => {
       {!isRegister && <Button href="/register">Registrarse</Button>}
     </>
   );
-
-  const handleLogout = () => {
-    logout(undefined, {
-      onSuccess: () => {
-        router.push("/login");
-      },
-    });
-  };
 
   return (
     <header className="fixed w-full justify-end p-4 backdrop-blur-md">
@@ -55,17 +67,7 @@ const Header = () => {
 
         <div className="flex items-center gap-x-6">
           <nav className="flex items-center justify-end gap-x-6">
-            {isAuthenticated ? (
-              <Button
-                onClick={handleLogout}
-                unstyled
-                className="cursor-pointer"
-              >
-                Cerrar sesión
-              </Button>
-            ) : (
-              unauthenticatedLinks
-            )}
+            {data?.isAuthtenticated ? authenticatedLinks : unauthenticatedLinks}
           </nav>
 
           <div className="bg-primary h-10 w-[1px]" />
