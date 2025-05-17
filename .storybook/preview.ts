@@ -18,6 +18,9 @@ const preview: Preview = {
         { name: "dark", value: "#191919" },
       ],
     },
+    nextjs: {
+      appDirectory: true,
+    },
   },
 
   decorators: [
