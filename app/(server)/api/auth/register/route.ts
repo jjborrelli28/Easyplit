@@ -14,8 +14,8 @@ export const POST = async (req: Request) => {
         const result = registerSchema.safeParse(body);
 
         if (!result.success) {
-            const errors = parseZodErrors(result.error);
-            return NextResponse.json({ error: { fields: errors } }, { status: 400 });
+            const fieldErrors = parseZodErrors(result.error);
+            return NextResponse.json({ fieldErrors }, { status: 400 });
         }
 
         const { name, email, password } = result.data;

@@ -11,8 +11,8 @@ export const POST = async (req: Request) => {
         const result = loginSchema.safeParse(body);
 
         if (!result.success) {
-            const errors = parseZodErrors(result.error);
-            return NextResponse.json({ errors }, { status: 400 });
+            const fieldErrors = parseZodErrors(result.error);
+            return NextResponse.json({ fieldErrors }, { status: 400 });
         }
 
         const { email, password } = result.data;
@@ -39,6 +39,6 @@ export const POST = async (req: Request) => {
     } catch (error) {
         console.error(error)
 
-        return NextResponse.json({ error: 'Error interno del servidor al intentar iniciar sesión' }, { status: 500 });
+        return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
     }
 };

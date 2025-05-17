@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { AuthUser, getUserFromCookie } from "@/lib/auth";
+import { type AuthUser, getUserFromCookie } from "@/lib/auth";
 
 export interface AuthUserResponse {
     user: AuthUser | null;

@@ -40,13 +40,11 @@ const LoginPage = () => {
     const result = loginSchema.safeParse(body);
 
     if (!result.success) {
-      const errors = parseZodErrors(result.error);
-      const { email, password } = errors;
+      const fieldErrors = parseZodErrors(result.error);
 
       setErrors({
+        ...fieldErrors,
         ...errorsInitialState,
-        email: email ?? "",
-        password: password ?? "",
       });
 
       return;
@@ -58,20 +56,18 @@ const LoginPage = () => {
 
         router.push("/dashboard");
       },
-      onError: (error) => {
-        const { errors, error: message } = error.response?.data || {};
+      onError: (err) => {
+        const { error, fieldErrors } = err.response.data;
 
-        if (errors) {
+        if (fieldErrors) {
           setErrors({
+            ...fieldErrors,
             ...errorsInitialState,
-            email: errors.email ?? "",
-            password: errors.password ?? "",
           });
         } else {
           setErrors({
             ...errorsInitialState,
-            response:
-              message ?? "Ocurrió un error inesperado al iniciar sesión",
+            response: error ?? "Ocurrió un error inesperado al iniciar sesión",
           });
         }
       },

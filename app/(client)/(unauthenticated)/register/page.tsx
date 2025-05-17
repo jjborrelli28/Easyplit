@@ -39,14 +39,11 @@ const RegisterPage = () => {
     const result = registerSchema.safeParse(body);
 
     if (!result.success) {
-      const errors = parseZodErrors(result.error);
-      const { name, email, password } = errors;
+      const fieldErrors = parseZodErrors(result.error);
 
       setErrors({
+        ...fieldErrors,
         ...errorsInitialState,
-        name: name ?? "",
-        email: email ?? "",
-        password: password ?? "",
       });
 
       return;
@@ -63,10 +60,8 @@ const RegisterPage = () => {
 
         if (fieldErrors) {
           setErrors({
+            ...fieldErrors,
             ...errorsInitialState,
-            name: fieldErrors.name ?? "",
-            email: fieldErrors.email ?? "",
-            password: fieldErrors.password ?? "",
           });
         } else {
           setErrors({
