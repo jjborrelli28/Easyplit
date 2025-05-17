@@ -2,7 +2,7 @@ import { useMutation } from '@tanstack/react-query';
 
 import api, { type AuthError } from '@/lib/axios';
 
-interface RegisterInput {
+interface RegisterFields {
     name: string;
     email: string;
     password: string;
@@ -13,11 +13,11 @@ interface RegisterResponse {
 }
 
 const useRegister = () => {
-    return useMutation<RegisterResponse, AuthError<RegisterInput>, RegisterInput>({
-        mutationFn: async (data) => {
-            const response = await api.post('/auth/register', data);
+    return useMutation<RegisterResponse, AuthError<RegisterFields>, RegisterFields>({
+        mutationFn: async (body) => {
+            const { data } = await api.post('/auth/register', body);
 
-            return response.data;
+            return data;
         },
     });
 };

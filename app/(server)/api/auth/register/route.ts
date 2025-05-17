@@ -15,7 +15,7 @@ export const POST = async (req: Request) => {
 
         if (!result.success) {
             const errors = parseZodErrors(result.error);
-            return NextResponse.json({ errors }, { status: 400 });
+            return NextResponse.json({ error: { fields: errors } }, { status: 400 });
         }
 
         const { name, email, password } = result.data;
@@ -24,10 +24,7 @@ export const POST = async (req: Request) => {
         if (exists) {
             return NextResponse.json(
                 {
-                    errors: {
-                        email: `Ya existe un usuario con este correo electrónico${!exists.emailVerified ? ", falta verificar el mismo" : ""
-                            }`,
-                    },
+                    error: exists.emailVerified ? 'Ya existe un usuario con este correo electrónico' : 'Correo electrónico registrado, falta verificar del mismo'
                 },
                 { status: 400 },
             );
@@ -43,7 +40,7 @@ export const POST = async (req: Request) => {
             await sendVerificationEmail(email, verifyToken);
         } catch (error) {
             return NextResponse.json(
-                { error: "Error al enviar el correo electrónico de verificación" },
+                { error: "Error al enviar correo electrónico de verificación" },
                 { status: 500 },
             );
         }
@@ -58,10 +55,10 @@ export const POST = async (req: Request) => {
             },
         });
     } catch (error) {
-        console.error(error)
+        console.error(error);
 
         return NextResponse.json(
-            { error: "Error interno del servidor al intentar registrarse", },
+            { error: "Error interno del servidor" },
             { status: 500 },
         );
     }

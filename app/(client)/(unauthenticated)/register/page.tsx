@@ -25,7 +25,7 @@ const errorsInitialState = {
 
 const RegisterPage = () => {
   const router = useRouter();
-  const { mutate, isPending } = useRegister();
+  const { mutate: register, isPending } = useRegister();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -52,26 +52,26 @@ const RegisterPage = () => {
       return;
     }
 
-    mutate(body, {
+    register(body, {
       onSuccess: () => {
         setErrors(errorsInitialState);
 
         router.push("/verify-email/sent");
       },
-      onError: (error) => {
-        const { errors, error: message } = error.response?.data || {};
+      onError: (err) => {
+        const { error, fieldErrors } = err.response.data;
 
-        if (errors) {
+        if (fieldErrors) {
           setErrors({
             ...errorsInitialState,
-            name: errors.name ?? "",
-            email: errors.email ?? "",
-            password: errors.password ?? "",
+            name: fieldErrors.name ?? "",
+            email: fieldErrors.email ?? "",
+            password: fieldErrors.password ?? "",
           });
         } else {
           setErrors({
             ...errorsInitialState,
-            response: message ?? "Ocurrió un error inesperado al registrarse",
+            response: error ?? "Ocurrió un error inesperado al registrarse",
           });
         }
       },
