@@ -2,16 +2,44 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
-import Button from "@/components/Button";
+import { useAuthQuery } from "@/lib/hooks/useAuth";
+
 import ThemeToggle from "@/theme/ThemeToggle";
 
+import Button from "@/components/Button";
+import useLogout from "@/lib/hooks/useLogout";
+
 const Header = () => {
+  const { data: user } = useAuthQuery();
+  const { mutate: logout } = useLogout();
+
+  const router = useRouter();
   const pathname = usePathname();
 
+  const isAuthenticated = !!user;
   const isLogin = pathname === "/login";
   const isRegister = pathname === "/register";
+
+  const unauthenticatedLinks = (
+    <>
+      {!isLogin && (
+        <Button href="/login" unstyled className="mx-3 my-2 font-semibold">
+          Iniciar sesión
+        </Button>
+      )}
+      {!isRegister && <Button href="/register">Registrarse</Button>}
+    </>
+  );
+
+  const handleLogout = () => {
+    logout(undefined, {
+      onSuccess: () => {
+        router.push("/login");
+      },
+    });
+  };
 
   return (
     <header className="fixed w-full justify-end p-4 backdrop-blur-md">
@@ -27,16 +55,17 @@ const Header = () => {
 
         <div className="flex items-center gap-x-6">
           <nav className="flex items-center justify-end gap-x-6">
-            {!isLogin && (
+            {isAuthenticated ? (
               <Button
-                href="/login"
+                onClick={handleLogout}
                 unstyled
-                className="mx-3 my-2 font-semibold"
+                className="cursor-pointer"
               >
-                Iniciar sesión
+                Cerrar sesión
               </Button>
+            ) : (
+              unauthenticatedLinks
             )}
-            {!isRegister && <Button href="/register">Registrarse</Button>}
           </nav>
 
           <div className="bg-primary h-10 w-[1px]" />
