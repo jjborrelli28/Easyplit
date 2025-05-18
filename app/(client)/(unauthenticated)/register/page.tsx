@@ -81,15 +81,22 @@ const RegisterPage = () => {
     <PageContainer centered>
       {successMessage ? (
         <MessageCard
-          color="success"
+          color="primary"
           icon={MailCheck}
           title="¡Verificá tu correo!"
           actionLabel="Volver al inicio"
           actionHref="/"
         >
-          Te enviamos un correo electrónico con un enlace para verificar tu
-          cuenta. Por favor, revisá tu bandeja de entrada (y también el correo
-          no deseado o spam).
+          <div className="space-y-4">
+            <p>
+              Te enviamos un correo electrónico con un enlace para verificar tu
+              cuenta.
+            </p>
+            <p className="text-xs">
+              Por favor, revisá tu bandeja de entrada (y también el correo no
+              deseado o spam).
+            </p>
+          </div>
         </MessageCard>
       ) : (
         <div className="border-h-background relative w-full max-w-md space-y-8 border p-8 shadow-xl">

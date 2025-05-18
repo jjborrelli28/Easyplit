@@ -11,9 +11,9 @@ const useLogout = () => {
 
     return useMutation<LoginResponse, AuthError<{ error: string }>, void>({
         mutationFn: async () => {
-            const res = await api.post("/auth/logout");
+            const { data } = await api.post("/auth/logout");
 
-            return res.data;
+            return data;
         },
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["auth"] });
