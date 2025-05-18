@@ -27,7 +27,7 @@ const initialErrorMessages = {
 
 const LoginPage = () => {
   const router = useRouter();
-  const { mutate, isPending } = useLogin();
+  const { mutate: login, isPending } = useLogin();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -54,7 +54,7 @@ const LoginPage = () => {
       return;
     }
 
-    mutate(body, {
+    login(body, {
       onSuccess: () => {
         setErrorsMessages(initialErrorMessages);
 

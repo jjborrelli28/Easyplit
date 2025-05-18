@@ -2,7 +2,7 @@ import { useMutation } from "@tanstack/react-query";
 
 import api, { type AuthError } from "@/lib/axios";
 
-interface RegisterInput {
+interface RegisterFields {
     email: string;
 }
 
@@ -11,15 +11,17 @@ interface RegisterResponse {
 }
 
 const useForgotPassword = () => {
-    return useMutation<RegisterResponse, AuthError<RegisterInput>, RegisterInput>(
-        {
-            mutationFn: async (data) => {
-                const response = await api.post("/auth/forgot-password", data);
+    return useMutation<
+        RegisterResponse,
+        AuthError<RegisterFields>,
+        RegisterFields
+    >({
+        mutationFn: async (body) => {
+            const { data } = await api.post("/auth/forgot-password", body);
 
-                return response.data;
-            },
+            return data;
         },
-    );
+    });
 };
 
 export default useForgotPassword;

@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
-import { CircleAlert } from "lucide-react";
+import { CircleAlert, MailCheck } from "lucide-react";
 
 import useForgotPassword from "@/lib/hooks/auth/useForgotPassword";
 import { parseZodErrors } from "@/lib/validations/helpers";
@@ -14,19 +13,23 @@ import AuthDivider from "@/components/AuthDivider";
 import Button from "@/components/Button";
 import Collapse from "@/components/Collapse";
 import Input from "@/components/Input";
+import MessageCard from "@/components/MessageCard";
 import PageContainer from "@/components/PageContainer";
 
-const errorsInitialState = {
-  email: "",
-  response: "",
+const initialErrorMessages = {
+  email: null,
+  response: null,
 };
 
 const ForgotPasswordPage = () => {
-  const router = useRouter();
-  const { mutate, isPending } = useForgotPassword();
+  const { mutate: forgotPassword, isPending } = useForgotPassword();
 
   const [email, setEmail] = useState("");
-  const [errors, setErrors] = useState(errorsInitialState);
+  const [errorMessages, setErrorsMessages] = useState<{
+    email: string | null;
+    response: string | null;
+  }>(initialErrorMessages);
+  const [successMessage, setSuccessMessage] = useState(false);
 
   const handleForgotPassword = async (e: FormEvent) => {
     e.preventDefault();
@@ -34,33 +37,34 @@ const ForgotPasswordPage = () => {
     const result = forgotPasswordSchema.safeParse({ email });
 
     if (!result.success) {
-      const parsedErrors = parseZodErrors(result.error);
-      setErrors({
-        ...errorsInitialState,
-        email: parsedErrors.email ?? "",
+      const fieldErrors = parseZodErrors(result.error);
+
+      setErrorsMessages({
+        ...initialErrorMessages,
+        ...fieldErrors,
       });
+
       return;
     }
 
-    mutate(
+    forgotPassword(
       { email },
       {
         onSuccess: () => {
-          setErrors(errorsInitialState);
-
-          router.push("/check-email");
+          setErrorsMessages(initialErrorMessages);
+          setSuccessMessage(true);
         },
         onError: (err) => {
-          const { errors, error } = err.response.data || {};
+          const { error, fieldErrors } = err.response.data;
 
-          if (errors) {
-            setErrors({
-              ...errorsInitialState,
-              email: errors.email ?? "",
+          if (fieldErrors) {
+            setErrorsMessages({
+              ...initialErrorMessages,
+              ...fieldErrors,
             });
           } else {
-            setErrors({
-              ...errorsInitialState,
+            setErrorsMessages({
+              ...initialErrorMessages,
               response:
                 error ??
                 "Ocurrió un error inesperado al intentar enviar el correo",
@@ -73,59 +77,76 @@ const ForgotPasswordPage = () => {
 
   return (
     <PageContainer centered>
-      <div className="border-h-background w-full max-w-md space-y-8 border p-8 text-center shadow-xl">
-        <h1 className="text-3xl font-bold text-nowrap">
-          ¿Olvidaste tu contraseña?
-        </h1>
+      {successMessage ? (
+        <MessageCard
+          icon={MailCheck}
+          title="Revisá tu correo"
+          actionLabel="Volver al inicio de sesión"
+          actionHref="/login"
+        >
+          <div className="space-y-4">
+            <p>
+              Si existe una cuenta con ese email, vas a recibir un enlace para
+              restablecer tu contraseña.
+            </p>
+            <p>Recordá revisar también la carpeta de spam o promociones.</p>
+          </div>
+        </MessageCard>
+      ) : (
+        <div className="border-h-background w-full max-w-md space-y-8 border p-8 text-center shadow-xl">
+          <h1 className="text-3xl font-bold text-nowrap">
+            ¿Olvidaste tu contraseña?
+          </h1>
 
-        <div className="space-y-4">
-          <p className="text-foreground/75">
-            Ingresá tu email y te enviaremos un enlace para restablecer tu
-            contraseña.
-          </p>
+          <div className="space-y-4">
+            <p className="text-foreground/75">
+              Ingresá tu email y te enviaremos un enlace para restablecer tu
+              contraseña.
+            </p>
 
-          <form
-            onSubmit={handleForgotPassword}
-            className="flex max-w-md flex-col gap-y-1"
-          >
-            <Input
-              id="email"
-              type="email"
-              label="Correo electrónico"
-              placeholder="ejemplo@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              error={errors.email}
-            />
-
-            <Button
-              type="submit"
-              fullWidth
-              className="mt-7"
-              loading={isPending}
+            <form
+              onSubmit={handleForgotPassword}
+              className="flex max-w-md flex-col gap-y-1"
             >
-              Enviar enlace
-            </Button>
+              <Input
+                id="email"
+                type="email"
+                label="Correo electrónico"
+                placeholder="ejemplo@email.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                error={errorMessages.email}
+              />
 
-            <Collapse open={!!errors.response}>
-              <p className="border-danger text-danger mt-2 mb-3 flex items-center gap-x-1.5 border px-3 py-2 text-xs">
-                <CircleAlert className="text-danger h-3.5 w-3.5" />
-                {errors.response}
-              </p>
-            </Collapse>
-          </form>
+              <Button
+                type="submit"
+                fullWidth
+                className="mt-7"
+                loading={isPending}
+              >
+                Enviar enlace
+              </Button>
 
-          <AuthDivider />
+              <Collapse open={!!errorMessages.response}>
+                <p className="border-danger text-danger mt-2 mb-3 flex items-center gap-x-1.5 border px-3 py-2 text-xs">
+                  <CircleAlert className="text-danger h-3.5 w-3.5" />
+                  {errorMessages.response}
+                </p>
+              </Collapse>
+            </form>
 
-          <div className="text-foreground/75 text-xs">
-            ¿Ya recordaste tu contraseña?{" "}
-            <Link href="/login" className="text-primary">
-              Iniciar sesión
-            </Link>
+            <AuthDivider />
+
+            <div className="text-foreground/75 text-xs">
+              ¿Ya recordaste tu contraseña?{" "}
+              <Link href="/login" className="text-primary">
+                Iniciar sesión
+              </Link>
+            </div>
           </div>
         </div>
-      </div>
+      )}
     </PageContainer>
   );
 };

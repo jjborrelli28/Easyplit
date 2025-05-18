@@ -24,7 +24,7 @@ export const POST = async (req: Request) => {
 
         if (!user) {
             return NextResponse.json(
-                { error: "El correo electrónico no se encuentra registrado." },
+                { error: "El correo electrónico no se encuentra registrado" },
                 { status: 404 },
             );
         }
@@ -48,12 +48,12 @@ export const POST = async (req: Request) => {
             html: `<p>Hacé clic en el siguiente enlace para restablecer tu contraseña: <a href="${resetLink}">¡Restablecer Ahora!</a></p>`,
         });
 
-        return NextResponse.json({ message: "Email enviado." });
+        return NextResponse.json({ message: "Email enviado" });
     } catch (error) {
         console.error(error);
 
         return NextResponse.json(
-            { error: "Error interno del servidor al intentar recuperar su contraseña." },
+            { error: "Error interno del servidor" },
             { status: 500 },
         );
     }
