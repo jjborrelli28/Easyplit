@@ -19,10 +19,10 @@ import Collapse from "@/components/Collapse";
 import Input from "@/components/Input";
 import PageContainer from "@/components/PageContainer";
 
-const errorsInitialState = {
-  email: "",
-  password: "",
-  response: "",
+const initialErrorMessages = {
+  email: null,
+  password: null,
+  response: null,
 };
 
 const LoginPage = () => {
@@ -31,7 +31,11 @@ const LoginPage = () => {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [errors, setErrors] = useState(errorsInitialState);
+  const [errorMessages, setErrorsMessages] = useState<{
+    email: string | null;
+    password: string | null;
+    response: string | null;
+  }>(initialErrorMessages);
 
   const handleLogin = async (e: FormEvent) => {
     e.preventDefault();
@@ -42,9 +46,9 @@ const LoginPage = () => {
     if (!result.success) {
       const fieldErrors = parseZodErrors(result.error);
 
-      setErrors({
+      setErrorsMessages({
+        ...initialErrorMessages,
         ...fieldErrors,
-        ...errorsInitialState,
       });
 
       return;
@@ -52,7 +56,7 @@ const LoginPage = () => {
 
     mutate(body, {
       onSuccess: () => {
-        setErrors(errorsInitialState);
+        setErrorsMessages(initialErrorMessages);
 
         router.push("/dashboard");
       },
@@ -60,13 +64,13 @@ const LoginPage = () => {
         const { error, fieldErrors } = err.response.data;
 
         if (fieldErrors) {
-          setErrors({
+          setErrorsMessages({
+            ...initialErrorMessages,
             ...fieldErrors,
-            ...errorsInitialState,
           });
         } else {
-          setErrors({
-            ...errorsInitialState,
+          setErrorsMessages({
+            ...initialErrorMessages,
             response: error ?? "Ocurrió un error inesperado al iniciar sesión",
           });
         }
@@ -90,7 +94,7 @@ const LoginPage = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                error={errors.email}
+                error={errorMessages.email}
               />
               <Input
                 id="password"
@@ -100,7 +104,7 @@ const LoginPage = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                error={errors.password}
+                error={errorMessages.password}
               />
 
               <Button
@@ -112,11 +116,11 @@ const LoginPage = () => {
                 Iniciar sesión
               </Button>
 
-              <Collapse open={!!errors.response}>
+              <Collapse open={!!errorMessages.response}>
                 <p className="border-danger text-danger mt-2 mb-3 flex items-center gap-x-1.5 border px-3 py-2 text-xs">
                   <CircleAlert className="text-danger h-3.5 w-3.5" />
 
-                  {errors.response}
+                  {errorMessages.response}
                 </p>
               </Collapse>
             </form>

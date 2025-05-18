@@ -1,32 +1,59 @@
 import { notFound } from "next/navigation";
-import type { ReactElement } from "react";
 
-import clsx from "clsx";
 import { CheckCircle, CircleAlert, CircleX } from "lucide-react";
 
+import MessageCard, { type MessageCardProps } from "@/components/MessageCard";
 import PageContainer from "@/components/PageContainer";
-import {
-  AlreadyVerified,
-  ErrorMessage,
-  SuccessMessage,
-} from "./_components/Messages";
 
-type States = "success" | "already_verified" | "error";
-
-const states: Record<States, { color: string; icon: ReactElement }> = {
+const messageCardProps: Record<States, MessageCardProps> = {
   success: {
-    color: "border-success",
-    icon: <CheckCircle className="text-success h-14 w-14" />,
+    color: "success",
+    icon: CheckCircle,
+    title: "¡Cuenta verificada!",
+    children: (
+      <div className="space-y-2">
+        <p>
+          Te confirmamos que tu dirección de correo fue verificada con éxito.
+        </p>
+        <p>Ya podés iniciar sesión y empezar a usar Easyplit!</p>
+      </div>
+    ),
+    actionLabel: "Iniciar sesión",
+    actionHref: "/login",
   },
   ["already_verified"]: {
-    color: "border-warning",
-    icon: <CircleAlert className="text-warning h-14 w-14" />,
+    color: "warning",
+    icon: CircleAlert,
+    title: "Correo ya verificado",
+    children: (
+      <div className="space-y-2">
+        <p>
+          Tu dirección de correo electrónico ya había sido verificada
+          previamente.
+        </p>
+        <p>Podés iniciar sesión para continuar usando Easyplit.</p>
+      </div>
+    ),
+    actionLabel: "Iniciar sesión",
+    actionHref: "/login",
   },
   error: {
-    color: "border-danger",
-    icon: <CircleX className="text-danger h-14 w-14" />,
+    color: "danger",
+    icon: CircleX,
+    title: "Hubo un problema",
+    children: (
+      <div className="space-y-2">
+        <p>No pudimos verificar tu correo electrónico.</p>
+        <p>Es posible que el enlace no sea valido o haya sido utilizado.</p>
+        <p>Vuelve a intentar crear tu cuenta.</p>
+      </div>
+    ),
+    actionLabel: "Volve a intentar registrate",
+    actionHref: "/register",
   },
 };
+
+type States = "success" | "already_verified" | "error";
 
 interface VerifyEmailResultPageProps {
   searchParams: Promise<{ status?: States }>;
@@ -43,22 +70,7 @@ const VerifyEmailResultPage = async ({
 
   return (
     <PageContainer centered>
-      <div
-        className={clsx(
-          "flex w-full max-w-md flex-col items-center space-y-8 border-1 p-8 text-center shadow-xl",
-          states[status].color,
-        )}
-      >
-        {states[status].icon}
-
-        {status === "success" ? (
-          <SuccessMessage />
-        ) : status === "already_verified" ? (
-          <AlreadyVerified />
-        ) : (
-          <ErrorMessage />
-        )}
-      </div>
+      <MessageCard {...messageCardProps[status]} />
     </PageContainer>
   );
 };

@@ -1,11 +1,11 @@
-import type { ReactNode } from "react";
+import { isValidElement, type ReactNode } from "react";
 
 import clsx from "clsx";
 import type { LucideIcon } from "lucide-react";
 
 import Button, { type Colors } from "../Button";
 
-interface MessageCardProps {
+export interface MessageCardProps {
   color?: Colors;
   icon: LucideIcon;
   title: ReactNode;
@@ -72,7 +72,11 @@ const MessageCard = ({
         </h1>
       </div>
 
-      <p className={contentClassName}>{children}</p>
+      {typeof children === "string" ? (
+        <p className={contentClassName}>{children}</p>
+      ) : (
+        children
+      )}
 
       {hasAction && (
         <Button
