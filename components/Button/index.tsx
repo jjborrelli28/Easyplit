@@ -1,8 +1,9 @@
 "use client";
 
+import type { ButtonHTMLAttributes, PropsWithChildren } from "react";
+
 import type { Url } from "next/dist/shared/lib/router/router";
 import Link, { type LinkProps } from "next/link";
-import type { ButtonHTMLAttributes, PropsWithChildren } from "react";
 
 import clsx from "clsx";
 
@@ -79,7 +80,7 @@ const Button = ({
       BASE_STYLES,
       COLORS[color][variant],
       fullWidth ? "w-full" : "w-fit",
-      loading && "pointer-events-none",
+      loading && "pointer-events-none text-transparent",
       disabled ? "cursor-not-allowed" : "cursor-pointer",
     ],
     className,
@@ -109,7 +110,7 @@ const Button = ({
         />
       )}
 
-      <span className={clsx(loading && "text-transparent")}>{children}</span>
+      {children}
     </button>
   );
 };

@@ -70,7 +70,7 @@ const VerifyEmailResultPage = async ({
 
   return (
     <PageContainer centered>
-      <MessageCard {...messageCardProps[status]} />
+      <MessageCard titleTag="h1" {...messageCardProps[status]} />
     </PageContainer>
   );
 };

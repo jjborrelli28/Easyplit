@@ -14,8 +14,9 @@ export const POST = async (req: Request) => {
         const result = forgotPasswordSchema.safeParse(body);
 
         if (!result.success) {
-            const errors = parseZodErrors(result.error);
-            return NextResponse.json({ errors }, { status: 400 });
+            const fields = parseZodErrors(result.error);
+
+            return NextResponse.json({ error: { fields } }, { status: 400 });
         }
 
         const { email } = result.data;
@@ -24,7 +25,9 @@ export const POST = async (req: Request) => {
 
         if (!user) {
             return NextResponse.json(
-                { error: "El correo electrónico no se encuentra registrado" },
+                {
+                    error: { result: "El correo electrónico no se encuentra registrado" },
+                },
                 { status: 404 },
             );
         }
@@ -42,18 +45,31 @@ export const POST = async (req: Request) => {
 
         const resetLink = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${token}`;
 
-        await sendMail({
-            to: email,
-            subject: "Restablecer contraseña en Easyplit",
-            html: `<p>Hacé clic en el siguiente enlace para restablecer tu contraseña: <a href="${resetLink}">¡Restablecer Ahora!</a></p>`,
-        });
+        try {
+            await sendMail({
+                to: email,
+                subject: "Restablecer contraseña en Easyplit",
+                html: `<p>Hacé clic en el siguiente enlace para restablecer tu contraseña: <a href="${resetLink}">¡Restablecer Ahora!</a></p>`,
+            });
+        } catch (error) {
+            console.log(error)
+
+            return NextResponse.json(
+                {
+                    error: {
+                        result: "Error al enviar correo electrónico de verificación.",
+                    },
+                },
+                { status: 500 },
+            );
+        }
 
         return NextResponse.json({ message: "Email enviado" });
     } catch (error) {
-        console.error(error);
+        console.log(error)
 
         return NextResponse.json(
-            { error: "Error interno del servidor" },
+            { error: { result: "Error interno del servidor" } },
             { status: 500 },
         );
     }

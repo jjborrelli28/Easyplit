@@ -1,10 +1,11 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
+import ThemeProvider from "@/providers/ThemeProvider";
+
 import ThemeToggle from ".";
-import ThemeProvider from "../ThemeProvider";
 
 const meta = {
-  title: "Theme/ThemeToggle",
+  title: "Components/ThemeToggle",
   component: ThemeToggle,
   parameters: {},
   tags: ["autodocs"],
@@ -19,7 +20,7 @@ type Story = StoryObj<typeof ThemeToggle>;
 export const Example: Story = {
   args: {},
 
-  render: (args) => {
+  render: () => {
     return (
       <ThemeProvider>
         <ThemeToggle />

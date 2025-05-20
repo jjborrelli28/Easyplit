@@ -1,17 +1,19 @@
 "use client";
 
+import { type FormEvent, useState } from "react";
+
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { type FormEvent, useState } from "react";
+import { redirect } from "next/navigation";
+
+import { signIn } from "next-auth/react";
 
 import { CircleAlert } from "lucide-react";
 
-import useLogin from "@/lib/hooks/auth/useLogin";
+import googleLogo from "@/public/assets/logos/Google.svg?url";
+
 import { parseZodErrors } from "@/lib/validations/helpers";
 import { loginSchema } from "@/lib/validations/schemas";
-
-import googleLogo from "@/public/assets/logos/Google.svg?url";
 
 import AuthDivider from "@/components/AuthDivider";
 import Button from "@/components/Button";
@@ -22,61 +24,67 @@ import PageContainer from "@/components/PageContainer";
 const initialErrorMessages = {
   email: null,
   password: null,
-  response: null,
+  result: null,
 };
 
 const LoginPage = () => {
-  const router = useRouter();
-  const { mutate: login, isPending } = useLogin();
-
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [errorMessages, setErrorsMessages] = useState<{
-    email: string | null;
-    password: string | null;
-    response: string | null;
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessages, setErrorMessages] = useState<{
+    email?: string | null;
+    password?: string | null;
+    result?: string | null;
   }>(initialErrorMessages);
 
-  const handleLogin = async (e: FormEvent) => {
+  const handleLoginWithCredentials = (e: FormEvent) => {
     e.preventDefault();
 
-    const body = { email, password };
-    const result = loginSchema.safeParse(body);
+    setIsLoading(true);
+    setErrorMessages(initialErrorMessages);
 
-    if (!result.success) {
-      const fieldErrors = parseZodErrors(result.error);
+    const verifiedCredentials = loginSchema.safeParse({ email, password });
 
-      setErrorsMessages({
+    if (!verifiedCredentials.success) {
+      const credentials = parseZodErrors(verifiedCredentials.error);
+
+      setIsLoading(false);
+      setErrorMessages({
         ...initialErrorMessages,
-        ...fieldErrors,
+        ...credentials,
       });
 
       return;
     }
 
-    login(body, {
-      onSuccess: () => {
-        setErrorsMessages(initialErrorMessages);
+    signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+    }).then((res) => {
+      setIsLoading(false);
 
-        router.push("/dashboard");
-      },
-      onError: (err) => {
-        const { error, fieldErrors } = err.response.data;
+      if (res?.ok) {
+        redirect("/dashboard");
+      } else if (res?.error) {
+        const { credentials, result } = JSON.parse(res.error);
 
-        if (fieldErrors) {
-          setErrorsMessages({
+        if (credentials) {
+          setErrorMessages({
             ...initialErrorMessages,
-            ...fieldErrors,
+            ...credentials,
           });
         } else {
-          setErrorsMessages({
+          setErrorMessages({
             ...initialErrorMessages,
-            response: error ?? "Ocurrió un error inesperado al iniciar sesión",
+            result,
           });
         }
-      },
+      }
     });
   };
+
+  const handleLoginWithGoogle = () => signIn("google");
 
   return (
     <PageContainer centered>
@@ -85,7 +93,10 @@ const LoginPage = () => {
 
         <div className="space-y-4">
           <div>
-            <form onSubmit={handleLogin} className="flex flex-col gap-y-1">
+            <form
+              onSubmit={handleLoginWithCredentials}
+              className="flex flex-col gap-y-1"
+            >
               <Input
                 id="email"
                 type="email"
@@ -93,6 +104,7 @@ const LoginPage = () => {
                 placeholder="Correo electrónico"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
                 required
                 error={errorMessages.email}
               />
@@ -103,6 +115,7 @@ const LoginPage = () => {
                 placeholder="Contraseña"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
                 required
                 error={errorMessages.password}
               />
@@ -111,17 +124,21 @@ const LoginPage = () => {
                 type="submit"
                 fullWidth
                 className="mt-7"
-                loading={isPending}
+                loading={isLoading}
               >
                 Iniciar sesión
               </Button>
 
-              <Collapse open={!!errorMessages.response}>
-                <p className="border-danger text-danger mt-2 mb-3 flex items-center gap-x-1.5 border px-3 py-2 text-xs">
-                  <CircleAlert className="text-danger h-3.5 w-3.5" />
+              <Collapse open={!!errorMessages.result}>
+                <div className="border-danger text-danger mt-2 mb-3 flex items-center border">
+                  <div className="flex h-full items-center px-3 py-2">
+                    <CircleAlert className="text-danger h-5 w-5" />
+                  </div>
 
-                  {errorMessages.response}
-                </p>
+                  <p className="border-danger border-l px-3 py-2 text-xs">
+                    {errorMessages.result}
+                  </p>
+                </div>
               </Collapse>
             </form>
 
@@ -140,9 +157,9 @@ const LoginPage = () => {
           <AuthDivider />
 
           <Button
-            href="/api/auth/0/login"
             variant="outlined"
             color="secondary"
+            onClick={handleLoginWithGoogle}
             fullWidth
           >
             <Image alt="Google" src={googleLogo} height={20} width={20} />

@@ -65,7 +65,7 @@ const Input = ({
       />
 
       <Collapse open={!!error}>
-        <p className="text-danger mt-1 ml-1 text-xs">{error}</p>
+        <p className="text-danger mt-1 ml-1 text-start text-xs">{error}</p>
       </Collapse>
     </fieldset>
   );

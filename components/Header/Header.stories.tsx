@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from "@storybook/react";
 
-import QueryClientProvider from "@/react-query/QueryClientProvider";
-
 import { ThemeProvider } from "next-themes";
+
+import QueryClientProvider from "@/providers/QueryClientProvider";
 
 import Header from ".";
 

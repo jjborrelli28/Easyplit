@@ -46,7 +46,7 @@ export const POST = async (req: Request) => {
 
         return NextResponse.json({ message: "Contraseña actualizada con éxito" });
     } catch (error) {
-        console.error(error);
+        console.log(error);
 
         return NextResponse.json({ error: "Error interno del servidor al intentar restablecer la contraseña" });
     }

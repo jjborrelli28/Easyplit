@@ -1,11 +1,13 @@
 "use client";
 
-import Link from "next/link";
 import { useState, type FormEvent } from "react";
+
+import Link from "next/link";
 
 import { CircleAlert, MailCheck } from "lucide-react";
 
-import useForgotPassword from "@/lib/hooks/auth/useForgotPassword";
+import useForgotPassword from "@/hooks/auth/useForgotPassword";
+
 import { parseZodErrors } from "@/lib/validations/helpers";
 import { forgotPasswordSchema } from "@/lib/validations/schemas";
 
@@ -18,7 +20,7 @@ import PageContainer from "@/components/PageContainer";
 
 const initialErrorMessages = {
   email: null,
-  response: null,
+  result: null,
 };
 
 const ForgotPasswordPage = () => {
@@ -26,22 +28,24 @@ const ForgotPasswordPage = () => {
 
   const [email, setEmail] = useState("");
   const [errorMessages, setErrorsMessages] = useState<{
-    email: string | null;
-    response: string | null;
+    email?: string | null;
+    result?: string | null;
   }>(initialErrorMessages);
   const [successMessage, setSuccessMessage] = useState(false);
 
   const handleForgotPassword = async (e: FormEvent) => {
     e.preventDefault();
 
-    const result = forgotPasswordSchema.safeParse({ email });
+    setErrorsMessages(initialErrorMessages);
 
-    if (!result.success) {
-      const fieldErrors = parseZodErrors(result.error);
+    const verifiedFields = forgotPasswordSchema.safeParse({ email });
+
+    if (!verifiedFields.success) {
+      const fields = parseZodErrors(verifiedFields.error);
 
       setErrorsMessages({
         ...initialErrorMessages,
-        ...fieldErrors,
+        ...fields,
       });
 
       return;
@@ -54,20 +58,18 @@ const ForgotPasswordPage = () => {
           setErrorsMessages(initialErrorMessages);
           setSuccessMessage(true);
         },
-        onError: (err) => {
-          const { error, fieldErrors } = err.response.data;
+        onError: (res) => {
+          const { error } = res.response.data;
 
-          if (fieldErrors) {
+          if (error.fields) {
             setErrorsMessages({
               ...initialErrorMessages,
-              ...fieldErrors,
+              ...error.fields,
             });
           } else {
             setErrorsMessages({
               ...initialErrorMessages,
-              response:
-                error ??
-                "Ocurrió un error inesperado al intentar enviar el correo",
+              result: error.result,
             });
           }
         },
@@ -128,11 +130,16 @@ const ForgotPasswordPage = () => {
                 Enviar enlace
               </Button>
 
-              <Collapse open={!!errorMessages.response}>
-                <p className="border-danger text-danger mt-2 mb-3 flex items-center gap-x-1.5 border px-3 py-2 text-xs">
-                  <CircleAlert className="text-danger h-3.5 w-3.5" />
-                  {errorMessages.response}
-                </p>
+              <Collapse open={!!errorMessages.result}>
+                <div className="border-danger text-danger mt-2 mb-3 flex items-center border">
+                  <div className="flex h-full items-center px-3 py-2">
+                    <CircleAlert className="text-danger h-5 w-5" />
+                  </div>
+
+                  <p className="border-danger border-l px-3 py-2 text-xs">
+                    {errorMessages.result}
+                  </p>
+                </div>
               </Collapse>
             </form>
 

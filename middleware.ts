@@ -1,17 +1,20 @@
+import { getToken } from "next-auth/jwt";
 import { type NextRequest, NextResponse } from "next/server";
 
-const delay = (ms: number) => {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-};
+const secret = process.env.NEXTAUTH_SECRET;
 
 export const middleware = async (req: NextRequest) => {
-    if (process.env.NODE_ENV === "development") {
-        await delay(300); // 300ms delay only in development environment
+    const token = await getToken({ req, secret });
+    const { pathname } = req.nextUrl;
+
+    const isAuthenticated = !!token;
+    const isAuthPage = pathname === "/login" || pathname === "/register";
+
+    if (isAuthenticated && isAuthPage) {
+        return NextResponse.redirect(new URL("/dashboard", req.url));
     }
 
-    const token = req.cookies.get("token")?.value;
-
-    if (!token) {
+    if (!isAuthenticated && pathname.startsWith("/dashboard")) {
         return NextResponse.redirect(new URL("/login", req.url));
     }
 
@@ -19,5 +22,5 @@ export const middleware = async (req: NextRequest) => {
 };
 
 export const config = {
-    matcher: ["/dashboard"],
+    matcher: ["/dashboard/:path*", "/login", "/register"],
 };

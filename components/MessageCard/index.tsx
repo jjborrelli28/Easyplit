@@ -1,4 +1,4 @@
-import { isValidElement, type ReactNode } from "react";
+import type { ReactNode } from "react";
 
 import clsx from "clsx";
 import type { LucideIcon } from "lucide-react";
@@ -9,6 +9,7 @@ export interface MessageCardProps {
   color?: Colors;
   icon: LucideIcon;
   title: ReactNode;
+  titleTag?: "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
   children: ReactNode;
   actionLabel?: string;
   onAction?: VoidFunction;
@@ -32,6 +33,7 @@ const MessageCard = ({
   color = "primary",
   icon: Icon,
   title,
+  titleTag = "h2",
   children,
   actionLabel,
   actionHref,
@@ -42,6 +44,7 @@ const MessageCard = ({
   contentClassName,
   actionClassName,
 }: MessageCardProps) => {
+  const TitleWrapper = titleTag;
   const hasAction = actionLabel && (actionHref || onAction);
 
   return (
@@ -52,7 +55,7 @@ const MessageCard = ({
         containerClassName,
       )}
     >
-      <div className="flex flex-col items-center gap-y-8">
+      <div className="flex flex-col items-center gap-y-4">
         <Icon
           className={clsx(
             "mx-auto h-12 w-12",
@@ -61,7 +64,7 @@ const MessageCard = ({
           )}
         />
 
-        <h1
+        <TitleWrapper
           className={clsx(
             "text-3xl font-semibold",
             COLORS[color].titleColor,
@@ -69,7 +72,7 @@ const MessageCard = ({
           )}
         >
           {title}
-        </h1>
+        </TitleWrapper>
       </div>
 
       {typeof children === "string" ? (

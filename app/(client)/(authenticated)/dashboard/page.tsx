@@ -1,37 +1,17 @@
-import { cookies } from "next/headers";
-import { redirect } from "next/navigation";
+"use client";
 
-import { verifyToken } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { useSession } from "next-auth/react";
 
 import PageContainer from "@/components/PageContainer";
 
-const DashboardPage = async () => {
-  const token = (await cookies()).get("token")?.value;
-
-  if (!token) redirect("/login");
-
-  let userId: string;
-
-  try {
-    const payload = verifyToken(token);
-    userId = payload.userId;
-  } catch {
-    redirect("/login");
-  }
-
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { name: true },
-  });
-
-  if (!user) redirect("/login");
-
+const DashboardPage = () => {
+  const { data } = useSession();
+  console.log(data);
   return (
     <PageContainer>
       <h1 className="text-3xl font-bold">Dashboard</h1>
 
-      <p>Bienvenido, {user.name}</p>
+      <p>Bienvenido, {data?.user?.name}</p>
     </PageContainer>
   );
 };

@@ -1,9 +1,11 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import type { ReactNode } from "react";
 
-import QueryClientProvider from "@/react-query/QueryClientProvider";
-import ThemeProvider from "@/theme/ThemeProvider";
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+
+import NextAuthProvider from "@/providers/NextAuthProvider";
+import QueryClientProvider from "@/providers/QueryClientProvider";
+import ThemeProvider from "@/providers/ThemeProvider";
 
 import Header from "@/components/Header";
 
@@ -29,16 +31,21 @@ const RootLayout = async ({
     <html lang="es" suppressHydrationWarning>
       <body className={`${inter.variable} antialiased`}>
         <QueryClientProvider>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
+          <NextAuthProvider
+            refetchInterval={5 * 60}
+            refetchOnWindowFocus={true}
           >
-            <Header />
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange
+            >
+              <Header />
 
-            {children}
-          </ThemeProvider>
+              {children}
+            </ThemeProvider>
+          </NextAuthProvider>
         </QueryClientProvider>
       </body>
     </html>

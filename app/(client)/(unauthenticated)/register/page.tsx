@@ -1,11 +1,12 @@
 "use client";
 
-import Link from "next/link";
 import { type FormEvent, useState } from "react";
+
+import Link from "next/link";
 
 import { CircleAlert, MailCheck } from "lucide-react";
 
-import useRegister from "@/lib/hooks/auth/useRegister";
+import useRegister from "@/hooks/auth/useRegister";
 import { parseZodErrors } from "@/lib/validations/helpers";
 import { registerSchema } from "@/lib/validations/schemas";
 
@@ -20,7 +21,7 @@ const initialErrorMessages = {
   name: null,
   email: null,
   password: null,
-  response: null,
+  result: null,
 };
 
 const RegisterPage = () => {
@@ -29,26 +30,28 @@ const RegisterPage = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [errorMessages, setErrorsMessages] = useState<{
-    name: string | null;
-    email: string | null;
-    password: string | null;
-    response: string | null;
+  const [errorMessages, setErrorMessages] = useState<{
+    name?: string | null;
+    email?: string | null;
+    password?: string | null;
+    result?: string | null;
   }>(initialErrorMessages);
   const [successMessage, setSuccessMessage] = useState(false);
 
   const handleRegister = async (e: FormEvent) => {
     e.preventDefault();
 
+    setErrorMessages(initialErrorMessages);
+
     const body = { name, email, password };
-    const result = registerSchema.safeParse(body);
+    const verifiedFields = registerSchema.safeParse(body);
 
-    if (!result.success) {
-      const fieldErrors = parseZodErrors(result.error);
+    if (!verifiedFields.success) {
+      const fields = parseZodErrors(verifiedFields.error);
 
-      setErrorsMessages({
+      setErrorMessages({
         ...initialErrorMessages,
-        ...fieldErrors,
+        ...fields,
       });
 
       return;
@@ -56,21 +59,21 @@ const RegisterPage = () => {
 
     register(body, {
       onSuccess: () => {
-        setErrorsMessages(initialErrorMessages);
+        setErrorMessages(initialErrorMessages);
         setSuccessMessage(true);
       },
-      onError: (err) => {
-        const { error, fieldErrors } = err.response.data;
+      onError: (res) => {
+        const { error } = res.response.data;
 
-        if (fieldErrors) {
-          setErrorsMessages({
+        if (error.fields) {
+          setErrorMessages({
             ...initialErrorMessages,
-            ...fieldErrors,
+            ...error.fields,
           });
         } else {
-          setErrorsMessages({
+          setErrorMessages({
             ...initialErrorMessages,
-            response: error ?? "Ocurrió un error inesperado al registrarse",
+            result: error.result,
           });
         }
       },
@@ -110,6 +113,7 @@ const RegisterPage = () => {
                 placeholder="Nombre"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                autoComplete="given-name"
                 required
                 error={errorMessages.name}
               />
@@ -120,6 +124,7 @@ const RegisterPage = () => {
                 placeholder="Correo electrónico"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                autoComplete="email"
                 required
                 error={errorMessages.email}
               />
@@ -130,6 +135,7 @@ const RegisterPage = () => {
                 placeholder="Contraseña"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
                 required
                 error={errorMessages.password}
               />
@@ -143,12 +149,16 @@ const RegisterPage = () => {
                 Registrarse
               </Button>
 
-              <Collapse open={!!errorMessages.response}>
-                <p className="border-danger text-danger mt-2 mb-3 flex items-center gap-x-1.5 border px-3 py-2 text-xs">
-                  <CircleAlert className="text-danger h-3.5 w-3.5" />
+              <Collapse open={!!errorMessages.result}>
+                <div className="border-danger text-danger mt-2 mb-3 flex items-center border">
+                  <div className="flex h-full items-center px-3 py-2">
+                    <CircleAlert className="text-danger h-5 w-5" />
+                  </div>
 
-                  {errorMessages.response}
-                </p>
+                  <p className="border-danger border-l px-3 py-2 text-xs">
+                    {errorMessages.result}
+                  </p>
+                </div>
               </Collapse>
             </form>
 
