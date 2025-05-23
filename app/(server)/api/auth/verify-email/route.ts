@@ -7,35 +7,52 @@ export const GET = async (req: Request) => {
         const { searchParams } = new URL(req.url);
         const verifyToken = searchParams.get("token");
 
-        // No token
+        // Step 1: Validate that a token is present
         if (!verifyToken) {
             return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}`);
         }
 
+        // Step 2: Find the user associated with the token
         const user = await prisma.user.findFirst({ where: { verifyToken } });
 
-        // User not found
+        // Step 3: If no user is found, redirect to 404 page
         if (!user) {
             return NextResponse.redirect(
-                `${process.env.NEXT_PUBLIC_APP_URL}/verify-email/result?status=user_not_found`,
+                `${process.env.NEXT_PUBLIC_APP_URL}/not-found`,
             );
         }
 
-        // Verified email
+        // Step 4: If the user is already verified, clear token and redirect with "already_verified" status
         if (user.emailVerified) {
+            await prisma.user.update({
+                where: { id: user.id },
+                data: {
+                    verifyToken: null,
+                    verifyTokenExp: null,
+                },
+            });
+
             return NextResponse.redirect(
                 `${process.env.NEXT_PUBLIC_APP_URL}/verify-email/result?status=already_verified`,
             );
         }
 
-        // Expired token
-        if (!user.verifyTokenExp || user.verifyTokenExp < new Date()) {
+        // Step 5: If the token is expired, clear token and redirect with "token_expired" status
+        if (user.verifyTokenExp && user.verifyTokenExp <= new Date()) {
+            await prisma.user.update({
+                where: { id: user.id },
+                data: {
+                    verifyToken: null,
+                    verifyTokenExp: null,
+                },
+            });
+
             return NextResponse.redirect(
                 `${process.env.NEXT_PUBLIC_APP_URL}/verify-email/result?status=token_expired`,
             );
         }
 
-        // User verification
+        // Step 6: Verify user email, clear token, and redirect with "success" status
         await prisma.user.update({
             where: { id: user.id },
             data: {
@@ -45,16 +62,13 @@ export const GET = async (req: Request) => {
             },
         });
 
-        NextResponse.json({ message: "Correo electrónico verificado." });
-
         return NextResponse.redirect(
             `${process.env.NEXT_PUBLIC_APP_URL}/verify-email/result?status=success`,
         );
     } catch (error) {
-        console.log(error)
+        console.log(error);
 
-        NextResponse.json({ error: "Error interno del servidor." }, { status: 500 });
-
+        // Step 7: Redirect with generic error if something went wrong
         return NextResponse.redirect(
             `${process.env.NEXT_PUBLIC_APP_URL}/verify-email/result?status=error`,
         );
