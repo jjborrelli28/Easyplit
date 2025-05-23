@@ -4,7 +4,9 @@ import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
 
 import { compare } from "bcryptjs";
+import { v4 as uuidv4 } from "uuid";
 
+import { sendVerificationEmail } from "@/lib/auth/helpers";
 import { prisma } from "@/lib/prisma";
 import { parseZodErrors } from "@/lib/validations/helpers";
 import { loginSchema } from "@/lib/validations/schemas";
@@ -20,7 +22,7 @@ const handler = NextAuth({
                 password: { label: "Password", type: "password" },
             },
             async authorize(credentials) {
-                // Verification of credentials format
+                // 1. Validate credentials format with Zod
                 const verifiedCredentials = loginSchema.safeParse(credentials);
 
                 if (!verifiedCredentials.success) {
@@ -36,12 +38,12 @@ const handler = NextAuth({
 
                 const { email, password } = verifiedCredentials.data;
 
-                // Verification of existing user
-                const user = await prisma.user.findUnique({
+                // 2. Check if user with the given email exists
+                const existingUser = await prisma.user.findUnique({
                     where: { email },
                 });
 
-                if (!user) {
+                if (!existingUser) {
                     throw new Error(
                         JSON.stringify({
                             code: "INVALID_CREDENTIALS",
@@ -50,19 +52,19 @@ const handler = NextAuth({
                     );
                 }
 
-                // Verification of existing user with Google login
-                if (!user.password) {
+                // 3. If user exists but does not have a password (Google account)
+                if (!existingUser.password) {
                     throw new Error(
                         JSON.stringify({
                             code: "GOOGLE_ACCOUNT_EXISTS",
                             result:
-                                "Este correo está vinculado a una cuenta creada con Google. Usa el botón de 'Iniciar sesión con Google' para acceder.",
+                                "Este correo electrónico está registrado mediante Google. Por favor, iniciá sesión con el botón de Google.",
                         }),
                     );
                 }
 
-                // Credential verification
-                const validUser = await compare(password, user.password);
+                // 4. Compare given password with stored hashed password
+                const validUser = await compare(password, existingUser.password);
 
                 if (!validUser) {
                     throw new Error(
@@ -73,25 +75,56 @@ const handler = NextAuth({
                     );
                 }
 
-                // Verified user verification
-                if (!user.emailVerified) {
-                    throw new Error(
-                        JSON.stringify({
-                            code: "EMAIL_NOT_VERIFIED",
-                            result:
-                                "Tu cuenta aún no ha sido verificada. Por favor revisá tu correo electrónico para confirmar tu cuenta.",
-                        }),
-                    );
+                // 5. If email is not verified
+                if (!existingUser.emailVerified) {
+                    // 5a. Token expired -> notify user
+                    if (
+                        existingUser.verifyTokenExp &&
+                        existingUser.verifyTokenExp <= new Date()
+                    ) {
+                        throw new Error(
+                            JSON.stringify({
+                                code: "EMAIL_NOT_VERIFIED",
+                                result:
+                                    "Tu cuenta aún no ha sido verificada. Por favor revisá tu casilla para confirmar tu cuenta.",
+                            }),
+                        );
+                    } else {
+                        // 5b. Token still valid -> resend verification email
+                        const verifyToken = uuidv4();
+                        const verifyTokenExp = new Date(Date.now() + 30 * 60 * 1000); // valid for 30 mins
+
+                        await prisma.user.update({
+                            where: { email },
+                            data: {
+                                verifyToken,
+                                verifyTokenExp,
+                            },
+                        });
+
+                        await sendVerificationEmail(email, verifyToken);
+
+                        throw new Error(
+                            JSON.stringify({
+                                code: "EMAIL_NOT_VERIFIED",
+                                result:
+                                    "Tu cuenta aún no ha sido verificada. Se ha enviado un nuevo correo electrónico de verificación. Por favor revisá tu casilla para confirmar tu cuenta.",
+                            }),
+                        );
+                    }
                 }
 
+                // 6. Return user session data on successful login
                 return {
-                    id: user.id,
-                    name: user.name,
-                    email: user.email,
-                    image: user.image,
+                    id: existingUser.id,
+                    name: existingUser.name,
+                    email: existingUser.email,
+                    image: existingUser.image,
                 };
             },
         }),
+
+        // Google OAuth provider
         GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID!,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
@@ -102,24 +135,26 @@ const handler = NextAuth({
             },
         }),
     ],
+
     session: {
         strategy: "jwt",
     },
+
+    // SignIn callback to handle user linking on Google login
     callbacks: {
         async signIn({ user, account }) {
             if (account?.provider === "google") {
-                // User verification
                 const existingUser = await prisma.user.findUnique({
                     where: { email: user.email! },
                     include: { accounts: true },
                 });
 
+                // 1. If user already exists but doesn't have Google linked -> link it
                 if (existingUser) {
                     const hasGoogleAccountLinked = existingUser.accounts.some(
                         (acc) => acc.provider === "google",
                     );
 
-                    // If you do not have a Google link, we do it
                     if (!hasGoogleAccountLinked) {
                         await prisma.account.create({
                             data: {
@@ -137,10 +172,10 @@ const handler = NextAuth({
                             },
                         });
                     }
-
                     return true;
                 }
 
+                // 2. If user doesn't exist -> allow default NextAuth flow to create it
                 return true;
             }
 
