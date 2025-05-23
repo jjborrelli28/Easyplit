@@ -1,7 +1,6 @@
-import { NextResponse } from "next/server";
-
 import { randomBytes } from "crypto";
 import { addHours } from "date-fns";
+import { NextResponse } from "next/server";
 
 import { sendMail } from "@/lib/mailer";
 import { prisma } from "@/lib/prisma";
@@ -10,67 +9,78 @@ import { forgotPasswordSchema } from "@/lib/validations/schemas";
 
 export const POST = async (req: Request) => {
     try {
+        // Step 1: Parse and validate the request body using Zod
         const body = await req.json();
         const result = forgotPasswordSchema.safeParse(body);
 
+        // Step 2: Return 400 with field-level errors if validation fails
         if (!result.success) {
-            const fields = parseZodErrors(result.error);
-
-            return NextResponse.json({ error: { fields } }, { status: 400 });
+            return NextResponse.json(
+                {
+                    error: {
+                        fields: parseZodErrors(result.error),
+                        code: "INVALID_INPUT",
+                    },
+                },
+                { status: 400 }
+            );
         }
 
         const { email } = result.data;
 
+        // Step 3: Look up user by email
         const user = await prisma.user.findUnique({ where: { email } });
 
+        // Step 4: Return 404 if user doesn't exist
         if (!user) {
             return NextResponse.json(
                 {
-                    error: { result: "El correo electrónico no se encuentra registrado" },
+                    error: {
+                        result: "Email address is not registered.",
+                        code: "EMAIL_NOT_FOUND",
+                    },
                 },
-                { status: 404 },
+                { status: 404 }
             );
         }
 
-        const token = randomBytes(32).toString("hex");
-        const expiration = addHours(new Date(), 1);
+        // Step 5: Generate a reset token and its expiration time (1 hour from now)
+        const resetToken = randomBytes(32).toString("hex");
+        const resetTokenExp = addHours(new Date(), 1);
 
+        // Step 6: Save the token and expiration time to the user's record
         await prisma.user.update({
             where: { email },
             data: {
-                resetToken: token,
-                resetTokenExp: expiration,
+                resetToken,
+                resetTokenExp,
             },
         });
 
-        const resetLink = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${token}`;
+        // Step 7: Build the password reset link including the token
+        const resetLink = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${resetToken}`;
 
-        try {
-            await sendMail({
-                to: email,
-                subject: "Restablecer contraseña en Easyplit",
-                html: `<p>Hacé clic en el siguiente enlace para restablecer tu contraseña: <a href="${resetLink}">¡Restablecer Ahora!</a></p>`,
-            });
-        } catch (error) {
-            console.log(error)
+        // Step 8: Send reset email with the link to the user
+        await sendMail({
+            to: email,
+            subject: "Reset your password on Easysplit",
+            html: `<p>Click the following link to reset your password: <a href="${resetLink}">Reset Now</a></p>`,
+        });
 
-            return NextResponse.json(
-                {
-                    error: {
-                        result: "Error al enviar correo electrónico de verificación.",
-                    },
-                },
-                { status: 500 },
-            );
-        }
-
-        return NextResponse.json({ message: "Email enviado" });
+        // Step 9: Return success message
+        return NextResponse.json({ message: "Password reset email sent successfully." });
     } catch (error) {
-        console.log(error)
+        console.log(error);
 
+        // Step 10: Handle unexpected server errors
         return NextResponse.json(
-            { error: { result: "Error interno del servidor" } },
-            { status: 500 },
+            {
+                error: {
+                    result: "Internal server error.",
+                    code: "INTERNAL_ERROR",
+                },
+            },
+            { status: 500 }
         );
     }
 };

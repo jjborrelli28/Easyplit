@@ -87,7 +87,7 @@ export const POST = async (req: Request) => {
 
             return NextResponse.json({
                 message:
-                    "Usuario creado. Ya puedes iniciar sesión con tu correo electrónico y contraseña.",
+                    "¡Usuario creado! Ya puedes iniciar sesión con tu correo electrónico y contraseña.",
                 user: {
                     id: user.id,
                     email: user.email,
@@ -116,7 +116,7 @@ export const POST = async (req: Request) => {
 
             return NextResponse.json({
                 message:
-                    "Usuario creado. Por favor, revisá tu correo electrónico para verificar tu cuenta.",
+                    "¡Usuario creado! Revisá tu correo electrónico para verificar tu cuenta.",
                 user: {
                     id: user.id,
                     email: user.email,
