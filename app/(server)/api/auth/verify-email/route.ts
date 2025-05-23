@@ -7,23 +7,23 @@ export const GET = async (req: Request) => {
         const { searchParams } = new URL(req.url);
         const verifyToken = searchParams.get("token");
 
-        // Step 1: Validate that a token is present
+        // 1. Validate fields format using Zod schema
         if (!verifyToken) {
             return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}`);
         }
 
-        // Step 2: Find the user associated with the token
+        // 2. Find the user associated with the token
         const user = await prisma.user.findFirst({ where: { verifyToken } });
 
-        // Step 3: If no user is found, redirect to 404 page
+        // 3. If no user is found, redirect to 404 page
         if (!user) {
             return NextResponse.redirect(
                 `${process.env.NEXT_PUBLIC_APP_URL}/not-found`,
             );
         }
 
-        // Step 4: If the user is already verified, clear token and redirect with "already_verified" status
-        if (user.emailVerified) {
+        // 4. If the user is already verified, clear token and redirect with "already_verified" status
+        if (user?.emailVerified) {
             await prisma.user.update({
                 where: { id: user.id },
                 data: {
@@ -37,8 +37,8 @@ export const GET = async (req: Request) => {
             );
         }
 
-        // Step 5: If the token is expired, clear token and redirect with "token_expired" status
-        if (user.verifyTokenExp && user.verifyTokenExp <= new Date()) {
+        // 5. If the token is expired, clear token and redirect with "token_expired" status
+        if (user?.verifyTokenExp && user.verifyTokenExp <= new Date()) {
             await prisma.user.update({
                 where: { id: user.id },
                 data: {
@@ -52,7 +52,7 @@ export const GET = async (req: Request) => {
             );
         }
 
-        // Step 6: Verify user email, clear token, and redirect with "success" status
+        // 6. Verify user email, clear token, and redirect with "success" status
         await prisma.user.update({
             where: { id: user.id },
             data: {
@@ -68,7 +68,6 @@ export const GET = async (req: Request) => {
     } catch (error) {
         console.log(error);
 
-        // Step 7: Redirect with generic error if something went wrong
         return NextResponse.redirect(
             `${process.env.NEXT_PUBLIC_APP_URL}/verify-email/result?status=error`,
         );

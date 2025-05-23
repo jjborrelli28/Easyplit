@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+
 import { v4 as uuidv4 } from "uuid";
 
 import { hashPassword, sendVerificationEmail } from "@/lib/auth/helpers";
@@ -15,7 +16,10 @@ export const POST = async (req: Request) => {
 
         if (!result.success) {
             const fields = parseZodErrors(result.error);
-            return NextResponse.json({ error: { fields } }, { status: 400 });
+            return NextResponse.json(
+                { error: { fields, code: "ZOD_VALIDATION_ERROR" } },
+                { status: 400 },
+            );
         }
 
         const { name, email, password } = result.data;
@@ -23,36 +27,39 @@ export const POST = async (req: Request) => {
         // 2. Check if user already exists in the database
         const existingUser = await prisma.user.findUnique({ where: { email } });
 
-        // Case 1: User exists with a password and is already verified
+        // 3. If user exists with a password (user created with credentials)
         if (existingUser?.password) {
-            if (existingUser.emailVerified) {
+            // 3.1.1. User is already verified
+            if (existingUser?.emailVerified) {
                 return NextResponse.json(
                     {
                         error: {
                             result:
                                 "Ya existe una cuenta registrada con este correo electrónico.",
+                            code: "EMAIL_ALREADY_REGISTERED",
                         },
                     },
                     { status: 409 },
                 );
             }
 
-            // Case 2: User exists, but verify token expired
+            // 3.1.2a. User exists, but verify token expired
             if (
-                existingUser.verifyTokenExp &&
-                existingUser.verifyTokenExp <= new Date()
+                existingUser?.verifyTokenExp &&
+                existingUser.verifyTokenExp >= new Date()
             ) {
                 return NextResponse.json(
                     {
                         error: {
                             result:
                                 "Ya existe una cuenta registrada con este correo electrónico que aún no ha sido verificada. Por favor revisá tu casilla para confirmar tu cuenta.",
+                            code: "EMAIL_NOT_VERIFIED",
                         },
                     },
                     { status: 409 },
                 );
             } else {
-                // Case 3: User exists, not verified, still within token expiration
+                // 3.1.2b. User exists, not verified, still within token expiration -> resend verification email
                 const verifyToken = uuidv4();
                 const verifyTokenExp = new Date(Date.now() + 30 * 60 * 1000); // valid for 30 mins
 
@@ -73,7 +80,7 @@ export const POST = async (req: Request) => {
             }
         }
 
-        // Case 4: User exists without password (e.g., created by external auth)
+        // 3.2. If user exists without password (e.g., created by external auth)
         else if (existingUser) {
             const hashedPassword = await hashPassword(password);
 
@@ -96,7 +103,7 @@ export const POST = async (req: Request) => {
             });
         }
 
-        // Case 5: New user registration
+        // 3.3. If a new user registration
         else {
             const hashedPassword = await hashPassword(password);
             const verifyToken = uuidv4();
@@ -131,6 +138,7 @@ export const POST = async (req: Request) => {
             {
                 error: {
                     result: "Error interno del servidor.",
+                    code: "INTERNAL_ERROR",
                 },
             },
             { status: 500 },

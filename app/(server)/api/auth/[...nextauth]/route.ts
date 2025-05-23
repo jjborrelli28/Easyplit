@@ -53,7 +53,7 @@ const handler = NextAuth({
                 }
 
                 // 3. If user exists but does not have a password (Google account)
-                if (!existingUser.password) {
+                if (!existingUser?.password) {
                     throw new Error(
                         JSON.stringify({
                             code: "GOOGLE_ACCOUNT_EXISTS",
@@ -76,10 +76,10 @@ const handler = NextAuth({
                 }
 
                 // 5. If email is not verified
-                if (!existingUser.emailVerified) {
-                    // 5a. Token expired -> notify user
+                if (!existingUser?.emailVerified) {
+                    // 5.1. Token expired -> notify user
                     if (
-                        existingUser.verifyTokenExp &&
+                        existingUser?.verifyTokenExp &&
                         existingUser.verifyTokenExp <= new Date()
                     ) {
                         throw new Error(
@@ -90,7 +90,7 @@ const handler = NextAuth({
                             }),
                         );
                     } else {
-                        // 5b. Token still valid -> resend verification email
+                        // 5.2. Token still valid -> resend verification email
                         const verifyToken = uuidv4();
                         const verifyTokenExp = new Date(Date.now() + 30 * 60 * 1000); // valid for 30 mins
 

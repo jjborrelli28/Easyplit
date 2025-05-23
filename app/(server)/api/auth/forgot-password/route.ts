@@ -1,6 +1,7 @@
+import { NextResponse } from "next/server";
+
 import { randomBytes } from "crypto";
 import { addHours } from "date-fns";
-import { NextResponse } from "next/server";
 
 import { sendMail } from "@/lib/mailer";
 import { prisma } from "@/lib/prisma";
@@ -9,46 +10,72 @@ import { forgotPasswordSchema } from "@/lib/validations/schemas";
 
 export const POST = async (req: Request) => {
     try {
-        // Step 1: Parse and validate the request body using Zod
+        // 1. Validate fields format using Zod schema
         const body = await req.json();
         const result = forgotPasswordSchema.safeParse(body);
 
-        // Step 2: Return 400 with field-level errors if validation fails
         if (!result.success) {
+            const fields = parseZodErrors(result.error);
+
             return NextResponse.json(
                 {
                     error: {
-                        fields: parseZodErrors(result.error),
-                        code: "INVALID_INPUT",
+                        fields,
+                        code: "ZOD_VALIDATION_ERROR",
                     },
                 },
-                { status: 400 }
+                { status: 400 },
             );
         }
 
         const { email } = result.data;
 
-        // Step 3: Look up user by email
+        // 2. Check if user with the given email exists
         const user = await prisma.user.findUnique({ where: { email } });
 
-        // Step 4: Return 404 if user doesn't exist
         if (!user) {
             return NextResponse.json(
                 {
                     error: {
-                        result: "Email address is not registered.",
+                        result: "El correo electrónico no se encuentra registrado.",
                         code: "EMAIL_NOT_FOUND",
                     },
                 },
-                { status: 404 }
+                { status: 404 },
             );
         }
 
-        // Step 5: Generate a reset token and its expiration time (1 hour from now)
+        // 3. If user already has a valid reset token
+        if (user?.resetToken) {
+            // 3.1. Token still valid -> notify user
+            if (user.resetTokenExp && user.resetTokenExp > new Date()) {
+                return NextResponse.json(
+                    {
+                        error: {
+                            result:
+                                "Ya se ha enviado un correo electrónico para restablecer la contraseña. Compruebe su bandeja de entrada.",
+                            code: "RESET_ALREADY_SENT",
+                        },
+                    },
+                    { status: 409 },
+                );
+            } else {
+                // 3.2. Token expired -> reset token values
+                await prisma.user.update({
+                    where: { email },
+                    data: {
+                        resetToken: null,
+                        resetTokenExp: null,
+                    },
+                });
+            }
+        }
+
+        // 4. Generate a reset token and its expiration time (1 hour from now)
         const resetToken = randomBytes(32).toString("hex");
         const resetTokenExp = addHours(new Date(), 1);
 
-        // Step 6: Save the token and expiration time to the user's record
+        // 5. Save the token and expiration time to the user's record
         await prisma.user.update({
             where: { email },
             data: {
@@ -57,22 +84,24 @@ export const POST = async (req: Request) => {
             },
         });
 
-        // Step 7: Build the password reset link including the token
+        // 6. Build the password reset link including the token
         const resetLink = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${resetToken}`;
 
-        // Step 8: Send reset email with the link to the user
+        // 7. Send reset email with the link to the user
         await sendMail({
             to: email,
-            subject: "Reset your password on Easysplit",
-            html: `<p>Click the following link to reset your password: <a href="${resetLink}">Reset Now</a></p>`,
+            subject: "Restablecer contraseña en Easyplit",
+            html: `<p>Hacé clic en el siguiente enlace para restablecer tu contraseña: <a href="${resetLink}">¡Restablecer Ahora!</a></p>`,
         });
 
-        // Step 9: Return success message
-        return NextResponse.json({ message: "Password reset email sent successfully." });
+        // 8. Return success message
+        return NextResponse.json({
+            message:
+                "El correo electrónico de restablecimiento de contraseña se ha enviado correctamente.",
+        });
     } catch (error) {
         console.log(error);
 
-        // Step 10: Handle unexpected server errors
         return NextResponse.json(
             {
                 error: {
@@ -80,7 +109,7 @@ export const POST = async (req: Request) => {
                     code: "INTERNAL_ERROR",
                 },
             },
-            { status: 500 }
+            { status: 500 },
         );
     }
 };
