@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-
 import { v4 as uuidv4 } from "uuid";
 
 import { hashPassword, sendVerificationEmail } from "@/lib/auth/helpers";
@@ -11,64 +10,74 @@ export const POST = async (req: Request) => {
     try {
         const body = await req.json();
 
-        // Verification of field formats
+        // 1. Validate fields format using Zod schema
         const result = registerSchema.safeParse(body);
 
         if (!result.success) {
             const fields = parseZodErrors(result.error);
-
             return NextResponse.json({ error: { fields } }, { status: 400 });
         }
 
         const { name, email, password } = result.data;
 
-        // Verification of existing or linked user with Google
+        // 2. Check if user already exists in the database
         const existingUser = await prisma.user.findUnique({ where: { email } });
-        const isGoogleLinked =
-            existingUser &&
-            (await prisma.account.findFirst({
-                where: {
-                    userId: existingUser.id,
-                    provider: "google",
-                },
-            }));
 
-        if (existingUser) {
-            if (existingUser?.password && isGoogleLinked) {
+        // Case 1: User exists with a password and is already verified
+        if (existingUser?.password) {
+            if (existingUser.emailVerified) {
                 return NextResponse.json(
                     {
                         error: {
                             result:
-                                "Ya existe una cuenta registrada con este correo electrónico y vinculada con Google. Puedes iniciar sesión con ambos métodos.",
+                                "Ya existe una cuenta registrada con este correo electrónico.",
                         },
                     },
-                    { status: 400 },
+                    { status: 409 },
                 );
             }
 
-            if (!isGoogleLinked) {
+            // Case 2: User exists, but verify token expired
+            if (
+                existingUser.verifyTokenExp &&
+                existingUser.verifyTokenExp <= new Date()
+            ) {
                 return NextResponse.json(
                     {
                         error: {
-                            result: existingUser.emailVerified
-                                ? "Ya existe una cuenta registrada con este correo electrónico."
-                                : "Este correo ya está registrado pero aún no fue verificado. Por favor revisá tu casilla para confirmar tu cuenta.",
+                            result:
+                                "Ya existe una cuenta registrada con este correo electrónico que aún no ha sido verificada. Por favor revisá tu casilla para confirmar tu cuenta.",
                         },
                     },
-                    { status: 400 },
+                    { status: 409 },
                 );
+            } else {
+                // Case 3: User exists, not verified, still within token expiration
+                const verifyToken = uuidv4();
+                const verifyTokenExp = new Date(Date.now() + 30 * 60 * 1000); // valid for 30 mins
+
+                await prisma.user.update({
+                    where: { email },
+                    data: {
+                        verifyToken,
+                        verifyTokenExp,
+                    },
+                });
+
+                await sendVerificationEmail(email, verifyToken);
+
+                return NextResponse.json({
+                    message:
+                        "Ya existe una cuenta registrada con este correo electrónico que aún no ha sido verificada. Se ha enviado un nuevo correo electrónico de verificación. Por favor revisá tu casilla para confirmar tu cuenta.",
+                });
             }
         }
 
-        // Verification token generation, expiration time and password hashings
+        // Case 4: User exists without password (e.g., created by external auth)
+        else if (existingUser) {
+            const hashedPassword = await hashPassword(password);
 
-        const hashedPassword = await hashPassword(password);
-
-        let user;
-
-        if (isGoogleLinked) {
-            // If linked to Google just add a password
-            user = await prisma.user.update({
+            const user = await prisma.user.update({
                 where: { email },
                 data: {
                     password: hashedPassword,
@@ -78,19 +87,24 @@ export const POST = async (req: Request) => {
 
             return NextResponse.json({
                 message:
-                    "Usuario creado. Ya puedes iniciar sesión con tu email y contraseña.",
+                    "Usuario creado. Ya puedes iniciar sesión con tu correo electrónico y contraseña.",
                 user: {
                     id: user.id,
                     email: user.email,
                     name: user.name,
                 },
             });
-        } else {
-            // If it is a new user, create it and send verification email
-            const verifyToken = uuidv4();
-            const verifyTokenExp = new Date(Date.now() + 30 * 60 * 1000);
+        }
 
-            user = await prisma.user.create({
+        // Case 5: New user registration
+        else {
+            const hashedPassword = await hashPassword(password);
+            const verifyToken = uuidv4();
+            const verifyTokenExp = new Date(Date.now() + 30 * 60 * 1000); // valid for 30 mins
+
+            await sendVerificationEmail(email, verifyToken);
+
+            const user = await prisma.user.create({
                 data: {
                     name,
                     email,
@@ -100,11 +114,9 @@ export const POST = async (req: Request) => {
                 },
             });
 
-            await sendVerificationEmail(email, verifyToken);
-
             return NextResponse.json({
                 message:
-                    "Usuario creado. Por favor, compruebe su correo electrónico para verificar su dirección.",
+                    "Usuario creado. Por favor, revisá tu correo electrónico para verificar tu cuenta.",
                 user: {
                     id: user.id,
                     email: user.email,
@@ -116,7 +128,11 @@ export const POST = async (req: Request) => {
         console.log(error);
 
         return NextResponse.json(
-            { error: { result: "Error interno del servidor." } },
+            {
+                error: {
+                    result: "Error interno del servidor.",
+                },
+            },
             { status: 500 },
         );
     }
