@@ -29,7 +29,7 @@ export const POST: RegisterHandler = async (req: Request) => {
                     success: false,
                     error: {
                         code: API_RESPONSE_CODE.INVALID_FIELD_FORMAT,
-                        message: "Revisá los datos ingresados.",
+                        message: ["Revisá los datos ingresados."],
                         fields,
                         statusCode: 400,
                     },
@@ -52,8 +52,9 @@ export const POST: RegisterHandler = async (req: Request) => {
                         success: false,
                         error: {
                             code: API_RESPONSE_CODE.EMAIL_ALREADY_REGISTERED,
-                            message:
+                            message: [
                                 "Ya existe una cuenta registrada con este correo electrónico.",
+                            ],
                             statusCode: 409,
                         },
                     },
@@ -74,8 +75,13 @@ export const POST: RegisterHandler = async (req: Request) => {
                         icon: "MailCheck",
                         title: "Correo ya registrado",
                         content: [
-                            "Ya existe una cuenta registrada con este correo electrónico que aún no ha sido verificada.",
-                            "Por favor revisá tu casilla para confirmar tu cuenta.",
+                            {
+                                text: "Ya existe una cuenta registrada con este correo electrónico que aún no ha sido verificada.",
+                            },
+                            {
+                                text: "Por favor revisá tu casilla para confirmar tu cuenta.",
+                                style: "small",
+                            },
                         ],
                         actionLabel: "Volver al inicio",
                         actionHref: "/",
@@ -106,8 +112,11 @@ export const POST: RegisterHandler = async (req: Request) => {
                         success: false,
                         error: {
                             code: API_RESPONSE_CODE.EMAIL_NOT_VERIFIED,
-                            message:
-                                "Ya existe una cuenta registrada con este correo electrónico que aún no ha sido verificada. Se ha enviado un nuevo correo electrónico de verificación. Por favor revisá tu casilla para confirmar tu cuenta.",
+                            message: [
+                                "Ya existe una cuenta registrada con este correo electrónico que aún no ha sido verificada.",
+                                "Se ha enviado un nuevo correo electrónico de verificación.",
+                                "Por favor revisá tu casilla para confirmar tu cuenta.",
+                            ],
                             statusCode: 409,
                         },
                     },
@@ -136,7 +145,9 @@ export const POST: RegisterHandler = async (req: Request) => {
                     icon: "CheckCircle",
                     title: "¡Usuario creado!",
                     content: [
-                        "Ya puedes iniciar sesión con tu correo electrónico y contraseña.",
+                        {
+                            text: "Ya puedes iniciar sesión con tu correo electrónico y contraseña.",
+                        },
                     ],
                     actionLabel: "Iniciar sesión",
                     actionHref: "/login",
@@ -175,8 +186,13 @@ export const POST: RegisterHandler = async (req: Request) => {
                     icon: "MailCheck",
                     title: "¡Verificá tu correo!",
                     content: [
-                        "Te enviamos un correo electrónico con un enlace para verificar tu cuenta.",
-                        "Por favor, revisá tu bandeja de entrada (y también el correo no deseado o spam).",
+                        {
+                            text: "Te enviamos un correo electrónico con un enlace para verificar tu cuenta.",
+                        },
+                        {
+                            text: "Por favor, revisá tu bandeja de entrada (y también el correo no deseado o spam).",
+                            style: "muted",
+                        },
                     ],
                     actionLabel: "Volver al inicio",
                     actionHref: "/",
@@ -196,7 +212,7 @@ export const POST: RegisterHandler = async (req: Request) => {
                 success: false,
                 error: {
                     code: API_RESPONSE_CODE.INTERNAL_SERVER_ERROR,
-                    message: "Error interno del servidor.",
+                    message: ["Error interno del servidor."],
                     details: error,
                     statusCode: 500,
                 },

@@ -8,8 +8,6 @@ import { redirect } from "next/navigation";
 
 import { signIn } from "next-auth/react";
 
-import { CircleAlert } from "lucide-react";
-
 import googleLogo from "@/public/assets/logos/Google.svg?url";
 
 import type { ErrorResponse } from "@/lib/api/types";
@@ -18,7 +16,7 @@ import { loginSchema } from "@/lib/validations/schemas";
 
 import AuthDivider from "@/components/AuthDivider";
 import Button from "@/components/Button";
-import Collapse from "@/components/Collapse";
+import FormErrorMessage from "@/components/FormErrorMessage";
 import Input from "@/components/Input";
 import PageContainer from "@/components/PageContainer";
 
@@ -36,7 +34,7 @@ const LoginPage = () => {
     email?: string | null;
     password?: string | null;
   }>(initialFieldErrors);
-  const [responseError, setResponseError] = useState<string | null>(null);
+  const [responseError, setResponseError] = useState<string[] | null>(null);
 
   const handleLoginWithCredentials = (e: FormEvent) => {
     e.preventDefault();
@@ -65,7 +63,7 @@ const LoginPage = () => {
       redirect: false,
     }).then((res) => {
       setIsLoading(false);
-
+      console.log(res);
       if (res?.ok) {
         redirect("/dashboard");
       } else if (res?.error) {
@@ -133,17 +131,7 @@ const LoginPage = () => {
                 Iniciar sesión
               </Button>
 
-              <Collapse open={!!responseError}>
-                <div className="border-danger text-danger mt-2 mb-3 flex items-center border">
-                  <div className="flex h-full items-center px-3 py-2">
-                    <CircleAlert className="text-danger h-5 w-5" />
-                  </div>
-
-                  <p className="border-danger border-l px-3 py-2 text-xs">
-                    {responseError}
-                  </p>
-                </div>
-              </Collapse>
+              <FormErrorMessage message={responseError} />
             </form>
 
             <Link

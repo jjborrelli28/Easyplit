@@ -4,47 +4,47 @@ import { useState, type FormEvent } from "react";
 
 import Link from "next/link";
 
-import { CircleAlert, MailCheck } from "lucide-react";
-
 import useForgotPassword from "@/hooks/auth/useForgotPassword";
 
+import type { ResponseMessage } from "@/lib/api/types";
+import ICON_MAP from "@/lib/icons";
 import { parseZodErrors } from "@/lib/validations/helpers";
 import { forgotPasswordSchema } from "@/lib/validations/schemas";
 
 import AuthDivider from "@/components/AuthDivider";
 import Button from "@/components/Button";
-import Collapse from "@/components/Collapse";
+import FormErrorMessage from "@/components/FormErrorMessage";
 import Input from "@/components/Input";
 import MessageCard from "@/components/MessageCard";
 import PageContainer from "@/components/PageContainer";
 
-const initialErrorMessages = {
+const initialFieldErrors = {
   email: null,
-  result: null,
 };
 
 const ForgotPasswordPage = () => {
   const { mutate: forgotPassword, isPending } = useForgotPassword();
 
   const [email, setEmail] = useState("");
-  const [errorMessages, setErrorsMessages] = useState<{
+  const [fieldErrors, setFieldErrors] = useState<{
     email?: string | null;
-    result?: string | null;
-  }>(initialErrorMessages);
-  const [successMessage, setSuccessMessage] = useState(false);
+  }>(initialFieldErrors);
+  const [responseError, setResponseError] = useState<string[] | null>(null);
+  const [message, setMessage] = useState<ResponseMessage | null>(null);
 
   const handleForgotPassword = async (e: FormEvent) => {
     e.preventDefault();
 
-    setErrorsMessages(initialErrorMessages);
+    setFieldErrors(initialFieldErrors);
+    setResponseError(null);
 
     const verifiedFields = forgotPasswordSchema.safeParse({ email });
 
     if (!verifiedFields.success) {
       const fields = parseZodErrors(verifiedFields.error);
 
-      setErrorsMessages({
-        ...initialErrorMessages,
+      setFieldErrors({
+        ...initialFieldErrors,
         ...fields,
       });
 
@@ -54,23 +54,23 @@ const ForgotPasswordPage = () => {
     forgotPassword(
       { email },
       {
-        onSuccess: () => {
-          setErrorsMessages(initialErrorMessages);
-          setSuccessMessage(true);
+        onSuccess: (res) => {
+          setFieldErrors(initialFieldErrors);
+          setResponseError(null);
+          setMessage(res.message);
         },
         onError: (res) => {
-          const { error } = res.response.data;
+          const {
+            error: { message, fields },
+          } = res.response.data;
 
-          if (error.fields) {
-            setErrorsMessages({
-              ...initialErrorMessages,
-              ...error.fields,
+          if (fields) {
+            setFieldErrors({
+              ...initialFieldErrors,
+              ...fields,
             });
           } else {
-            setErrorsMessages({
-              ...initialErrorMessages,
-              result: error.result,
-            });
+            setResponseError(message);
           }
         },
       },
@@ -79,26 +79,13 @@ const ForgotPasswordPage = () => {
 
   return (
     <PageContainer centered>
-      {successMessage ? (
-        <MessageCard
-          icon={MailCheck}
-          title="Revisá tu correo"
-          actionLabel="Volver al inicio de sesión"
-          actionHref="/login"
-        >
-          <div className="space-y-4">
-            <p>
-              Si existe una cuenta con ese email, vas a recibir un enlace para
-              restablecer tu contraseña.
-            </p>
-            <p>Recordá revisar también la carpeta de spam o promociones.</p>
-          </div>
+      {message ? (
+        <MessageCard {...message} icon={ICON_MAP[message.icon]}>
+          {message.content}
         </MessageCard>
       ) : (
-        <div className="border-h-background w-full max-w-md space-y-8 border p-8 text-center shadow-xl">
-          <h1 className="text-3xl font-bold text-nowrap">
-            ¿Olvidaste tu contraseña?
-          </h1>
+        <div className="border-h-background w-full max-w-md space-y-8 border p-8 shadow-xl">
+          <h1 className="text-3xl font-bold">¿Olvidaste tu contraseña?</h1>
 
           <div className="space-y-4">
             <p className="text-foreground/75">
@@ -118,7 +105,7 @@ const ForgotPasswordPage = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                error={errorMessages.email}
+                error={fieldErrors.email}
               />
 
               <Button
@@ -127,20 +114,10 @@ const ForgotPasswordPage = () => {
                 className="mt-7"
                 loading={isPending}
               >
-                Enviar enlace
+                Enviar correo de recuperación
               </Button>
 
-              <Collapse open={!!errorMessages.result}>
-                <div className="border-danger text-danger mt-2 mb-3 flex items-center border">
-                  <div className="flex h-full items-center px-3 py-2">
-                    <CircleAlert className="text-danger h-5 w-5" />
-                  </div>
-
-                  <p className="border-danger border-l px-3 py-2 text-xs">
-                    {errorMessages.result}
-                  </p>
-                </div>
-              </Collapse>
+              <FormErrorMessage message={responseError} />
             </form>
 
             <AuthDivider />

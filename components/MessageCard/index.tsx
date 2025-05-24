@@ -10,7 +10,7 @@ export interface MessageCardProps {
   icon?: LucideIcon;
   title: ReactNode;
   titleTag?: "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
-  children: ReactNode;
+  children: ReactNode | StyledContent[];
   actionLabel?: string;
   onAction?: VoidFunction;
   actionHref?: string;
@@ -77,11 +77,7 @@ const MessageCard = ({
         </TitleWrapper>
       </div>
 
-      {typeof children === "string" ? (
-        <p className={contentClassName}>{children}</p>
-      ) : (
-        children
-      )}
+      <Content content={children} className={contentClassName} />
 
       {hasAction && (
         <Button
@@ -98,3 +94,57 @@ const MessageCard = ({
 };
 
 export default MessageCard;
+
+const PARAGRAPH_STYLE = {
+  base: "text-foreground text-md",
+  small: "text-foreground text-sm",
+  muted: "text-foreground/75 text-sm",
+};
+
+interface StyledContent {
+  text: string;
+  style?: keyof typeof PARAGRAPH_STYLE;
+}
+
+const isStyledContentArray = (content: unknown): content is StyledContent[] => {
+  return (
+    Array.isArray(content) &&
+    content.every(
+      (item) =>
+        typeof item === "object" &&
+        item !== null &&
+        "text" in item &&
+        typeof item.text === "string",
+    )
+  );
+};
+
+interface ContentProps {
+  content: ReactNode | StyledContent[];
+  className?: string;
+}
+
+const Content = ({ content, className }: ContentProps) => {
+  if (!content) return null;
+
+  // If content is a styled content array like StyledContent type
+  if (isStyledContentArray(content)) {
+    return (
+      <div className={clsx("space-y-4", className)}>
+        {content.map((item, i) => (
+          <p key={i} className={clsx(PARAGRAPH_STYLE[item?.style ?? "base"])}>
+            {item.text}
+          </p>
+        ))}
+      </div>
+    );
+  }
+
+  // If content is string
+  if (typeof content === "string") {
+    return <p className={className}>{content}</p>;
+  }
+
+  // If content is a React node
+  return content;
+};

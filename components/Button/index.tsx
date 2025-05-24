@@ -9,11 +9,11 @@ import clsx from "clsx";
 
 import Spinner from "../Spinner";
 
-type Variants = "contained" | "outlined";
+type Variant = "contained" | "outlined";
 export type Colors = "primary" | "secondary" | "success" | "warning" | "danger";
 
 interface BaseProps {
-  variant?: Variants;
+  variant?: Variant;
   color?: Colors;
   fullWidth?: boolean;
   unstyled?: boolean;
@@ -36,7 +36,7 @@ export type ButtonProps = PropsWithChildren<ButtonAsButton | ButtonAsLink>;
 const BASE_STYLES =
   "relative box-border flex min-w-[80px] items-center justify-center gap-3 px-4 py-2 font-semibold transition-colors duration-300";
 
-const COLORS: Record<Colors, Record<Variants, string>> = {
+const COLORS: Record<Colors, Record<Variant, string>> = {
   primary: {
     contained: "bg-primary text-background hover:bg-primary/90",
     outlined:

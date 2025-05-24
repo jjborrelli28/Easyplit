@@ -32,7 +32,7 @@ const handler = NextAuth({
                     throw new Error(
                         JSON.stringify({
                             code: API_RESPONSE_CODE.INVALID_FIELD_FORMAT,
-                            message: "Revisá los datos ingresados.",
+                            message: ["Revisá los datos ingresados."],
                             fields,
                             statusCode: 400,
                         }),
@@ -50,7 +50,7 @@ const handler = NextAuth({
                     throw new Error(
                         JSON.stringify({
                             code: API_RESPONSE_CODE.INVALID_CREDENTIALS,
-                            message: "Credenciales inválidas.",
+                            message: ["Credenciales inválidas."],
                             statusCode: 400,
                         }),
                     );
@@ -61,8 +61,10 @@ const handler = NextAuth({
                     throw new Error(
                         JSON.stringify({
                             code: API_RESPONSE_CODE.GOOGLE_ACCOUNT_EXISTS,
-                            message:
-                                "Este correo electrónico está registrado mediante Google. Por favor, iniciá sesión con el botón de 'Iniciar sesión con Google'.",
+                            message: [
+                                "Este correo electrónico está registrado mediante Google.",
+                                "Por favor, iniciá sesión con el botón de 'Iniciar sesión con Google'.",
+                            ],
                             statusCode: 409,
                         }),
                     );
@@ -75,7 +77,7 @@ const handler = NextAuth({
                     throw new Error(
                         JSON.stringify({
                             code: API_RESPONSE_CODE.INVALID_CREDENTIALS,
-                            result: "Credenciales inválidas.",
+                            message: ["Credenciales inválidas."],
                             statusCode: 400,
                         }),
                     );
@@ -91,8 +93,10 @@ const handler = NextAuth({
                         throw new Error(
                             JSON.stringify({
                                 code: API_RESPONSE_CODE.EMAIL_NOT_VERIFIED,
-                                message:
-                                    "Tu cuenta aún no ha sido verificada. Por favor revisá tu casilla para confirmar tu cuenta.",
+                                message: [
+                                    "Tu cuenta aún no ha sido verificada.",
+                                    "Por favor revisá tu casilla para confirmar tu cuenta.",
+                                ],
                                 statusCode: 409,
                             }),
                         );
@@ -114,8 +118,11 @@ const handler = NextAuth({
                         throw new Error(
                             JSON.stringify({
                                 code: API_RESPONSE_CODE.EMAIL_NOT_VERIFIED,
-                                message:
-                                    "Tu cuenta aún no ha sido verificada. Se ha enviado un nuevo correo electrónico de verificación. Por favor revisá tu casilla para confirmar tu cuenta.",
+                                message: [
+                                    "Tu cuenta aún no ha sido verificada.",
+                                    "Se ha enviado un nuevo correo electrónico de verificación.",
+                                    "Por favor revisá tu casilla para confirmar tu cuenta.",
+                                ],
                                 statusCode: 409,
                             }),
                         );

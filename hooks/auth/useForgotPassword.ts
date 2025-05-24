@@ -1,18 +1,15 @@
 import { useMutation } from "@tanstack/react-query";
 
-import api, { type AuthError } from "@/lib/axios";
+import type { AuthError, SuccessResponse } from "@/lib/api/types";
+import api from "@/lib/axios";
 
 interface ForgotPasswordFields {
     email: string;
 }
 
-interface ForgotPasswordResponse {
-    message: string;
-}
-
 const useForgotPassword = () => {
     return useMutation<
-        ForgotPasswordResponse,
+        SuccessResponse,
         AuthError<ForgotPasswordFields>,
         ForgotPasswordFields
     >({

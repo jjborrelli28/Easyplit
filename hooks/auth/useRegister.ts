@@ -1,7 +1,7 @@
 import { useMutation } from "@tanstack/react-query";
 
-import api from "@/lib/axios";
 import type { AuthError, SuccessResponse } from "@/lib/api/types";
+import api from "@/lib/axios";
 
 interface RegisterFields {
     name: string;

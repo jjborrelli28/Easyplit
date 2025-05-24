@@ -1,25 +1,24 @@
 import { useMutation } from "@tanstack/react-query";
 
-import api, { type AuthError } from "@/lib/axios";
+import type { AuthError, SuccessResponse } from "@/lib/api/types";
+import api from "@/lib/axios";
 
 interface ResetPasswordFields {
     password: string;
 }
 
-interface ResetPasswordResponse {
-    message: string;
-}
-
 const useResetPassword = () => {
-    return useMutation<ResetPasswordResponse, AuthError<ResetPasswordFields>, ResetPasswordFields>(
-        {
-            mutationFn: async (body) => {
-                const { data } = await api.post("/auth/reset-password", body);
+    return useMutation<
+        SuccessResponse,
+        AuthError<ResetPasswordFields>,
+        ResetPasswordFields
+    >({
+        mutationFn: async (body) => {
+            const { data } = await api.post("/auth/reset-password", body);
 
-                return data;
-            },
+            return data;
         },
-    );
+    });
 };
 
 export default useResetPassword;

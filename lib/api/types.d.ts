@@ -7,7 +7,7 @@ export interface ErrorResponse<T> {
     success: boolean;
     error: {
         code: API_RESPONSE_CODE;
-        message: string;
+        message: string[];
         fields?: T;
         details?: unknown;
         statusCode: number;
@@ -26,7 +26,7 @@ export type ResponseIcon = keyof typeof ICON_MAP;
 export type ResponseMessage = Pick<
     MessageCardProps,
     "color" | "title" | "actionLabel" | "actionHref"
-> & { icon: ResponseIcon; content: string[] };
+> & { icon: ResponseIcon; content: MessageCardProps['children'] };
 
 export interface SuccessResponse {
     success: true;

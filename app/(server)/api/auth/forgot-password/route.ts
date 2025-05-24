@@ -3,12 +3,20 @@ import { NextResponse } from "next/server";
 import { randomBytes } from "crypto";
 import { addHours } from "date-fns";
 
+import API_RESPONSE_CODE from "@/lib/api/API_RESPONSE_CODE";
+import type { ErrorResponse, SuccessResponse } from "@/lib/api/types";
 import { sendMail } from "@/lib/mailer";
 import { prisma } from "@/lib/prisma";
 import { parseZodErrors } from "@/lib/validations/helpers";
 import { forgotPasswordSchema } from "@/lib/validations/schemas";
 
-export const POST = async (req: Request) => {
+type ForgotPasswordHandler = (
+    req: Request,
+) => Promise<
+    NextResponse<ErrorResponse<Record<string, string>> | SuccessResponse>
+>;
+
+export const POST: ForgotPasswordHandler = async (req: Request) => {
     try {
         // 1. Validate fields format using Zod schema
         const body = await req.json();
@@ -19,9 +27,12 @@ export const POST = async (req: Request) => {
 
             return NextResponse.json(
                 {
+                    success: false,
                     error: {
+                        code: API_RESPONSE_CODE.INVALID_FIELD_FORMAT,
+                        message: ["Revisá los datos ingresados."],
                         fields,
-                        code: "ZOD_VALIDATION_ERROR",
+                        statusCode: 400,
                     },
                 },
                 { status: 400 },
@@ -36,9 +47,11 @@ export const POST = async (req: Request) => {
         if (!user) {
             return NextResponse.json(
                 {
+                    success: false,
                     error: {
-                        result: "El correo electrónico no se encuentra registrado.",
-                        code: "EMAIL_NOT_FOUND",
+                        code: API_RESPONSE_CODE.USER_NOT_FOUND,
+                        message: ["El correo electrónico no se encuentra registrado."],
+                        statusCode: 404,
                     },
                 },
                 { status: 404 },
@@ -49,12 +62,17 @@ export const POST = async (req: Request) => {
         if (user?.resetToken) {
             // 3.1. Token still valid -> notify user
             if (user.resetTokenExp && user.resetTokenExp > new Date()) {
+                console.log(user)
                 return NextResponse.json(
                     {
+                        success: false,
                         error: {
-                            result:
-                                "Ya se ha enviado un correo electrónico para restablecer la contraseña. Compruebe su bandeja de entrada.",
-                            code: "RESET_ALREADY_SENT",
+                            code: API_RESPONSE_CODE.EMAIL_VERIFICATION_SENT,
+                            message: [
+                                "Ya se ha enviado un correo electrónico para restablecer la contraseña.",
+                                "Compruebe su bandeja de entrada.",
+                            ],
+                            statusCode: 409,
                         },
                     },
                     { status: 409 },
@@ -96,17 +114,41 @@ export const POST = async (req: Request) => {
 
         // 8. Return success message
         return NextResponse.json({
-            message:
-                "El correo electrónico de restablecimiento de contraseña se ha enviado correctamente.",
+            success: true,
+            code: API_RESPONSE_CODE.EMAIL_VERIFICATION_SENT,
+            message: {
+                color: "primary",
+                icon: "MailCheck",
+                title: "Correo enviado",
+                content: [
+                    {
+                        text: "Te enviamos un correo electrónico con instrucciones para restablecer tu contraseña.",
+                    },
+                    {
+                        text: "Si no lo encontrás en tu bandeja de entrada, revisá la carpeta de spam o correo no deseado.",
+                        style: "muted",
+                    },
+                ],
+                actionLabel: "Volver al inicio",
+                actionHref: "/",
+            },
+            data: {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+            },
         });
     } catch (error) {
         console.log(error);
 
         return NextResponse.json(
             {
+                success: false,
                 error: {
-                    result: "Internal server error.",
-                    code: "INTERNAL_ERROR",
+                    code: API_RESPONSE_CODE.INTERNAL_SERVER_ERROR,
+                    message: ["Error interno del servidor."],
+                    details: error,
+                    statusCode: 500,
                 },
             },
             { status: 500 },

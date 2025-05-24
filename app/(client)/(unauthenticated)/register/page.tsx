@@ -4,8 +4,6 @@ import { type FormEvent, useState } from "react";
 
 import Link from "next/link";
 
-import { CircleAlert } from "lucide-react";
-
 import useRegister from "@/hooks/auth/useRegister";
 import type { ResponseMessage } from "@/lib/api/types";
 import ICON_MAP from "@/lib/icons";
@@ -14,7 +12,7 @@ import { registerSchema } from "@/lib/validations/schemas";
 
 import AuthDivider from "@/components/AuthDivider";
 import Button from "@/components/Button";
-import Collapse from "@/components/Collapse";
+import FormErrorMessage from "@/components/FormErrorMessage";
 import Input from "@/components/Input";
 import MessageCard from "@/components/MessageCard";
 import PageContainer from "@/components/PageContainer";
@@ -36,7 +34,7 @@ const RegisterPage = () => {
     email?: string | null;
     password?: string | null;
   }>(initialFieldErrors);
-  const [responseError, setResponseError] = useState<string | null>(null);
+  const [responseError, setResponseError] = useState<string[] | null>(null);
   const [message, setMessage] = useState<ResponseMessage | null>(null);
 
   const handleRegister = async (e: FormEvent) => {
@@ -61,7 +59,6 @@ const RegisterPage = () => {
 
     register(body, {
       onSuccess: (res) => {
-        console.log(res);
         setFieldErrors(initialFieldErrors);
         setResponseError(null);
         setMessage(res.message);
@@ -87,15 +84,12 @@ const RegisterPage = () => {
     <PageContainer centered>
       {message ? (
         <MessageCard {...message} icon={ICON_MAP[message.icon]}>
-          <div className="space-y-4">
-            {message.content.map((paragraph, i) => (
-              <p key={i}>{paragraph}</p>
-            ))}
-          </div>
+          {message.content}
         </MessageCard>
       ) : (
         <div className="border-h-background relative w-full max-w-md space-y-8 border p-8 shadow-xl">
           <h1 className="text-3xl font-bold">Crear cuenta</h1>
+
           <div className="space-y-4">
             <form onSubmit={handleRegister} className="flex flex-col gap-y-1">
               <Input
@@ -141,17 +135,7 @@ const RegisterPage = () => {
                 Registrarse
               </Button>
 
-              <Collapse open={!!responseError}>
-                <div className="border-danger text-danger mt-2 mb-3 flex items-center border">
-                  <div className="flex h-full items-center px-3 py-2">
-                    <CircleAlert className="text-danger h-5 w-5" />
-                  </div>
-
-                  <p className="border-danger border-l px-3 py-2 text-xs">
-                    {responseError}
-                  </p>
-                </div>
-              </Collapse>
+              <FormErrorMessage message={responseError} />
             </form>
 
             <AuthDivider />
