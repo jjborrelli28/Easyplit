@@ -4,9 +4,11 @@ import { type FormEvent, useState } from "react";
 
 import Link from "next/link";
 
-import { CircleAlert, MailCheck } from "lucide-react";
+import { CircleAlert } from "lucide-react";
 
 import useRegister from "@/hooks/auth/useRegister";
+import type { ResponseMessage } from "@/lib/api/types";
+import ICON_MAP from "@/lib/icons";
 import { parseZodErrors } from "@/lib/validations/helpers";
 import { registerSchema } from "@/lib/validations/schemas";
 
@@ -17,11 +19,10 @@ import Input from "@/components/Input";
 import MessageCard from "@/components/MessageCard";
 import PageContainer from "@/components/PageContainer";
 
-const initialErrorMessages = {
+const initialFieldErrors = {
   name: null,
   email: null,
   password: null,
-  result: null,
 };
 
 const RegisterPage = () => {
@@ -30,18 +31,19 @@ const RegisterPage = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [errorMessages, setErrorMessages] = useState<{
+  const [fieldErrors, setFieldErrors] = useState<{
     name?: string | null;
     email?: string | null;
     password?: string | null;
-    result?: string | null;
-  }>(initialErrorMessages);
-  const [successMessage, setSuccessMessage] = useState(false);
+  }>(initialFieldErrors);
+  const [responseError, setResponseError] = useState<string | null>(null);
+  const [message, setMessage] = useState<ResponseMessage | null>(null);
 
   const handleRegister = async (e: FormEvent) => {
     e.preventDefault();
 
-    setErrorMessages(initialErrorMessages);
+    setFieldErrors(initialFieldErrors);
+    setResponseError(null);
 
     const body = { name, email, password };
     const verifiedFields = registerSchema.safeParse(body);
@@ -49,8 +51,8 @@ const RegisterPage = () => {
     if (!verifiedFields.success) {
       const fields = parseZodErrors(verifiedFields.error);
 
-      setErrorMessages({
-        ...initialErrorMessages,
+      setFieldErrors({
+        ...initialFieldErrors,
         ...fields,
       });
 
@@ -58,23 +60,24 @@ const RegisterPage = () => {
     }
 
     register(body, {
-      onSuccess: () => {
-        setErrorMessages(initialErrorMessages);
-        setSuccessMessage(true);
+      onSuccess: (res) => {
+        console.log(res);
+        setFieldErrors(initialFieldErrors);
+        setResponseError(null);
+        setMessage(res.message);
       },
       onError: (res) => {
-        const { error } = res.response.data;
+        const {
+          error: { message, fields },
+        } = res.response.data;
 
-        if (error.fields) {
-          setErrorMessages({
-            ...initialErrorMessages,
-            ...error.fields,
+        if (fields) {
+          setFieldErrors({
+            ...initialFieldErrors,
+            ...fields,
           });
         } else {
-          setErrorMessages({
-            ...initialErrorMessages,
-            result: error.result,
-          });
+          setResponseError(message);
         }
       },
     });
@@ -82,23 +85,12 @@ const RegisterPage = () => {
 
   return (
     <PageContainer centered>
-      {successMessage ? (
-        <MessageCard
-          color="primary"
-          icon={MailCheck}
-          title="¡Verificá tu correo!"
-          actionLabel="Volver al inicio"
-          actionHref="/"
-        >
+      {message ? (
+        <MessageCard {...message} icon={ICON_MAP[message.icon]}>
           <div className="space-y-4">
-            <p>
-              Te enviamos un correo electrónico con un enlace para verificar tu
-              cuenta.
-            </p>
-            <p className="text-xs">
-              Por favor, revisá tu bandeja de entrada (y también el correo no
-              deseado o spam).
-            </p>
+            {message.content.map((paragraph, i) => (
+              <p key={i}>{paragraph}</p>
+            ))}
           </div>
         </MessageCard>
       ) : (
@@ -115,7 +107,7 @@ const RegisterPage = () => {
                 onChange={(e) => setName(e.target.value)}
                 autoComplete="given-name"
                 required
-                error={errorMessages.name}
+                error={fieldErrors.name}
               />
               <Input
                 id="email"
@@ -126,7 +118,7 @@ const RegisterPage = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 autoComplete="email"
                 required
-                error={errorMessages.email}
+                error={fieldErrors.email}
               />
               <Input
                 id="password"
@@ -137,7 +129,7 @@ const RegisterPage = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"
                 required
-                error={errorMessages.password}
+                error={fieldErrors.password}
               />
 
               <Button
@@ -149,14 +141,14 @@ const RegisterPage = () => {
                 Registrarse
               </Button>
 
-              <Collapse open={!!errorMessages.result}>
+              <Collapse open={!!responseError}>
                 <div className="border-danger text-danger mt-2 mb-3 flex items-center border">
                   <div className="flex h-full items-center px-3 py-2">
                     <CircleAlert className="text-danger h-5 w-5" />
                   </div>
 
                   <p className="border-danger border-l px-3 py-2 text-xs">
-                    {errorMessages.result}
+                    {responseError}
                   </p>
                 </div>
               </Collapse>

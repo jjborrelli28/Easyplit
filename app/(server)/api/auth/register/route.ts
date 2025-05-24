@@ -2,12 +2,20 @@ import { NextResponse } from "next/server";
 
 import { v4 as uuidv4 } from "uuid";
 
+import API_RESPONSE_CODE from "@/lib/api/API_RESPONSE_CODE";
+import type { ErrorResponse, SuccessResponse } from "@/lib/api/types";
 import { hashPassword, sendVerificationEmail } from "@/lib/auth/helpers";
 import { prisma } from "@/lib/prisma";
 import { parseZodErrors } from "@/lib/validations/helpers";
 import { registerSchema } from "@/lib/validations/schemas";
 
-export const POST = async (req: Request) => {
+type RegisterHandler = (
+    req: Request,
+) => Promise<
+    NextResponse<ErrorResponse<Record<string, string>> | SuccessResponse>
+>;
+
+export const POST: RegisterHandler = async (req: Request) => {
     try {
         const body = await req.json();
 
@@ -17,7 +25,15 @@ export const POST = async (req: Request) => {
         if (!result.success) {
             const fields = parseZodErrors(result.error);
             return NextResponse.json(
-                { error: { fields, code: "ZOD_VALIDATION_ERROR" } },
+                {
+                    success: false,
+                    error: {
+                        code: API_RESPONSE_CODE.INVALID_FIELD_FORMAT,
+                        message: "Revisá los datos ingresados.",
+                        fields,
+                        statusCode: 400,
+                    },
+                },
                 { status: 400 },
             );
         }
@@ -33,31 +49,43 @@ export const POST = async (req: Request) => {
             if (existingUser?.emailVerified) {
                 return NextResponse.json(
                     {
+                        success: false,
                         error: {
-                            result:
+                            code: API_RESPONSE_CODE.EMAIL_ALREADY_REGISTERED,
+                            message:
                                 "Ya existe una cuenta registrada con este correo electrónico.",
-                            code: "EMAIL_ALREADY_REGISTERED",
+                            statusCode: 409,
                         },
                     },
                     { status: 409 },
                 );
             }
 
-            // 3.1.2a. User exists, but verify token expired
+            // 3.1.2a. User exists, but is not verified
             if (
                 existingUser?.verifyTokenExp &&
                 existingUser.verifyTokenExp >= new Date()
             ) {
-                return NextResponse.json(
-                    {
-                        error: {
-                            result:
-                                "Ya existe una cuenta registrada con este correo electrónico que aún no ha sido verificada. Por favor revisá tu casilla para confirmar tu cuenta.",
-                            code: "EMAIL_NOT_VERIFIED",
-                        },
+                return NextResponse.json({
+                    success: true,
+                    code: API_RESPONSE_CODE.EMAIL_VERIFICATION_SENT,
+                    message: {
+                        color: "warning",
+                        icon: "MailCheck",
+                        title: "Correo ya registrado",
+                        content: [
+                            "Ya existe una cuenta registrada con este correo electrónico que aún no ha sido verificada.",
+                            "Por favor revisá tu casilla para confirmar tu cuenta.",
+                        ],
+                        actionLabel: "Volver al inicio",
+                        actionHref: "/",
                     },
-                    { status: 409 },
-                );
+                    data: {
+                        id: existingUser.id,
+                        email: existingUser.email,
+                        name: existingUser.name,
+                    },
+                });
             } else {
                 // 3.1.2b. User exists, not verified, still within token expiration -> resend verification email
                 const verifyToken = uuidv4();
@@ -73,10 +101,18 @@ export const POST = async (req: Request) => {
 
                 await sendVerificationEmail(email, verifyToken);
 
-                return NextResponse.json({
-                    message:
-                        "Ya existe una cuenta registrada con este correo electrónico que aún no ha sido verificada. Se ha enviado un nuevo correo electrónico de verificación. Por favor revisá tu casilla para confirmar tu cuenta.",
-                });
+                return NextResponse.json(
+                    {
+                        success: false,
+                        error: {
+                            code: API_RESPONSE_CODE.EMAIL_NOT_VERIFIED,
+                            message:
+                                "Ya existe una cuenta registrada con este correo electrónico que aún no ha sido verificada. Se ha enviado un nuevo correo electrónico de verificación. Por favor revisá tu casilla para confirmar tu cuenta.",
+                            statusCode: 409,
+                        },
+                    },
+                    { status: 409 },
+                );
             }
         }
 
@@ -93,9 +129,19 @@ export const POST = async (req: Request) => {
             });
 
             return NextResponse.json({
-                message:
-                    "¡Usuario creado! Ya puedes iniciar sesión con tu correo electrónico y contraseña.",
-                user: {
+                success: true,
+                code: API_RESPONSE_CODE.USER_CREATED,
+                message: {
+                    color: "success",
+                    icon: "CheckCircle",
+                    title: "¡Usuario creado!",
+                    content: [
+                        "Ya puedes iniciar sesión con tu correo electrónico y contraseña.",
+                    ],
+                    actionLabel: "Iniciar sesión",
+                    actionHref: "/login",
+                },
+                data: {
                     id: user.id,
                     email: user.email,
                     name: user.name,
@@ -122,9 +168,20 @@ export const POST = async (req: Request) => {
             });
 
             return NextResponse.json({
-                message:
-                    "¡Usuario creado! Revisá tu correo electrónico para verificar tu cuenta.",
-                user: {
+                success: true,
+                code: API_RESPONSE_CODE.EMAIL_VERIFICATION_SENT,
+                message: {
+                    color: "primary",
+                    icon: "MailCheck",
+                    title: "¡Verificá tu correo!",
+                    content: [
+                        "Te enviamos un correo electrónico con un enlace para verificar tu cuenta.",
+                        "Por favor, revisá tu bandeja de entrada (y también el correo no deseado o spam).",
+                    ],
+                    actionLabel: "Volver al inicio",
+                    actionHref: "/",
+                },
+                data: {
                     id: user.id,
                     email: user.email,
                     name: user.name,
@@ -136,9 +193,12 @@ export const POST = async (req: Request) => {
 
         return NextResponse.json(
             {
+                success: false,
                 error: {
-                    result: "Error interno del servidor.",
-                    code: "INTERNAL_ERROR",
+                    code: API_RESPONSE_CODE.INTERNAL_SERVER_ERROR,
+                    message: "Error interno del servidor.",
+                    details: error,
+                    statusCode: 500,
                 },
             },
             { status: 500 },

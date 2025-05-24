@@ -1,6 +1,7 @@
-import { useMutation } from '@tanstack/react-query';
+import { useMutation } from "@tanstack/react-query";
 
-import api, { type AuthError } from '@/lib/axios';
+import api from "@/lib/axios";
+import type { AuthError, SuccessResponse } from "@/lib/api/types";
 
 interface RegisterFields {
     name: string;
@@ -8,18 +9,18 @@ interface RegisterFields {
     password: string;
 }
 
-interface RegisterResponse {
-    message: string;
-}
-
 const useRegister = () => {
-    return useMutation<RegisterResponse, AuthError<RegisterFields>, RegisterFields>({
+    return useMutation<
+        SuccessResponse,
+        AuthError<RegisterFields>,
+        RegisterFields
+    >({
         mutationFn: async (body) => {
-            const { data } = await api.post('/auth/register', body);
+            const { data } = await api.post("/auth/register", body);
 
             return data;
         },
     });
 };
 
-export default useRegister
+export default useRegister;

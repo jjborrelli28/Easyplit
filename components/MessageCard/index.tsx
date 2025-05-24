@@ -7,7 +7,7 @@ import Button, { type Colors } from "../Button";
 
 export interface MessageCardProps {
   color?: Colors;
-  icon: LucideIcon;
+  icon?: LucideIcon;
   title: ReactNode;
   titleTag?: "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
   children: ReactNode;
@@ -56,13 +56,15 @@ const MessageCard = ({
       )}
     >
       <div className="flex flex-col items-center gap-y-4">
-        <Icon
-          className={clsx(
-            "mx-auto h-12 w-12",
-            COLORS[color].titleColor,
-            iconClassName,
-          )}
-        />
+        {Icon && (
+          <Icon
+            className={clsx(
+              "mx-auto h-12 w-12",
+              COLORS[color].titleColor,
+              iconClassName,
+            )}
+          />
+        )}
 
         <TitleWrapper
           className={clsx(
