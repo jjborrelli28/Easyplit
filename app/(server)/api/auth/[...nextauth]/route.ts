@@ -62,8 +62,7 @@ const handler = NextAuth({
                         JSON.stringify({
                             code: API_RESPONSE_CODE.GOOGLE_ACCOUNT_EXISTS,
                             message: [
-                                "Este correo electrónico está registrado mediante Google.",
-                                "Por favor, iniciá sesión con el botón de 'Iniciar sesión con Google'.",
+                                "Este correo electrónico está registrado mediante Google. Por favor, iniciá sesión con el botón de 'Iniciar sesión con Google'.",
                             ],
                             statusCode: 409,
                         }),
