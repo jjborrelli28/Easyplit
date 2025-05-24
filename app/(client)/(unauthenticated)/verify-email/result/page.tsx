@@ -1,11 +1,28 @@
 import { notFound } from "next/navigation";
 
-import { CheckCircle, CircleAlert, CircleX } from "lucide-react";
+import { AlertTriangle, CheckCircle, CircleAlert, Clock10 } from "lucide-react";
 
 import MessageCard, { type MessageCardProps } from "@/components/MessageCard";
 import PageContainer from "@/components/PageContainer";
 
-const messageCardProps: Record<States, MessageCardProps> = {
+type State = "token_expired" | "success" | "already_verified" | "error";
+
+const messageCardProps: Record<State, MessageCardProps> = {
+  token_expired: {
+    color: "primary",
+    icon: Clock10,
+    title: "El enlace expiró",
+    children: (
+      <div className="space-y-2">
+        <p>
+          El enlace de verificación ha expirado por cuestiones de seguridad.
+        </p>
+        <p>Podés volver a registrarte para recibir uno nuevo.</p>
+      </div>
+    ),
+    actionLabel: "Volver a registrarte",
+    actionHref: "/register",
+  },
   success: {
     color: "success",
     icon: CheckCircle,
@@ -39,24 +56,21 @@ const messageCardProps: Record<States, MessageCardProps> = {
   },
   error: {
     color: "danger",
-    icon: CircleX,
-    title: "Hubo un problema",
+    icon: AlertTriangle,
+    title: "Algo salió mal",
     children: (
       <div className="space-y-2">
-        <p>No pudimos verificar tu correo electrónico.</p>
-        <p>Es posible que el enlace no sea valido o haya sido utilizado.</p>
-        <p>Vuelve a intentar crear tu cuenta.</p>
+        <p>Ocurrió un error inesperado en el servidor.</p>
+        <p>Por favor, intentá nuevamente en unos minutos.</p>
       </div>
     ),
-    actionLabel: "Volve a intentar registrate",
-    actionHref: "/register",
+    actionLabel: "Volver al inicio",
+    actionHref: "/",
   },
 };
 
-type States = "success" | "already_verified" | "error";
-
 interface VerifyEmailResultPageProps {
-  searchParams: Promise<{ status?: States }>;
+  searchParams: Promise<{ status?: State }>;
 }
 
 const VerifyEmailResultPage = async ({
@@ -64,7 +78,10 @@ const VerifyEmailResultPage = async ({
 }: VerifyEmailResultPageProps) => {
   const { status } = await searchParams;
 
-  if (!status || !["success", "already_verified", "error"].includes(status)) {
+  if (
+    !status ||
+    !["token_expired", "success", "already_verified", "error"].includes(status)
+  ) {
     notFound();
   }
 
