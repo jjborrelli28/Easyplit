@@ -12,6 +12,7 @@ import { CircleAlert } from "lucide-react";
 
 import googleLogo from "@/public/assets/logos/Google.svg?url";
 
+import type { ErrorResponse } from "@/lib/api/types";
 import { parseZodErrors } from "@/lib/validations/helpers";
 import { loginSchema } from "@/lib/validations/schemas";
 
@@ -21,7 +22,7 @@ import Collapse from "@/components/Collapse";
 import Input from "@/components/Input";
 import PageContainer from "@/components/PageContainer";
 
-const initialErrorMessages = {
+const initialFieldErrors = {
   email: null,
   password: null,
   result: null,
@@ -31,27 +32,28 @@ const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMessages, setErrorMessages] = useState<{
+  const [fieldErrors, setFieldErrors] = useState<{
     email?: string | null;
     password?: string | null;
-    result?: string | null;
-  }>(initialErrorMessages);
+  }>(initialFieldErrors);
+  const [responseError, setResponseError] = useState<string | null>(null);
 
   const handleLoginWithCredentials = (e: FormEvent) => {
     e.preventDefault();
 
     setIsLoading(true);
-    setErrorMessages(initialErrorMessages);
+    setFieldErrors(initialFieldErrors);
+    setResponseError(null);
 
     const verifiedCredentials = loginSchema.safeParse({ email, password });
 
     if (!verifiedCredentials.success) {
-      const credentials = parseZodErrors(verifiedCredentials.error);
+      const fields = parseZodErrors(verifiedCredentials.error);
 
       setIsLoading(false);
-      setErrorMessages({
-        ...initialErrorMessages,
-        ...credentials,
+      setFieldErrors({
+        ...initialFieldErrors,
+        ...fields,
       });
 
       return;
@@ -67,18 +69,20 @@ const LoginPage = () => {
       if (res?.ok) {
         redirect("/dashboard");
       } else if (res?.error) {
-        const { credentials, result } = JSON.parse(res.error);
+        const {
+          message,
+          fields,
+        }: ErrorResponse<Record<string, string>>["error"] = JSON.parse(
+          res.error,
+        );
 
-        if (credentials) {
-          setErrorMessages({
-            ...initialErrorMessages,
-            ...credentials,
+        if (fields) {
+          setFieldErrors({
+            ...initialFieldErrors,
+            ...fields,
           });
         } else {
-          setErrorMessages({
-            ...initialErrorMessages,
-            result,
-          });
+          setResponseError(message);
         }
       }
     });
@@ -106,7 +110,7 @@ const LoginPage = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 autoComplete="email"
                 required
-                error={errorMessages.email}
+                error={fieldErrors.email}
               />
               <Input
                 id="password"
@@ -117,7 +121,7 @@ const LoginPage = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="current-password"
                 required
-                error={errorMessages.password}
+                error={fieldErrors.password}
               />
 
               <Button
@@ -129,14 +133,14 @@ const LoginPage = () => {
                 Iniciar sesión
               </Button>
 
-              <Collapse open={!!errorMessages.result}>
+              <Collapse open={!!responseError}>
                 <div className="border-danger text-danger mt-2 mb-3 flex items-center border">
                   <div className="flex h-full items-center px-3 py-2">
                     <CircleAlert className="text-danger h-5 w-5" />
                   </div>
 
                   <p className="border-danger border-l px-3 py-2 text-xs">
-                    {errorMessages.result}
+                    {responseError}
                   </p>
                 </div>
               </Collapse>

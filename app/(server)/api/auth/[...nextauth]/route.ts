@@ -6,6 +6,7 @@ import GoogleProvider from "next-auth/providers/google";
 import { compare } from "bcryptjs";
 import { v4 as uuidv4 } from "uuid";
 
+import API_RESPONSE_CODE from "@/lib/api/API_RESPONSE_CODE";
 import { sendVerificationEmail } from "@/lib/auth/helpers";
 import { prisma } from "@/lib/prisma";
 import { parseZodErrors } from "@/lib/validations/helpers";
@@ -26,12 +27,14 @@ const handler = NextAuth({
                 const verifiedCredentials = loginSchema.safeParse(credentials);
 
                 if (!verifiedCredentials.success) {
-                    const credentials = parseZodErrors(verifiedCredentials.error);
+                    const fields = parseZodErrors(verifiedCredentials.error);
 
                     throw new Error(
                         JSON.stringify({
-                            code: "ZOD_VALIDATION_ERROR",
-                            credentials,
+                            code: API_RESPONSE_CODE.INVALID_FIELD_FORMAT,
+                            message: "Revisá los datos ingresados.",
+                            fields,
+                            statusCode: 400,
                         }),
                     );
                 }
@@ -46,8 +49,9 @@ const handler = NextAuth({
                 if (!existingUser) {
                     throw new Error(
                         JSON.stringify({
-                            code: "INVALID_CREDENTIALS",
-                            result: "Credenciales inválidas.",
+                            code: API_RESPONSE_CODE.INVALID_CREDENTIALS,
+                            message: "Credenciales inválidas.",
+                            statusCode: 400,
                         }),
                     );
                 }
@@ -56,9 +60,10 @@ const handler = NextAuth({
                 if (!existingUser?.password) {
                     throw new Error(
                         JSON.stringify({
-                            code: "GOOGLE_ACCOUNT_EXISTS",
-                            result:
-                                "Este correo electrónico está registrado mediante Google. Por favor, iniciá sesión con el botón de Google.",
+                            code: API_RESPONSE_CODE.GOOGLE_ACCOUNT_EXISTS,
+                            message:
+                                "Este correo electrónico está registrado mediante Google. Por favor, iniciá sesión con el botón de 'Iniciar sesión con Google'.",
+                            statusCode: 409,
                         }),
                     );
                 }
@@ -69,8 +74,9 @@ const handler = NextAuth({
                 if (!validUser) {
                     throw new Error(
                         JSON.stringify({
-                            code: "INVALID_CREDENTIALS",
+                            code: API_RESPONSE_CODE.INVALID_CREDENTIALS,
                             result: "Credenciales inválidas.",
+                            statusCode: 400,
                         }),
                     );
                 }
@@ -84,9 +90,10 @@ const handler = NextAuth({
                     ) {
                         throw new Error(
                             JSON.stringify({
-                                code: "EMAIL_NOT_VERIFIED",
-                                result:
+                                code: API_RESPONSE_CODE.EMAIL_NOT_VERIFIED,
+                                message:
                                     "Tu cuenta aún no ha sido verificada. Por favor revisá tu casilla para confirmar tu cuenta.",
+                                statusCode: 409,
                             }),
                         );
                     } else {
@@ -106,9 +113,10 @@ const handler = NextAuth({
 
                         throw new Error(
                             JSON.stringify({
-                                code: "EMAIL_NOT_VERIFIED",
-                                result:
+                                code: API_RESPONSE_CODE.EMAIL_NOT_VERIFIED,
+                                message:
                                     "Tu cuenta aún no ha sido verificada. Se ha enviado un nuevo correo electrónico de verificación. Por favor revisá tu casilla para confirmar tu cuenta.",
+                                statusCode: 409,
                             }),
                         );
                     }
@@ -119,7 +127,6 @@ const handler = NextAuth({
                     id: existingUser.id,
                     name: existingUser.name,
                     email: existingUser.email,
-                    image: existingUser.image,
                 };
             },
         }),
