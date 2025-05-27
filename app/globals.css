@@ -116,7 +116,7 @@ input:-webkit-autofill {
   animation: justify-start-to-end 300ms ease-in-out forwards;
 }
 
-@keyframes pulse-width {
+@keyframes width-pulse {
   0% {
     width: 24px;
   }
@@ -128,6 +128,20 @@ input:-webkit-autofill {
   }
 }
 
-.animate-pulse-width {
-  animation: pulse-width 300ms ease-in-out forwards;
+.animate-width-pulse {
+  animation: width-pulse 300ms ease-in-out forwards;
+}
+
+@keyframes color-pulse {
+  0%,
+  100% {
+    color: var(--foreground);
+  }
+  50% {
+    color: var(--primary);
+  }
+}
+
+.animate-color-pulse {
+  animation: color-pulse 1.5s ease-in-out infinite;
 }

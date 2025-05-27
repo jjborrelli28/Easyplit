@@ -5,7 +5,12 @@ interface EasyplitLogoProps {
 }
 const EasyplitLogo = ({ isAnimated = false }: EasyplitLogoProps) => {
   return (
-    <div className="group flex items-center gap-x-1">
+    <div
+      className={clsx(
+        "flex items-center gap-x-1",
+        isAnimated && "group transition-transform duration-300 hover:scale-105",
+      )}
+    >
       <svg
         xmlns="http://www.w3.org/2000/svg"
         width="40"
@@ -17,24 +22,43 @@ const EasyplitLogo = ({ isAnimated = false }: EasyplitLogoProps) => {
         strokeLinecap="round"
         strokeLinejoin="round"
         className={clsx(
-          "lucide lucide-circle-dollar-sign-icon lucide-circle-dollar-sign bg-h-background rotate-45 rounded-full shadow-xl",
+          "rounded-full",
           isAnimated &&
-            "transition-transform duration-300 group-hover:rotate-0",
+            "rotate-45 transition-transform duration-300 group-hover:rotate-0",
         )}
       >
         <circle cx="12" cy="12" r="11" className="text-foreground" />
+
         <path
           d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"
           className="text-foreground"
         />
+
         <path
-          d="M12 18V6"
-          className={clsx("text-primary", isAnimated && "animate-pulse")}
+          d="M12 18.5 L12 5.5"
+          className={clsx("text-primary", isAnimated && "animate-color-pulse")}
+        />
+
+        <circle
+          cx={4.75}
+          cy={12}
+          r={0.2}
+          className={clsx("text-primary", isAnimated && "animate-color-pulse")}
+        />
+
+        <circle
+          cx={19.25}
+          cy={12}
+          r={0.2}
+          className={clsx("text-primary", isAnimated && "animate-color-pulse")}
         />
       </svg>
+
       <p className="text-foreground text-xl font-bold">
         easy
-        <span className={clsx("text-primary", isAnimated && "animate-pulse")}>
+        <span
+          className={clsx("text-primary", isAnimated && "animate-color-pulse")}
+        >
           plit
         </span>
       </p>

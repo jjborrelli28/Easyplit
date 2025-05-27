@@ -48,7 +48,7 @@ const ThemeToggle = () => {
         <span
           className={clsx(
             "bg-primary group-hover:bg-primary/90 z-10 h-6 w-6 rounded-full shadow-md transition-colors duration-300 ease-in-out",
-            isChanging && "animate-pulse-width",
+            isChanging && "animate-width-pulse",
           )}
         />
       </div>
