@@ -142,7 +142,7 @@ const RegisterPage = () => {
 
             <div className="text-foreground/75 text-center text-xs">
               ¿Ya tenés cuenta?{" "}
-              <Link href="/login" className="text-primary">
+              <Link href="/login" className="text-primary font-semibold">
                 Iniciar sesión
               </Link>
             </div>

@@ -10,11 +10,20 @@ const ThemeToggle = () => {
   const { resolvedTheme, setTheme } = useTheme();
 
   const [isMounted, setIsMounted] = useState(false);
+  const [shouldAnimateOnMount, setShouldAnimateOnMount] = useState(false);
   const [isChanging, setIsChanging] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
+
+    setShouldAnimateOnMount(true);
+
+    const timer = setTimeout(() => {
+      setShouldAnimateOnMount(false);
+    }, 300);
+
+    return () => clearTimeout(timer);
   }, []);
 
   const isDark = resolvedTheme === "dark";
@@ -41,6 +50,7 @@ const ThemeToggle = () => {
         <div
           className={clsx(
             "absolute right-1 left-1 flex h-6 w-[calc(100%_-_8px)] rounded-full",
+            shouldAnimateOnMount && "animate-fade-in",
             isDark ? "justify-end" : "justify-start",
             hasInteracted &&
               (isDark
