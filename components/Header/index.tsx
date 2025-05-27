@@ -1,13 +1,13 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 import { signOut, useSession } from "next-auth/react";
 
-import Button from "@/components/Button";
-import ThemeToggle from "@/components/ThemeToggle";
+import Button from "../Button";
+import EasyplitLogo from "../EasyplitLogo";
+import ThemeToggle from "../ThemeToggle";
 
 const Header = () => {
   const { status } = useSession();
@@ -40,12 +40,7 @@ const Header = () => {
     <header className="fixed w-full justify-end p-4 backdrop-blur-md">
       <div className="container mx-auto flex items-center justify-between">
         <Link href="/">
-          <Image
-            alt="Easyplit"
-            src={"https://lucide.dev/logo.dark.svg"}
-            height={40}
-            width={40}
-          />
+          <EasyplitLogo isAnimated />
         </Link>
 
         <div className="flex items-center gap-x-6">

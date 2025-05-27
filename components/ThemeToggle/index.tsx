@@ -21,6 +21,8 @@ const ThemeToggle = () => {
   const isDark = resolvedTheme === "dark";
 
   const handleToggle = () => {
+    if (isChanging) return;
+
     setTheme(isDark ? "light" : "dark");
     setIsChanging(true);
 
@@ -33,7 +35,7 @@ const ThemeToggle = () => {
     <button
       onClick={handleToggle}
       aria-label="Change theme"
-      className="bg-h-background border-primary relative flex h-8 w-16 cursor-pointer items-center rounded-full border px-1 transition-colors duration-300"
+      className="group bg-h-background border-primary relative flex h-8 w-16 cursor-pointer items-center rounded-full border px-1 transition-colors duration-300"
     >
       <div
         className={clsx(
@@ -45,7 +47,7 @@ const ThemeToggle = () => {
       >
         <span
           className={clsx(
-            "bg-primary z-10 h-6 w-6 rounded-full shadow-md transition-transform duration-300 ease-in-out",
+            "bg-primary group-hover:bg-primary/90 z-10 h-6 w-6 rounded-full shadow-md transition-colors duration-300 ease-in-out",
             isChanging && "animate-pulse-width",
           )}
         />
