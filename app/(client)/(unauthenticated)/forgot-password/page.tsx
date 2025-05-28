@@ -9,7 +9,10 @@ import useForgotPassword from "@/hooks/auth/useForgotPassword";
 import type { ResponseMessage } from "@/lib/api/types";
 import ICON_MAP from "@/lib/icons";
 import { parseZodErrors } from "@/lib/validations/helpers";
-import { forgotPasswordSchema } from "@/lib/validations/schemas";
+import {
+  forgotPasswordSchema,
+  recaptchaTokenSchema,
+} from "@/lib/validations/schemas";
 
 import AuthDivider from "@/components/AuthDivider";
 import Button from "@/components/Button";
@@ -17,6 +20,7 @@ import FormErrorMessage from "@/components/FormErrorMessage";
 import Input from "@/components/Input";
 import MessageCard from "@/components/MessageCard";
 import PageContainer from "@/components/PageContainer";
+import ReCAPTCHAv2 from "@/components/ReCAPTCHAv2";
 
 const initialFieldErrors = {
   email: null,
@@ -26,8 +30,11 @@ const ForgotPasswordPage = () => {
   const { mutate: forgotPassword, isPending } = useForgotPassword();
 
   const [email, setEmail] = useState("");
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
+
   const [fieldErrors, setFieldErrors] = useState<{
     email?: string | null;
+    recaptchaToken?: string | null;
   }>(initialFieldErrors);
   const [responseError, setResponseError] = useState<string[] | null>(null);
   const [message, setMessage] = useState<ResponseMessage | null>(null);
@@ -38,10 +45,11 @@ const ForgotPasswordPage = () => {
     setFieldErrors(initialFieldErrors);
     setResponseError(null);
 
-    const verifiedFields = forgotPasswordSchema.safeParse({ email });
+    const body = { email, recaptchaToken };
+    const fieldVerification = forgotPasswordSchema.safeParse(body);
 
-    if (!verifiedFields.success) {
-      const fields = parseZodErrors(verifiedFields.error);
+    if (!fieldVerification.success) {
+      const fields = parseZodErrors(fieldVerification.error);
 
       setFieldErrors({
         ...initialFieldErrors,
@@ -51,30 +59,27 @@ const ForgotPasswordPage = () => {
       return;
     }
 
-    forgotPassword(
-      { email },
-      {
-        onSuccess: (res) => {
-          setFieldErrors(initialFieldErrors);
-          setResponseError(null);
-          setMessage(res.message);
-        },
-        onError: (res) => {
-          const {
-            error: { message, fields },
-          } = res.response.data;
-
-          if (fields) {
-            setFieldErrors({
-              ...initialFieldErrors,
-              ...fields,
-            });
-          } else {
-            setResponseError(message);
-          }
-        },
+    forgotPassword(body, {
+      onSuccess: (res) => {
+        setFieldErrors(initialFieldErrors);
+        setResponseError(null);
+        setMessage(res.message);
       },
-    );
+      onError: (res) => {
+        const {
+          error: { message, fields },
+        } = res.response.data;
+
+        if (fields) {
+          setFieldErrors({
+            ...initialFieldErrors,
+            ...fields,
+          });
+        } else {
+          setResponseError(message);
+        }
+      },
+    });
   };
 
   return (
@@ -108,10 +113,38 @@ const ForgotPasswordPage = () => {
                 error={fieldErrors.email}
               />
 
+              <ReCAPTCHAv2
+                onChange={(recaptchaToken) => {
+                  const recaptchaTokenVerification =
+                    recaptchaTokenSchema.safeParse({
+                      recaptchaToken,
+                    });
+
+                  if (recaptchaTokenVerification.success) {
+                    setRecaptchaToken(recaptchaToken);
+
+                    setFieldErrors((prevState) => ({
+                      ...prevState,
+                      recaptchaToken: null,
+                    }));
+                  } else {
+                    const { recaptchaToken } = parseZodErrors(
+                      recaptchaTokenVerification.error,
+                    );
+
+                    setFieldErrors((prevState) => ({
+                      ...prevState,
+                      recaptchaToken,
+                    }));
+                  }
+                }}
+                error={fieldErrors.recaptchaToken}
+              />
+
               <Button
                 type="submit"
                 fullWidth
-                className="mt-7"
+                className="mt-4"
                 loading={isPending}
               >
                 Enviar correo de recuperación

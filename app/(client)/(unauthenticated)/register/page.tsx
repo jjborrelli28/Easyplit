@@ -8,7 +8,10 @@ import useRegister from "@/hooks/auth/useRegister";
 import type { ResponseMessage } from "@/lib/api/types";
 import ICON_MAP from "@/lib/icons";
 import { parseZodErrors } from "@/lib/validations/helpers";
-import { registerSchema } from "@/lib/validations/schemas";
+import {
+  recaptchaTokenSchema,
+  registerSchema,
+} from "@/lib/validations/schemas";
 
 import AuthDivider from "@/components/AuthDivider";
 import Button from "@/components/Button";
@@ -16,11 +19,13 @@ import FormErrorMessage from "@/components/FormErrorMessage";
 import Input from "@/components/Input";
 import MessageCard from "@/components/MessageCard";
 import PageContainer from "@/components/PageContainer";
+import ReCAPTCHAv2 from "@/components/ReCAPTCHAv2";
 
 const initialFieldErrors = {
   name: null,
   email: null,
   password: null,
+  recaptchaToken: null,
 };
 
 const RegisterPage = () => {
@@ -29,10 +34,13 @@ const RegisterPage = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
+
   const [fieldErrors, setFieldErrors] = useState<{
     name?: string | null;
     email?: string | null;
     password?: string | null;
+    recaptchaToken?: string | null;
   }>(initialFieldErrors);
   const [responseError, setResponseError] = useState<string[] | null>(null);
   const [message, setMessage] = useState<ResponseMessage | null>(null);
@@ -43,11 +51,11 @@ const RegisterPage = () => {
     setFieldErrors(initialFieldErrors);
     setResponseError(null);
 
-    const body = { name, email, password };
-    const verifiedFields = registerSchema.safeParse(body);
+    const body = { name, email, password, recaptchaToken };
+    const fieldVerification = registerSchema.safeParse(body);
 
-    if (!verifiedFields.success) {
-      const fields = parseZodErrors(verifiedFields.error);
+    if (!fieldVerification.success) {
+      const fields = parseZodErrors(fieldVerification.error);
 
       setFieldErrors({
         ...initialFieldErrors,
@@ -126,10 +134,38 @@ const RegisterPage = () => {
                 error={fieldErrors.password}
               />
 
+              <ReCAPTCHAv2
+                onChange={(recaptchaToken) => {
+                  const recaptchaTokenVerification =
+                    recaptchaTokenSchema.safeParse({
+                      recaptchaToken,
+                    });
+
+                  if (recaptchaTokenVerification.success) {
+                    setRecaptchaToken(recaptchaToken);
+
+                    setFieldErrors((prevState) => ({
+                      ...prevState,
+                      recaptchaToken: null,
+                    }));
+                  } else {
+                    const { recaptchaToken } = parseZodErrors(
+                      recaptchaTokenVerification.error,
+                    );
+
+                    setFieldErrors((prevState) => ({
+                      ...prevState,
+                      recaptchaToken,
+                    }));
+                  }
+                }}
+                error={fieldErrors.recaptchaToken}
+              />
+
               <Button
                 type="submit"
                 fullWidth
-                className="mt-7"
+                className="mt-4"
                 loading={isPending}
               >
                 Registrarse

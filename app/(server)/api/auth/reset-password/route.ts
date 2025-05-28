@@ -3,10 +3,10 @@ import { NextResponse } from "next/server";
 import { hash } from "bcryptjs";
 
 import API_RESPONSE_CODE from "@/lib/api/API_RESPONSE_CODE";
-import { prisma } from "@/lib/prisma";
+import { ErrorResponse, SuccessResponse } from "@/lib/api/types";
+import prisma from "@/lib/prisma";
 import { parseZodErrors } from "@/lib/validations/helpers";
 import { resetPasswordSchema } from "@/lib/validations/schemas";
-import { ErrorResponse, SuccessResponse } from "@/lib/api/types";
 
 type ResetPasswordHandler = (
     req: Request,
@@ -18,13 +18,13 @@ export const POST: ResetPasswordHandler = async (req: Request) => {
     try {
         const { token: resetToken, password } = await req.json();
 
-        // 1. Validate fields format using Zod schema
-        const result = resetPasswordSchema.safeParse({
+        // Field format verification
+        const fieldVerification = resetPasswordSchema.safeParse({
             password,
         });
 
-        if (!result.success) {
-            const fields = parseZodErrors(result.error);
+        if (!fieldVerification.success) {
+            const fields = parseZodErrors(fieldVerification.error);
 
             return NextResponse.json(
                 {
@@ -40,7 +40,7 @@ export const POST: ResetPasswordHandler = async (req: Request) => {
             );
         }
 
-        // 2. Look for a user with a valid (non-expired) reset token
+        // Search user with reset token
         const user = await prisma.user.findFirst({
             where: {
                 resetToken,
@@ -50,7 +50,7 @@ export const POST: ResetPasswordHandler = async (req: Request) => {
             },
         });
 
-        // 3. If token is invalid or expired
+        // User not found
         if (!user) {
             return NextResponse.json(
                 {
@@ -67,7 +67,7 @@ export const POST: ResetPasswordHandler = async (req: Request) => {
 
         const hashedPassword = await hash(password, 10);
 
-        // 4. Update user password and remove the reset token
+        // Update user password
         await prisma.user.update({
             where: { id: user.id },
             data: {
@@ -77,7 +77,6 @@ export const POST: ResetPasswordHandler = async (req: Request) => {
             },
         });
 
-        // 5. Return success message
         return NextResponse.json({
             success: true,
             code: API_RESPONSE_CODE.PASSWORD_RESET_SUCCESS,
@@ -102,7 +101,7 @@ export const POST: ResetPasswordHandler = async (req: Request) => {
             },
         });
     } catch (error) {
-        console.log(error);
+        console.error(error);
 
         return NextResponse.json(
             {

@@ -23,7 +23,7 @@ export const sendMail = async ({
             html,
         });
     } catch (error) {
-        console.log(error);
+        console.error(error);
 
         throw new Error("Error al intentar enviar el correo electrónico.");
     }

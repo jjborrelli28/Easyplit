@@ -8,7 +8,8 @@ import { v4 as uuidv4 } from "uuid";
 
 import API_RESPONSE_CODE from "@/lib/api/API_RESPONSE_CODE";
 import { sendVerificationEmail } from "@/lib/auth/helpers";
-import { prisma } from "@/lib/prisma";
+import prisma from "@/lib/prisma";
+import verifyRecaptcha from "@/lib/recaptcha";
 import { parseZodErrors } from "@/lib/validations/helpers";
 import { loginSchema } from "@/lib/validations/schemas";
 
@@ -21,13 +22,14 @@ const handler = NextAuth({
             credentials: {
                 email: { label: "Email", type: "text" },
                 password: { label: "Password", type: "password" },
+                recaptchaToken: { label: "ReCAPTCHA Token", type: "text" },
             },
             async authorize(credentials) {
-                // 1. Validate credentials format with Zod
-                const verifiedCredentials = loginSchema.safeParse(credentials);
+                // Credential format verification
+                const credentialVerification = loginSchema.safeParse(credentials);
 
-                if (!verifiedCredentials.success) {
-                    const fields = parseZodErrors(verifiedCredentials.error);
+                if (!credentialVerification.success) {
+                    const fields = parseZodErrors(credentialVerification.error);
 
                     throw new Error(
                         JSON.stringify({
@@ -39,13 +41,28 @@ const handler = NextAuth({
                     );
                 }
 
-                const { email, password } = verifiedCredentials.data;
+                const { email, password, recaptchaToken } = credentialVerification.data;
 
-                // 2. Check if user with the given email exists
+                // ReCAPTCHA verification
+                try {
+                    await verifyRecaptcha(recaptchaToken);
+                } catch (error) {
+                    throw new Error(
+                        JSON.stringify({
+                            code: API_RESPONSE_CODE.INVALID_RECAPTCHA,
+                            message: ["Fallo la verificación de reCAPTCHA."],
+                            details: error,
+                            statusCode: 400,
+                        }),
+                    );
+                }
+
+                // Search user
                 const existingUser = await prisma.user.findUnique({
                     where: { email },
                 });
 
+                // Existing user verification
                 if (!existingUser) {
                     throw new Error(
                         JSON.stringify({
@@ -56,7 +73,7 @@ const handler = NextAuth({
                     );
                 }
 
-                // 3. If user exists but does not have a password (Google account)
+                // User verification with Google login
                 if (!existingUser?.password) {
                     throw new Error(
                         JSON.stringify({
@@ -69,7 +86,7 @@ const handler = NextAuth({
                     );
                 }
 
-                // 4. Compare given password with stored hashed password
+                // Credential verification
                 const validUser = await compare(password, existingUser.password);
 
                 if (!validUser) {
@@ -82,9 +99,8 @@ const handler = NextAuth({
                     );
                 }
 
-                // 5. If email is not verified
+                // Check if the account is verified
                 if (!existingUser?.emailVerified) {
-                    // 5.1. Token expired -> notify user
                     if (
                         existingUser?.verifyTokenExp &&
                         existingUser.verifyTokenExp <= new Date()
@@ -100,7 +116,7 @@ const handler = NextAuth({
                             }),
                         );
                     } else {
-                        // 5.2. Token still valid -> resend verification email
+                        // If the token expired, resend verification email
                         const verifyToken = uuidv4();
                         const verifyTokenExp = new Date(Date.now() + 30 * 60 * 1000); // valid for 30 mins
 
@@ -128,7 +144,7 @@ const handler = NextAuth({
                     }
                 }
 
-                // 6. Return user session data on successful login
+                // Login
                 return {
                     id: existingUser.id,
                     name: existingUser.name,
@@ -137,7 +153,6 @@ const handler = NextAuth({
             },
         }),
 
-        // Google OAuth provider
         GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID!,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
@@ -162,7 +177,7 @@ const handler = NextAuth({
                     include: { accounts: true },
                 });
 
-                // 1. If user already exists but doesn't have Google linked -> link it
+                // If the user exists but is not linked to Google, the user will be linked to Google
                 if (existingUser) {
                     const hasGoogleAccountLinked = existingUser.accounts.some(
                         (acc) => acc.provider === "google",
@@ -187,11 +202,9 @@ const handler = NextAuth({
                     }
                     return true;
                 }
-
-                // 2. If user doesn't exist -> allow default NextAuth flow to create it
+                // If the user does not exist, allow NextAuth to create it
                 return true;
             }
-
             return true;
         },
     },

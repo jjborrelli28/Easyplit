@@ -12,27 +12,32 @@ import googleLogo from "@/public/assets/logos/Google.svg?url";
 
 import type { ErrorResponse } from "@/lib/api/types";
 import { parseZodErrors } from "@/lib/validations/helpers";
-import { loginSchema } from "@/lib/validations/schemas";
+import { loginSchema, recaptchaTokenSchema } from "@/lib/validations/schemas";
 
 import AuthDivider from "@/components/AuthDivider";
 import Button from "@/components/Button";
 import FormErrorMessage from "@/components/FormErrorMessage";
 import Input from "@/components/Input";
 import PageContainer from "@/components/PageContainer";
+import ReCAPTCHAv2 from "@/components/ReCAPTCHAv2";
 
 const initialFieldErrors = {
   email: null,
   password: null,
-  result: null,
+  recaptchaToken: null,
 };
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
+
   const [isLoading, setIsLoading] = useState(false);
+
   const [fieldErrors, setFieldErrors] = useState<{
     email?: string | null;
     password?: string | null;
+    recaptchaToken?: string | null;
   }>(initialFieldErrors);
   const [responseError, setResponseError] = useState<string[] | null>(null);
 
@@ -43,10 +48,14 @@ const LoginPage = () => {
     setFieldErrors(initialFieldErrors);
     setResponseError(null);
 
-    const verifiedCredentials = loginSchema.safeParse({ email, password });
+    const credentialVerification = loginSchema.safeParse({
+      email,
+      password,
+      recaptchaToken,
+    });
 
-    if (!verifiedCredentials.success) {
-      const fields = parseZodErrors(verifiedCredentials.error);
+    if (!credentialVerification.success) {
+      const fields = parseZodErrors(credentialVerification.error);
 
       setIsLoading(false);
       setFieldErrors({
@@ -60,10 +69,11 @@ const LoginPage = () => {
     signIn("credentials", {
       email,
       password,
+      recaptchaToken,
       redirect: false,
     }).then((res) => {
       setIsLoading(false);
-      console.log(res);
+
       if (res?.ok) {
         redirect("/dashboard");
       } else if (res?.error) {
@@ -122,10 +132,38 @@ const LoginPage = () => {
                 error={fieldErrors.password}
               />
 
+              <ReCAPTCHAv2
+                onChange={(recaptchaToken) => {
+                  const recaptchaTokenVerification =
+                    recaptchaTokenSchema.safeParse({
+                      recaptchaToken,
+                    });
+
+                  if (recaptchaTokenVerification.success) {
+                    setRecaptchaToken(recaptchaToken);
+
+                    setFieldErrors((prevState) => ({
+                      ...prevState,
+                      recaptchaToken: null,
+                    }));
+                  } else {
+                    const { recaptchaToken } = parseZodErrors(
+                      recaptchaTokenVerification.error,
+                    );
+
+                    setFieldErrors((prevState) => ({
+                      ...prevState,
+                      recaptchaToken,
+                    }));
+                  }
+                }}
+                error={fieldErrors.recaptchaToken}
+              />
+
               <Button
                 type="submit"
                 fullWidth
-                className="mt-7"
+                className="mt-4"
                 loading={isLoading}
               >
                 Iniciar sesión

@@ -1,28 +1,28 @@
 import { NextResponse } from "next/server";
 
-import { prisma } from "@/lib/prisma";
+import prisma from "@/lib/prisma";
 
 export const GET = async (req: Request) => {
     try {
         const { searchParams } = new URL(req.url);
         const verifyToken = searchParams.get("token");
 
-        // 1. Validate fields format using Zod schema
+        // Verify token existence
         if (!verifyToken) {
             return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}`);
         }
 
-        // 2. Find the user associated with the token
+        // Search user
         const user = await prisma.user.findFirst({ where: { verifyToken } });
 
-        // 3. If no user is found, redirect to 404 page
+        // User not found
         if (!user) {
             return NextResponse.redirect(
                 `${process.env.NEXT_PUBLIC_APP_URL}/not-found`,
             );
         }
 
-        // 4. If the user is already verified, clear token and redirect with "already_verified" status
+        // User is verified
         if (user?.emailVerified) {
             await prisma.user.update({
                 where: { id: user.id },
@@ -37,7 +37,7 @@ export const GET = async (req: Request) => {
             );
         }
 
-        // 5. If the token is expired, clear token and redirect with "token_expired" status
+        // Token is expired
         if (user?.verifyTokenExp && user.verifyTokenExp <= new Date()) {
             await prisma.user.update({
                 where: { id: user.id },
@@ -52,7 +52,7 @@ export const GET = async (req: Request) => {
             );
         }
 
-        // 6. Verify user email, clear token, and redirect with "success" status
+        // Verify user email
         await prisma.user.update({
             where: { id: user.id },
             data: {
@@ -66,7 +66,7 @@ export const GET = async (req: Request) => {
             `${process.env.NEXT_PUBLIC_APP_URL}/verify-email/result?status=success`,
         );
     } catch (error) {
-        console.log(error);
+        console.error(error);
 
         return NextResponse.redirect(
             `${process.env.NEXT_PUBLIC_APP_URL}/verify-email/result?status=error`,

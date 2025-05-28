@@ -5,7 +5,8 @@ import { v4 as uuidv4 } from "uuid";
 import API_RESPONSE_CODE from "@/lib/api/API_RESPONSE_CODE";
 import type { ErrorResponse, SuccessResponse } from "@/lib/api/types";
 import { hashPassword, sendVerificationEmail } from "@/lib/auth/helpers";
-import { prisma } from "@/lib/prisma";
+import prisma from "@/lib/prisma";
+import verifyRecaptcha from "@/lib/recaptcha";
 import { parseZodErrors } from "@/lib/validations/helpers";
 import { registerSchema } from "@/lib/validations/schemas";
 
@@ -19,11 +20,12 @@ export const POST: RegisterHandler = async (req: Request) => {
     try {
         const body = await req.json();
 
-        // 1. Validate fields format using Zod schema
-        const result = registerSchema.safeParse(body);
+        // Field format verification
+        const fieldVerification = registerSchema.safeParse(body);
 
-        if (!result.success) {
-            const fields = parseZodErrors(result.error);
+        if (!fieldVerification.success) {
+            const fields = parseZodErrors(fieldVerification.error);
+
             return NextResponse.json(
                 {
                     success: false,
@@ -38,14 +40,32 @@ export const POST: RegisterHandler = async (req: Request) => {
             );
         }
 
-        const { name, email, password } = result.data;
+        const { name, email, password, recaptchaToken } = fieldVerification.data;
 
-        // 2. Check if user already exists in the database
+        // ReCAPTCHA verification
+        try {
+            await verifyRecaptcha(recaptchaToken);
+        } catch (error) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: {
+                        code: API_RESPONSE_CODE.INVALID_RECAPTCHA,
+                        message: ["Fallo la verificación de reCAPTCHA."],
+                        details: error,
+                        statusCode: 400,
+                    },
+                },
+                { status: 400 },
+            );
+        }
+
+        // Search user
         const existingUser = await prisma.user.findUnique({ where: { email } });
 
-        // 3. If user exists with a password (user created with credentials)
+        // Existing user verification (created with credentials)
         if (existingUser?.password) {
-            // 3.1.1. User is already verified
+            // User is verified
             if (existingUser?.emailVerified) {
                 return NextResponse.json(
                     {
@@ -62,7 +82,7 @@ export const POST: RegisterHandler = async (req: Request) => {
                 );
             }
 
-            // 3.1.2a. User exists, but is not verified
+            // User is not verified
             if (
                 existingUser?.verifyTokenExp &&
                 existingUser.verifyTokenExp >= new Date()
@@ -93,7 +113,7 @@ export const POST: RegisterHandler = async (req: Request) => {
                     },
                 });
             } else {
-                // 3.1.2b. User exists, not verified, still within token expiration -> resend verification email
+                // Existing user, unverified and with expired token
                 const verifyToken = uuidv4();
                 const verifyTokenExp = new Date(Date.now() + 30 * 60 * 1000); // valid for 30 mins
 
@@ -125,7 +145,7 @@ export const POST: RegisterHandler = async (req: Request) => {
             }
         }
 
-        // 3.2. If user exists without password (e.g., created by external auth)
+        // Existing user without credentials (e.g., created by Google)
         else if (existingUser) {
             const hashedPassword = await hashPassword(password);
 
@@ -160,7 +180,7 @@ export const POST: RegisterHandler = async (req: Request) => {
             });
         }
 
-        // 3.3. If a new user registration
+        // Register new user with credentials
         else {
             const hashedPassword = await hashPassword(password);
             const verifyToken = uuidv4();
@@ -205,7 +225,7 @@ export const POST: RegisterHandler = async (req: Request) => {
             });
         }
     } catch (error) {
-        console.log(error);
+        console.error(error);
 
         return NextResponse.json(
             {
