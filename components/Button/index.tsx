@@ -9,7 +9,7 @@ import clsx from "clsx";
 
 import Spinner from "../Spinner";
 
-type Variant = "contained" | "outlined";
+type Variant = "contained" | "outlined" | "text";
 export type Colors = "primary" | "secondary" | "success" | "warning" | "danger";
 
 interface BaseProps {
@@ -41,26 +41,31 @@ const COLORS: Record<Colors, Record<Variant, string>> = {
     contained: "bg-primary text-background hover:bg-primary/90",
     outlined:
       "border border-primary text-primary hover:bg-primary hover:text-background",
+    text: "text-primary hover:text-primary/90",
   },
   secondary: {
     contained: "bg-secondary text-background hover:bg-secondary/90",
     outlined:
       "border border-secondary text-secondary hover:bg-secondary hover:text-background",
+    text: "text-secondary hover:text-secondary/90",
   },
   success: {
     contained: "bg-success text-background hover:bg-success/90",
     outlined:
       "border border-success text-success hover:bg-success hover:text-background",
+    text: "text-success hover:text-success/90",
   },
   warning: {
     contained: "bg-warning text-background hover:bg-warning/90",
     outlined:
       "border border-warning text-warning hover:bg-warning hover:text-background",
+    text: "text-warning hover:text-warning/90",
   },
   danger: {
     contained: "bg-danger text-background hover:bg-danger/90",
     outlined:
       "border border-danger text-danger hover:bg-danger hover:text-background",
+    text: "text-danger hover:text-danger/90",
   },
 };
 

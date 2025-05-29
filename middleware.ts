@@ -3,18 +3,27 @@ import { type NextRequest, NextResponse } from "next/server";
 
 const secret = process.env.NEXTAUTH_SECRET;
 
+const unauthenticatedPaths = ["/", "/login", "/register"];
+
+const authenticatedPaths = [
+    "/my-profile",
+    "/dashboard",
+    "/recent-activity",
+    "/all-expenses",
+];
+
 export const middleware = async (req: NextRequest) => {
     const token = await getToken({ req, secret });
     const { pathname } = req.nextUrl;
 
     const isAuthenticated = !!token;
-    const isAuthPage = pathname === "/login" || pathname === "/register";
 
-    if (isAuthenticated && isAuthPage) {
+    if (isAuthenticated && unauthenticatedPaths.includes(pathname)) {
         return NextResponse.redirect(new URL("/dashboard", req.url));
     }
 
-    if (!isAuthenticated && pathname.startsWith("/dashboard")) {
+    if (!isAuthenticated && authenticatedPaths.includes(pathname)) {
+        console.log(pathname);
         return NextResponse.redirect(new URL("/login", req.url));
     }
 
@@ -22,5 +31,13 @@ export const middleware = async (req: NextRequest) => {
 };
 
 export const config = {
-    matcher: ["/dashboard/:path*", "/login", "/register"],
+    matcher: [
+        "/",
+        "/login",
+        "/register",
+        "/my-profile",
+        "/dashboard/:path*",
+        "/recent-activity/:path*",
+        "/all-expenses/:path*",
+    ],
 };

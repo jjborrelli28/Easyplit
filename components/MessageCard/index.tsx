@@ -68,7 +68,8 @@ const MessageCard = ({
 
         <TitleWrapper
           className={clsx(
-            "text-3xl font-semibold",
+            "text-3xl",
+            titleTag === "h1" ? "font-bold" : "font-semibold",
             COLORS[color].titleColor,
             titleClassNAme,
           )}

@@ -17,7 +17,7 @@ const meta: Meta<typeof FormErrorMessage> = {
 
 export default meta;
 
-type Story = StoryObj<typeof FormErrorMessage>;
+type Story = StoryObj<typeof meta>;
 
 const mockupErrorMessage = [
   "Este campo es obligatorio.",

@@ -15,7 +15,7 @@ const meta = {
 
 export default meta;
 
-type Story = StoryObj<typeof ThemeToggle>;
+type Story = StoryObj<typeof meta>;
 
 export const Example: Story = {
   args: {},

@@ -2,6 +2,10 @@ import type { NextConfig } from "next";
 import type { RuleSetRule } from "webpack";
 
 const nextConfig: NextConfig = {
+  images: {
+    domains: ["lh3.googleusercontent.com"],
+  },
+
   webpack(config) {
     // Grab the existing rule that handles SVG imports
     const fileLoaderRule = config.module.rules.find((rule: RuleSetRule) => {

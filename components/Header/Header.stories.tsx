@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 
 import { ThemeProvider } from "next-themes";
 
+import NextAuthProvider from "@/providers/NextAuthProvider";
 import QueryClientProvider from "@/providers/QueryClientProvider";
 
 import Header from ".";
@@ -24,9 +25,11 @@ export const HomepageExample: Story = {
   render: (args) => {
     return (
       <QueryClientProvider {...args}>
-        <ThemeProvider>
-          <Header />
-        </ThemeProvider>
+        <NextAuthProvider refetchInterval={5 * 60} refetchOnWindowFocus={true}>
+          <ThemeProvider>
+            <Header />
+          </ThemeProvider>
+        </NextAuthProvider>
       </QueryClientProvider>
     );
   },

@@ -158,3 +158,7 @@ input:-webkit-autofill {
 .animate-fade-in {
   animation: fade-in 300ms ease-out forwards;
 }
+
+.animate-spin-slow {
+  animation: spin 10s linear infinite;
+}

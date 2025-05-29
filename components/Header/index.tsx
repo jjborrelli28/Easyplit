@@ -1,28 +1,59 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { redirect, usePathname } from "next/navigation";
 
 import { signOut, useSession } from "next-auth/react";
 
 import Button from "../Button";
+import Dropdown from "../Dropdown";
 import EasyplitLogo from "../EasyplitLogo";
 import ThemeToggle from "../ThemeToggle";
 
 const Header = () => {
-  const { status } = useSession();
+  const { data, status } = useSession();
   const pathname = usePathname();
+
+  const user = data?.user;
 
   const isAuthenticated = status === "authenticated";
   const isLoginPage = pathname === "/login";
   const isRegisterPage = pathname === "/register";
 
-  const handleLogout = () => signOut();
+  const handleLogout = () => {
+    signOut();
+    redirect("/");
+  };
 
   const authenticatedLinks = (
-    <Button onClick={handleLogout} unstyled className="cursor-pointer">
-      Cerrar sesión
-    </Button>
+    <>
+      {user && (
+        <Dropdown
+          label={
+            <>
+              {user.image && (
+                <Image
+                  alt="Avatar"
+                  src={user.image}
+                  height={40}
+                  width={40}
+                  className="border-primary rounded-full border"
+                />
+              )}
+
+              {user.name}
+            </>
+          }
+          items={[
+            { label: "Mi perfil", onClick: () => redirect("/my-profile") },
+            { label: "Cerrar sesión", onClick: handleLogout },
+          ]}
+          variant="text"
+          className="!py-0 !pr-0 hover:!bg-transparent"
+        />
+      )}
+    </>
   );
 
   const unauthenticatedLinks = (

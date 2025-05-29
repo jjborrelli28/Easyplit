@@ -22,11 +22,11 @@ export const metadata: Metadata = {
     "Easyplit te ayuda a dividir gastos con amigos, grupos o parejas de forma simple y rápida. Registrá, organizá y saldá cuentas sin complicaciones.",
 };
 
-const RootLayout = async ({
-  children,
-}: Readonly<{
+interface RootLayoutProps {
   children: ReactNode;
-}>) => {
+}
+
+const RootLayout = async ({ children }: RootLayoutProps) => {
   return (
     <html lang="es" suppressHydrationWarning>
       <body className={`${inter.variable} antialiased`}>

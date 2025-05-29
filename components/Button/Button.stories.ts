@@ -17,7 +17,7 @@ const meta = {
   argTypes: {
     variant: {
       control: { type: "select" },
-      options: ["contained", "outlined"],
+      options: ["contained", "outlined", 'text'],
     },
     color: {
       control: { type: "select" },
