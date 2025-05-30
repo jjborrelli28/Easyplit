@@ -7,7 +7,9 @@ import { redirect, usePathname } from "next/navigation";
 import { Session } from "next-auth";
 import { signOut } from "next-auth/react";
 
-import Button from "../Button";
+import clsx from "clsx";
+
+import Button, { type ButtonProps } from "../Button";
 import Collapse from "../Collapse";
 import Dropdown from "../Dropdown";
 import EasyplitLogo from "../EasyplitLogo";
@@ -42,51 +44,24 @@ const AuthenticatedContent = ({ isOpen, user }: AuthenticatedContentProps) => {
         className="md:!grid-rows-[1fr] md:!opacity-100"
         containerClassName="md:overflow-visible"
       >
-        <div className="border-foreground mt-4 flex flex-col gap-6 border-t py-6 md:mt-0 md:flex-row md:items-center md:border-t-0 md:py-0">
+        <div className="border-foreground box-sizing mt-4 flex flex-col gap-6 border-t py-6 md:mt-0 md:flex-row md:items-center md:border-t-0 md:py-0">
           <nav className="flex flex-col gap-6 md:hidden md:flex-row md:items-center">
-            {!isMyAccountPage && (
-              <Button
-                href="/my-account"
-                unstyled
-                className="hover:text-foreground/90 w-fit font-semibold transition-colors duration-300"
-              >
-                Mi cuenta
-              </Button>
-            )}
-            {!isDashboardPage && (
-              <Button
-                href="/dashboard"
-                unstyled
-                className="hover:text-foreground/90 w-fit font-semibold transition-colors duration-300"
-              >
-                Panel de control
-              </Button>
-            )}
-            {!isRecentActivityPage && (
-              <Button
-                href="/recent-activity"
-                unstyled
-                className="hover:text-foreground/90 w-fit font-semibold transition-colors duration-300"
-              >
-                Actividad reciente
-              </Button>
-            )}
-            {!isAllExpensesPage && (
-              <Button
-                href="/all-expenses"
-                unstyled
-                className="hover:text-foreground/90 w-fit font-semibold transition-colors duration-300"
-              >
-                Todos los gastos
-              </Button>
-            )}
-            <Button
-              onClick={handleLogout}
-              unstyled
-              className="hover:text-foreground/90 w-fit cursor-pointer font-semibold transition-colors duration-300"
-            >
-              Cerrar sesión
-            </Button>
+            <CTA href="/my-account" isActive={isMyAccountPage}>
+              Mi cuenta
+            </CTA>
+            <CTA href="/dashboard" isActive={isDashboardPage}>
+              Panel de control
+            </CTA>
+            <CTA href="/recent-activity" isActive={isRecentActivityPage}>
+              Actividad reciente
+            </CTA>
+            <CTA href="/all-expenses" isActive={isAllExpensesPage}>
+              Todos los gastos
+            </CTA>
+
+            <hr className="border-foreground" />
+
+            <CTA onClick={handleLogout}>Cerrar sesión</CTA>
           </nav>
 
           <Dropdown
@@ -127,3 +102,20 @@ const AuthenticatedContent = ({ isOpen, user }: AuthenticatedContentProps) => {
 };
 
 export default AuthenticatedContent;
+
+type CTAProps = ButtonProps & {
+  isActive?: boolean;
+};
+
+const CTA = ({ isActive, className, ...restProps }: CTAProps) => (
+  <Button
+    unstyled
+    className={clsx(
+      "hover:text-foreground/90 w-fit cursor-pointer font-semibold transition-colors duration-300",
+      isActive && "text-primary hover:text-primary/90 pointer-events-none",
+      className,
+    )}
+    disabled={isActive}
+    {...restProps}
+  />
+);
