@@ -6,9 +6,10 @@ import { useSession } from "next-auth/react";
 
 import clsx from "clsx";
 
+import Button, { type ButtonProps } from "../Button";
 import MenuButton from "../MenuButton";
-import UnauthenticatedContent from "./UnauthenticatedContent";
 import AuthenticatedContent from "./AuthenticatedContent";
+import UnauthenticatedContent from "./UnauthenticatedContent";
 
 const Header = () => {
   const { data, status } = useSession();
@@ -55,3 +56,20 @@ const Header = () => {
 };
 
 export default Header;
+
+type CTAProps = ButtonProps & {
+  isActive?: boolean;
+};
+
+export const CTA = ({ isActive, className, ...restProps }: CTAProps) => (
+  <Button
+    unstyled
+    className={clsx(
+      "hover:text-foreground/90 w-fit cursor-pointer font-semibold transition-colors duration-300",
+      isActive && "text-primary hover:text-primary/90 pointer-events-none",
+      className,
+    )}
+    disabled={isActive}
+    {...restProps}
+  />
+);

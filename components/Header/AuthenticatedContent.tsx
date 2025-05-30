@@ -7,9 +7,8 @@ import { redirect, usePathname } from "next/navigation";
 import { Session } from "next-auth";
 import { signOut } from "next-auth/react";
 
-import clsx from "clsx";
-
-import Button, { type ButtonProps } from "../Button";
+import { CTA } from ".";
+import Button from "../Button";
 import Collapse from "../Collapse";
 import Dropdown from "../Dropdown";
 import EasyplitLogo from "../EasyplitLogo";
@@ -35,9 +34,21 @@ const AuthenticatedContent = ({ isOpen, user }: AuthenticatedContentProps) => {
 
   return (
     <div className="container mx-auto flex w-full flex-col p-4 md:flex-row md:items-center md:justify-between">
-      <Link href="/">
+      <Link href="/" className="w-fit">
         <EasyplitLogo isAnimated />
       </Link>
+
+      <Button href="/my-account" unstyled className="absolute top-4 right-18">
+        {user.image && (
+          <Image
+            alt="Avatar"
+            src={user.image}
+            height={40}
+            width={40}
+            className="border-secondary rounded-full border-2 transition-opacity hover:opacity-90"
+          />
+        )}
+      </Button>
 
       <Collapse
         isOpen={isOpen}
@@ -46,9 +57,6 @@ const AuthenticatedContent = ({ isOpen, user }: AuthenticatedContentProps) => {
       >
         <div className="border-foreground box-sizing mt-4 flex flex-col gap-6 border-t py-6 md:mt-0 md:flex-row md:items-center md:border-t-0 md:py-0">
           <nav className="flex flex-col gap-6 md:hidden md:flex-row md:items-center">
-            <CTA href="/my-account" isActive={isMyAccountPage}>
-              Mi cuenta
-            </CTA>
             <CTA href="/dashboard" isActive={isDashboardPage}>
               Panel de control
             </CTA>
@@ -61,6 +69,9 @@ const AuthenticatedContent = ({ isOpen, user }: AuthenticatedContentProps) => {
 
             <hr className="border-foreground" />
 
+            <CTA href="/my-account" isActive={isMyAccountPage}>
+              Mi cuenta
+            </CTA>
             <CTA onClick={handleLogout}>Cerrar sesión</CTA>
           </nav>
 
@@ -88,6 +99,7 @@ const AuthenticatedContent = ({ isOpen, user }: AuthenticatedContentProps) => {
               { label: "Cerrar sesión", onClick: handleLogout },
             ]}
             variant="text"
+            color="secondary"
             className="!py-0 !pr-0 hover:!bg-transparent"
             containerClassName="!hidden md:!inline-block"
           />
@@ -102,20 +114,3 @@ const AuthenticatedContent = ({ isOpen, user }: AuthenticatedContentProps) => {
 };
 
 export default AuthenticatedContent;
-
-type CTAProps = ButtonProps & {
-  isActive?: boolean;
-};
-
-const CTA = ({ isActive, className, ...restProps }: CTAProps) => (
-  <Button
-    unstyled
-    className={clsx(
-      "hover:text-foreground/90 w-fit cursor-pointer font-semibold transition-colors duration-300",
-      isActive && "text-primary hover:text-primary/90 pointer-events-none",
-      className,
-    )}
-    disabled={isActive}
-    {...restProps}
-  />
-);
