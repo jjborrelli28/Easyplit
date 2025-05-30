@@ -38,7 +38,11 @@ const AuthenticatedContent = ({ isOpen, user }: AuthenticatedContentProps) => {
         <EasyplitLogo isAnimated />
       </Link>
 
-      <Button href="/my-account" unstyled className="absolute top-4 right-18">
+      <Button
+        href="/my-account"
+        unstyled
+        className="absolute top-4 right-18 md:hidden"
+      >
         {user.image && (
           <Image
             alt="Avatar"
@@ -84,7 +88,7 @@ const AuthenticatedContent = ({ isOpen, user }: AuthenticatedContentProps) => {
                     src={user.image}
                     height={40}
                     width={40}
-                    className="border-primary rounded-full border"
+                    className="border-secondary rounded-full border-2"
                   />
                 )}
 
