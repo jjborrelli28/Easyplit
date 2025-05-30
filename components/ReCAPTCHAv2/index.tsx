@@ -13,7 +13,7 @@ const ReCAPTCHAv2 = ({ error, ...restProps }: ReCAPTCHATv2Props) => {
     <div className="mt-4">
       <ReCAPTCHA sitekey={SITE_KEY} {...restProps} className="w-full" />
 
-      <Collapse open={!!error}>
+      <Collapse isOpen={!!error}>
         <p className="text-danger mt-1 ml-1 text-start text-xs">{error}</p>
       </Collapse>
     </div>

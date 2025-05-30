@@ -6,7 +6,7 @@ const secret = process.env.NEXTAUTH_SECRET;
 const unauthenticatedPaths = ["/", "/login", "/register"];
 
 const authenticatedPaths = [
-    "/my-profile",
+    "/my-account",
     "/dashboard",
     "/recent-activity",
     "/all-expenses",
@@ -35,7 +35,7 @@ export const config = {
         "/",
         "/login",
         "/register",
-        "/my-profile",
+        "/my-account",
         "/dashboard/:path*",
         "/recent-activity/:path*",
         "/all-expenses/:path*",

@@ -64,7 +64,7 @@ const Input = ({
         {...props}
       />
 
-      <Collapse open={!!error}>
+      <Collapse isOpen={!!error}>
         <p className="text-danger mt-1 ml-1 text-start text-xs">{error}</p>
       </Collapse>
     </fieldset>

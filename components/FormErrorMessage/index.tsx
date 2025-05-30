@@ -15,7 +15,7 @@ const FormErrorMessage = ({
   paragraphClassName,
 }: FormErrorMessageProps) => {
   return (
-    <Collapse open={!!message}>
+    <Collapse isOpen={!!message}>
       <div
         className={clsx(
           "border-danger text-danger mt-2 mb-3 flex items-center border",

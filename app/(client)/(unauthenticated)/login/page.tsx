@@ -187,9 +187,9 @@ const LoginPage = () => {
           <AuthDivider />
 
           <Button
+            onClick={handleLoginWithGoogle}
             variant="outlined"
             color="secondary"
-            onClick={handleLoginWithGoogle}
             fullWidth
           >
             <Image alt="Google" src={googleLogo} height={20} width={20} />

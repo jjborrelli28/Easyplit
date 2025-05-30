@@ -9,13 +9,11 @@ const RecentActivityPage = () => {
   //  const { data } = useSession();
 
   return (
-    <PageContainer className="border-h-background border-r !px-0">
-      <div className="border-h-background flex flex-1 flex-col border-t">
-        <div className="flex flex-1 flex-col gap-y-4 p-4">
-          <h1 className="text-3xl font-bold">Actividad reciente</h1>
+    <PageContainer className="border-h-background !px-0 md:border-r">
+      <div className="border-h-background flex flex-1 flex-col border-t p-4">
+        <h1 className="text-3xl font-bold">Actividad reciente</h1>
 
-          <PageUnderConstructionMessage />
-        </div>
+        <PageUnderConstructionMessage />
       </div>
     </PageContainer>
   );

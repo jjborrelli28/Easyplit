@@ -19,14 +19,14 @@ type Story = StoryObj<typeof Collapse>;
 
 export const Example: Story = {
   args: {
-    open: false,
+    isOpen: false,
   },
 
   render: (args) => {
-    const [{ open }, updateArgs] = useArgs();
+    const [{ isOpen }, updateArgs] = useArgs();
 
     const handleToggleCollapse = () => {
-      updateArgs({ open: !open });
+      updateArgs({ isOpen: !open });
     };
 
     return (
@@ -37,7 +37,7 @@ export const Example: Story = {
 
         <hr className="border-foreground" />
 
-        <Collapse {...args} open={open}>
+        <Collapse {...args} isOpen={isOpen}>
           <p className="text-foreground border-h-foreground border p-4">
             Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
             eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim

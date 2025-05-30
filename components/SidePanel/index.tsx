@@ -11,7 +11,7 @@ const SidePanel = () => {
   const pathname = usePathname();
 
   return (
-    <aside className="mt-header from-h-background to-background w-sm bg-gradient-to-l">
+    <aside className="mt-header from-h-background to-background hidden w-sm bg-gradient-to-l md:block lg:w-md xl:w-lg">
       <nav className="flex flex-col">
         <CTA
           icon={MonitorCog}

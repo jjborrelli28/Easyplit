@@ -8,7 +8,7 @@ const EasyplitLogo = ({ isAnimated = false }: EasyplitLogoProps) => {
     <div
       className={clsx(
         "flex items-center gap-x-1",
-        isAnimated && "group transition-transform duration-300 hover:scale-105",
+        isAnimated && "group transition-transform duration-300",
       )}
     >
       <svg
@@ -54,7 +54,7 @@ const EasyplitLogo = ({ isAnimated = false }: EasyplitLogoProps) => {
         />
       </svg>
 
-      <p className="text-foreground text-xl font-bold">
+      <p className="text-foreground hidden text-xl font-bold md:block">
         easy
         <span
           className={clsx("text-primary", isAnimated && "animate-color-pulse")}

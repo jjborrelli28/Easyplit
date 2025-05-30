@@ -15,7 +15,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-export const ExampleInDashboard: Story = {
+export const DashboardExample: Story = {
   args: {},
   parameters: {
     nextjs: {

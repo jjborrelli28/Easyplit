@@ -1,89 +1,55 @@
 "use client";
 
-import Image from "next/image";
-import Link from "next/link";
-import { redirect, usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 
-import { signOut, useSession } from "next-auth/react";
+import { useSession } from "next-auth/react";
 
-import Button from "../Button";
-import Dropdown from "../Dropdown";
-import EasyplitLogo from "../EasyplitLogo";
-import ThemeToggle from "../ThemeToggle";
+import clsx from "clsx";
+
+import MenuButton from "../MenuButton";
+import UnauthenticatedContent from "./UnauthenticatedContent";
+import AuthenticatedContent from "./AuthenticatedContent";
 
 const Header = () => {
   const { data, status } = useSession();
-  const pathname = usePathname();
 
-  const user = data?.user;
+  const [menuIsOpen, setMenuIsOpen] = useState(false);
+
+  useEffect(() => {
+    if (menuIsOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [menuIsOpen]);
+
+  const handleToggleMenu = () => setMenuIsOpen((prevState) => !prevState);
 
   const isAuthenticated = status === "authenticated";
-  const isLoginPage = pathname === "/login";
-  const isRegisterPage = pathname === "/register";
-
-  const handleLogout = () => {
-    signOut();
-    redirect("/");
-  };
-
-  const authenticatedLinks = (
-    <>
-      {user && (
-        <Dropdown
-          label={
-            <>
-              {user.image && (
-                <Image
-                  alt="Avatar"
-                  src={user.image}
-                  height={40}
-                  width={40}
-                  className="border-primary rounded-full border"
-                />
-              )}
-
-              {user.name}
-            </>
-          }
-          items={[
-            { label: "Mi perfil", onClick: () => redirect("/my-profile") },
-            { label: "Cerrar sesión", onClick: handleLogout },
-          ]}
-          variant="text"
-          className="!py-0 !pr-0 hover:!bg-transparent"
-        />
-      )}
-    </>
-  );
-
-  const unauthenticatedLinks = (
-    <>
-      {!isLoginPage && (
-        <Button href="/login" unstyled className="mx-3 my-2 font-semibold">
-          Iniciar sesión
-        </Button>
-      )}
-      {!isRegisterPage && <Button href="/register">Registrarse</Button>}
-    </>
-  );
 
   return (
-    <header className="fixed w-full justify-end p-4 backdrop-blur-md">
-      <div className="container mx-auto flex items-center justify-between">
-        <Link href="/">
-          <EasyplitLogo isAnimated />
-        </Link>
+    <header
+      className={clsx(
+        "fixed z-50 flex w-full justify-end backdrop-blur-md",
+        menuIsOpen &&
+          "bg-h-background/75 inset-0 md:inset-auto md:bg-transparent",
+      )}
+    >
+      {isAuthenticated ? (
+        <AuthenticatedContent isOpen={menuIsOpen} user={data.user} />
+      ) : (
+        <UnauthenticatedContent isOpen={menuIsOpen} />
+      )}
 
-        <div className="flex items-center gap-x-6">
-          <nav className="flex items-center justify-end gap-x-6">
-            {isAuthenticated ? authenticatedLinks : unauthenticatedLinks}
-          </nav>
-
-          <div className="bg-primary h-10 w-[1px]" />
-
-          <ThemeToggle />
-        </div>
-      </div>
+      <MenuButton
+        isOpen={menuIsOpen}
+        onClick={handleToggleMenu}
+        className="absolute top-4 right-4 md:hidden"
+      />
     </header>
   );
 };
