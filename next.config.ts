@@ -3,7 +3,7 @@ import type { RuleSetRule } from "webpack";
 
 const nextConfig: NextConfig = {
   images: {
-    domains: ["lh3.googleusercontent.com"],
+    domains: ['ui-avatars.com', "lh3.googleusercontent.com"],
   },
 
   webpack(config) {

@@ -4,7 +4,7 @@ import { v4 as uuidv4 } from "uuid";
 
 import API_RESPONSE_CODE from "@/lib/api/API_RESPONSE_CODE";
 import type { ErrorResponse, SuccessResponse } from "@/lib/api/types";
-import { hashPassword, sendVerificationEmail } from "@/lib/auth/helpers";
+import { getRandomColorPair, hashPassword, parseNameForAvatar, sendVerificationEmail } from "@/lib/auth/helpers";
 import prisma from "@/lib/prisma";
 import verifyRecaptcha from "@/lib/recaptcha";
 import { parseZodErrors } from "@/lib/validations/helpers";
@@ -188,11 +188,16 @@ export const POST: RegisterHandler = async (req: Request) => {
 
             await sendVerificationEmail(email, verifyToken);
 
+            const { background, text } = getRandomColorPair()
+            const parsedName = parseNameForAvatar(name)
+            const image = `https://ui-avatars.com/api/?name=${parsedName}&background=${background}&color=${text}&size=128`;
+
             const user = await prisma.user.create({
                 data: {
                     name,
                     email,
                     password: hashedPassword,
+                    image,
                     verifyToken,
                     verifyTokenExp,
                 },
