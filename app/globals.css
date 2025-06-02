@@ -162,3 +162,17 @@ input:-webkit-autofill {
 .animate-spin-slow {
   animation: spin 10s linear infinite;
 }
+
+@keyframes border-bottom-color-pulse {
+  0%,
+  100% {
+    border-bottom-color: var(--foreground);
+  }
+  50% {
+    border-bottom-color: var(--primary);
+  }
+}
+
+.animate-border-bottom-color-pulse {
+  animation: border-bottom-color-pulse 1.5s ease-in-out infinite;
+}

@@ -95,7 +95,7 @@ const RegisterPage = () => {
           {message.content}
         </MessageCard>
       ) : (
-        <div className="border-h-background relative w-full max-w-md space-y-8 border p-8 shadow-xl">
+        <div className="border-h-background relative my-8 w-full max-w-md space-y-8 border p-8 shadow-xl">
           <h1 className="text-3xl font-bold">Crear cuenta</h1>
 
           <div className="space-y-4">

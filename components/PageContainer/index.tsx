@@ -15,7 +15,7 @@ const PageContainer = ({
   return (
     <main
       className={clsx(
-        "py-header container mx-auto flex min-h-screen flex-col px-4",
+        "pt-header container mx-auto flex min-h-screen flex-col px-4 pb-4",
         centered && "items-center justify-center",
         className,
       )}
