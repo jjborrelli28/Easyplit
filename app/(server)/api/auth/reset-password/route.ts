@@ -6,7 +6,7 @@ import API_RESPONSE_CODE from "@/lib/api/API_RESPONSE_CODE";
 import { ErrorResponse, SuccessResponse } from "@/lib/api/types";
 import prisma from "@/lib/prisma";
 import { parseZodErrors } from "@/lib/validations/helpers";
-import { resetPasswordSchema } from "@/lib/validations/schemas";
+import { changePasswordSchema } from "@/lib/validations/schemas";
 
 type ResetPasswordHandler = (
     req: Request,
@@ -19,7 +19,7 @@ export const POST: ResetPasswordHandler = async (req: Request) => {
         const { token: resetToken, password } = await req.json();
 
         // Field format verification
-        const fieldVerification = resetPasswordSchema.safeParse({
+        const fieldVerification = changePasswordSchema.safeParse({
             password,
         });
 

@@ -1,6 +1,6 @@
 "use client";
 
-import type { ButtonHTMLAttributes, PropsWithChildren } from "react";
+import type { ButtonHTMLAttributes, PropsWithChildren, Ref } from "react";
 
 import type { Url } from "next/dist/shared/lib/router/router";
 import Link, { type LinkProps } from "next/link";
@@ -22,19 +22,21 @@ interface BaseProps {
 }
 
 interface ButtonAsLink extends BaseProps, LinkProps {
+  ref?: Ref<HTMLAnchorElement>;
   className?: string;
 }
 
 interface ButtonAsButton
   extends BaseProps,
     Omit<ButtonHTMLAttributes<HTMLButtonElement>, "color"> {
+  ref?: Ref<HTMLButtonElement>;
   href?: Url;
 }
 
 export type ButtonProps = PropsWithChildren<ButtonAsButton | ButtonAsLink>;
 
 const BASE_STYLES =
-  "relative box-border flex min-w-[80px] items-center justify-center gap-3 px-4 py-2 font-semibold transition-colors duration-300";
+  "relative box-border flex min-w-30 items-center justify-center gap-3 px-4 py-2 font-semibold transition-colors duration-300";
 
 const COLORS: Record<Colors, Record<Variant, string>> = {
   primary: {
@@ -84,7 +86,7 @@ const Button = ({
     !unstyled && [
       BASE_STYLES,
       COLORS[color][variant],
-      fullWidth ? "w-full" : "w-fit",
+      fullWidth ? "w-full" : "max-w-fit",
       loading && "pointer-events-none text-transparent",
       disabled ? "cursor-not-allowed" : "cursor-pointer",
     ],

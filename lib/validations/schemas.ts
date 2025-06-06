@@ -46,10 +46,14 @@ export const forgotPasswordSchema = z.object({
     recaptchaToken,
 });
 
-export const resetPasswordSchema = z.object({
+export const changePasswordSchema = z.object({
     password,
 });
 
 export const recaptchaTokenSchema = z.object({
     recaptchaToken,
+});
+
+export const changeNameSchema = z.object({
+    name,
 });

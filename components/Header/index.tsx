@@ -7,12 +7,13 @@ import { useSession } from "next-auth/react";
 import clsx from "clsx";
 
 import Button, { type ButtonProps } from "../Button";
+import LoadingBar from "../LoadingBar";
 import MenuButton from "../MenuButton";
 import AuthenticatedContent from "./AuthenticatedContent";
 import UnauthenticatedContent from "./UnauthenticatedContent";
 
 const Header = () => {
-  const { data, status } = useSession();
+  const { status, data } = useSession();
 
   const [menuIsOpen, setMenuIsOpen] = useState(false);
 
@@ -30,7 +31,9 @@ const Header = () => {
 
   const handleToggleMenu = () => setMenuIsOpen((prevState) => !prevState);
 
+  const isLoading = status === "loading";
   const isAuthenticated = status === "authenticated";
+  const user = data?.user;
 
   return (
     <header
@@ -40,7 +43,9 @@ const Header = () => {
           "bg-h-background/75 inset-0 md:inset-auto md:bg-transparent",
       )}
     >
-      {isAuthenticated ? (
+      {isLoading ? (
+        <LoadingBar />
+      ) : isAuthenticated && user ? (
         <AuthenticatedContent isOpen={menuIsOpen} user={data.user} />
       ) : (
         <UnauthenticatedContent isOpen={menuIsOpen} />
