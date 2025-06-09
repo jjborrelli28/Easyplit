@@ -10,7 +10,7 @@ import {
 } from "react";
 
 import clsx from "clsx";
-import { Pencil, PencilOff } from "lucide-react";
+import { Eye, EyeOff, Pencil, PencilOff } from "lucide-react";
 
 import Button from "../Button";
 import Collapse from "../Collapse";
@@ -28,6 +28,7 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 const Input = ({
   label,
   error,
+  type,
   value: rawValue,
   onChange,
   onFocus: rawOnFocus,
@@ -41,11 +42,13 @@ const Input = ({
   ...props
 }: InputProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
+  const showPasswordRef = useRef<HTMLButtonElement>(null);
   const editableToggleRef = useRef<HTMLButtonElement>(null);
 
   const [onFocus, setOnFocus] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [internalValue, setInternalValue] = useState(rawValue);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     if (inputRef.current && isEditing) {
@@ -54,7 +57,11 @@ const Input = ({
   }, [isEditing]);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    isEditing ? setInternalValue(e.target.value) : onChange?.(e);
+    if (isEditing) {
+      setInternalValue(e.target.value);
+    } else {
+      onChange?.(e);
+    }
   };
 
   const handleFocus = (e: FocusEvent<HTMLInputElement, Element>) => {
@@ -64,7 +71,11 @@ const Input = ({
   };
 
   const handleBlur = (e: FocusEvent<HTMLInputElement, Element>) => {
-    if (e.relatedTarget && e.relatedTarget === editableToggleRef.current)
+    if (
+      e.relatedTarget &&
+      (e.relatedTarget === editableToggleRef.current ||
+        e.relatedTarget === showPasswordRef.current)
+    )
       return;
 
     setOnFocus(false);
@@ -86,6 +97,10 @@ const Input = ({
     onBlur?.(e);
   };
 
+  const handleShowPasswordToggle = () => {
+    setShowPassword((prevState) => !prevState);
+  };
+
   const handleEditableToggle = () => {
     if (isEditing) {
       const syntheticEvent = {
@@ -101,6 +116,14 @@ const Input = ({
       onChange?.(syntheticEvent);
     } else {
       setIsEditing(true);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (editableToggle && isEditing && e.key === "Enter") {
+      e.preventDefault();
+
+      handleEditableToggle();
     }
   };
 
@@ -133,29 +156,51 @@ const Input = ({
         </label>
       )}
 
-      <div className="flex items-center">
+      <div className="relative flex items-center">
         <input
           ref={inputRef}
+          type={type === "password" ? (showPassword ? "text" : type) : type}
           value={value}
           onChange={handleChange}
           onFocus={handleFocus}
           onBlur={handleBlur}
+          onKeyDown={handleKeyDown}
           disabled={disabled}
           className={clsx(
             "text-foreground !border-b-foreground focus:!border-b-primary w-full border border-transparent bg-transparent p-3 transition duration-300 outline-none focus:ring-0",
+            type === "password"
+              ? editableToggle
+                ? "pr-12"
+                : "pr-12"
+              : editableToggle
+                ? "pr-0"
+                : "pr-3",
             !label
               ? "placeholder-foreground/50"
               : onFocus
                 ? "placeholder-h-background"
                 : "placeholder:text-transparent",
             error ? "!border-b-danger" : "border-b-transparent",
-            editableToggle && "!pr-0",
             editableToggle && !disabled && "animate-border-bottom-color-pulse",
             disabled && "border-b-transparent",
             className,
           )}
           {...props}
         />
+
+        {type === "password" && (
+          <Button
+            ref={showPasswordRef}
+            onClick={handleShowPasswordToggle}
+            unstyled
+            className={clsx(
+              "text-foreground hover:text-primary absolute top-1/2 right-3 flex h-12 flex-1 -translate-y-1/2 transform cursor-pointer items-center transition-colors duration-300",
+              editableToggle && "right-15",
+            )}
+          >
+            {showPassword ? <EyeOff /> : <Eye />}
+          </Button>
+        )}
 
         {editableToggle && (
           <Button

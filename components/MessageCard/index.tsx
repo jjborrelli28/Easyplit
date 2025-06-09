@@ -4,6 +4,7 @@ import clsx from "clsx";
 import type { LucideIcon } from "lucide-react";
 
 import Button, { type Colors } from "../Button";
+import Countdown, { type CountdownProps } from "../Countdown";
 
 export interface MessageCardProps {
   color?: Colors;
@@ -19,6 +20,7 @@ export interface MessageCardProps {
   titleClassNAme?: string;
   contentClassName?: string;
   actionClassName?: string;
+  countdown?: CountdownProps;
 }
 
 const COLORS = {
@@ -43,6 +45,7 @@ const MessageCard = ({
   titleClassNAme,
   contentClassName,
   actionClassName,
+  countdown,
 }: MessageCardProps) => {
   const TitleWrapper = titleTag;
   const hasAction = actionLabel && (actionHref || onAction);
@@ -89,6 +92,12 @@ const MessageCard = ({
         >
           {actionLabel}
         </Button>
+      )}
+
+      {countdown && (
+        <div className="flex justify-center">
+          <Countdown {...countdown} />
+        </div>
       )}
     </div>
   );

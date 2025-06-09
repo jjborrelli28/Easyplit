@@ -149,7 +149,7 @@ const handler = NextAuth({
                     id: existingUser.id,
                     name: existingUser.name,
                     email: existingUser.email,
-                    image: existingUser.image
+                    image: existingUser.image,
                 };
             },
         }),
@@ -207,6 +207,47 @@ const handler = NextAuth({
                 return true;
             }
             return true;
+        },
+
+        // Callback to modify the JWT (executed when logging in or updating token)
+        async jwt({ token, user }) {
+            const email = user?.email ?? token?.email;
+
+            // Search user by email
+            if (email) {
+                const existingUser = await prisma.user.findUnique({
+                    where: { email },
+                    select: {
+                        id: true,
+                        email: true,
+                        name: true,
+                        image: true,
+                        emailVerified: true,
+                        password: true,
+                    },
+                });
+
+                // If the user exists Update the token with the user's details
+                if (existingUser) {
+                    token.email = existingUser.email;
+                    token.name = existingUser.name;
+                    token.image = existingUser.image;
+                    token.hasPassword = !!existingUser.password;
+                }
+            }
+
+            return token;
+        },
+        // Callback to modify the session before sending it to the client
+        async session({ session, token }) {
+            if (session.user && token) {
+                session.user.name = token.name as string;
+                session.user.email = token.email as string;
+                session.user.image = token.image as string;
+                session.user.hasPassword = token.hasPassword as boolean;
+            }
+
+            return session;
         },
     },
 });

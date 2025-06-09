@@ -8,7 +8,8 @@ import Button from "../Button";
 
 interface ModalProps {
   isOpen: boolean;
-  onClose: () => void;
+  onClose: VoidFunction;
+  showHeader?: boolean;
   title?: string;
   children: ReactNode;
   className?: string;
@@ -19,6 +20,7 @@ interface ModalProps {
 const Modal = ({
   isOpen,
   onClose,
+  showHeader = true,
   title,
   children,
   className,
@@ -49,24 +51,29 @@ const Modal = ({
         role="dialog"
         aria-modal="true"
         className={clsx(
-          "bg-h-background flex w-full max-w-md flex-col gap-y-8 rounded-lg p-4 shadow-xl lg:p-8",
+          "bg-h-background flex w-full max-w-md flex-col gap-y-8 p-4 shadow-xl lg:p-8",
           className,
         )}
       >
-        <div
-          className={clsx("flex items-center justify-between", headerClassName)}
-        >
-          {title && <h2 className="text-2xl font-semibold">{title}</h2>}
-
-          <Button
-            aria-label="Cerrar"
-            onClick={onClose}
-            unstyled
-            className="hover:text-foreground/90 cursor-pointer transition-colors duration-300"
+        {showHeader && (
+          <div
+            className={clsx(
+              "flex items-center justify-between",
+              headerClassName,
+            )}
           >
-            <X />
-          </Button>
-        </div>
+            {title && <h2 className="text-2xl font-semibold">{title}</h2>}
+
+            <Button
+              aria-label="Cerrar"
+              onClick={onClose}
+              unstyled
+              className="hover:text-foreground/90 cursor-pointer transition-colors duration-300"
+            >
+              <X />
+            </Button>
+          </div>
+        )}
 
         <div className={clsx("flex flex-col gap-y-8", contentClassName)}>
           {children}

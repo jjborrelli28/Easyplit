@@ -3,22 +3,29 @@ import { type FormEvent, useState } from "react";
 import Image from "next/image";
 
 import type { Session } from "next-auth";
+import { useSession } from "next-auth/react";
 
 import clsx from "clsx";
 
+import useUpdateUserData from "@/hooks/auth/useUpdateUserData";
+import type { ResponseMessage } from "@/lib/api/types";
+import ICON_MAP from "@/lib/icons";
 import { parseZodErrors } from "@/lib/validations/helpers";
 import {
-  changeNameSchema,
-  changePasswordSchema,
+  updateNameSchema,
+  updatePasswordSchema,
 } from "@/lib/validations/schemas";
 
 import Button from "@/components/Button";
+import FormErrorMessage from "@/components/FormErrorMessage";
 import Input from "@/components/Input";
+import MessageCard from "@/components/MessageCard";
 import Modal from "@/components/Modal";
 
 const initialFieldErrors = {
   name: null,
   password: null,
+  currentPassword: null,
 };
 
 interface MyAccountSectionProps {
@@ -26,23 +33,79 @@ interface MyAccountSectionProps {
 }
 
 const MyAccountSection = ({ user }: MyAccountSectionProps) => {
+  const { mutate: updateUserData, isPending } = useUpdateUserData();
+  const { update } = useSession();
+
   const currentUserData = user;
 
   const [name, setName] = useState(currentUserData.name);
-  const [email, setEmail] = useState(currentUserData.email); // Not editable yet
   const [password, setPassword] = useState("");
+  const [email, setEmail] = useState(currentUserData.email); // Not editable yet
   const [currentPassword, setCurrentPassword] = useState("");
 
   const [fieldErrors, setFieldErrors] = useState<{
     name?: string | null;
     password?: string | null;
+    currentPassword?: string | null;
   }>(initialFieldErrors);
   const [responseError, setResponseError] = useState<string[] | null>(null);
+  const [message, setMessage] = useState<ResponseMessage | null>(null);
 
   const [isOpenModal, setIsOpenModal] = useState(false);
 
-  const handleUpdateData = async (e: FormEvent) => {
+  const handleUpdateUserData = async (e: FormEvent) => {
     e.preventDefault();
+
+    if (!email) return;
+
+    if (password) {
+      const verifiedField = updatePasswordSchema.safeParse({
+        password: currentPassword,
+      });
+
+      if (!verifiedField.success) {
+        const fields = parseZodErrors(verifiedField.error);
+
+        setFieldErrors({
+          ...initialFieldErrors,
+          ...{ currentPassword: fields.password },
+        });
+
+        return;
+      } else {
+        setFieldErrors(initialFieldErrors);
+      }
+    }
+
+    const body = {
+      ...(name && { name }),
+      ...(password && { password }),
+      ...(password && { currentPassword }),
+      password,
+      email,
+    };
+
+    updateUserData(body, {
+      onSuccess: (res) => {
+        setFieldErrors(initialFieldErrors);
+        setResponseError(null);
+        setMessage(res.message);
+      },
+      onError: (res) => {
+        const {
+          error: { message, fields },
+        } = res.response.data;
+
+        if (fields) {
+          setFieldErrors({
+            ...initialFieldErrors,
+            ...fields,
+          });
+        } else {
+          setResponseError(message);
+        }
+      },
+    });
   };
 
   const nameUpdated = name !== currentUserData.name;
@@ -82,7 +145,7 @@ const MyAccountSection = ({ user }: MyAccountSectionProps) => {
 
                   setName(name);
 
-                  const verifiedField = changeNameSchema.safeParse({
+                  const verifiedField = updateNameSchema.safeParse({
                     name,
                   });
 
@@ -108,6 +171,49 @@ const MyAccountSection = ({ user }: MyAccountSectionProps) => {
                 containerClassName="text-foreground/75 order-1"
               />
             )}
+            {user.hasPassword && (
+              <Input
+                id="password"
+                type="password"
+                label="Nueva contraseña"
+                placeholder="Nueva contraseña"
+                value={password}
+                onChange={(e) => {
+                  const password = e.target.value;
+
+                  setPassword(password);
+                  if (password === "")
+                    return setFieldErrors((prevState) => ({
+                      ...prevState,
+                      password: null,
+                    }));
+
+                  const verifiedField = updatePasswordSchema.safeParse({
+                    password,
+                  });
+
+                  if (verifiedField.success) {
+                    setFieldErrors((prevState) => ({
+                      ...prevState,
+                      password: null,
+                    }));
+                  } else {
+                    const fields = parseZodErrors(verifiedField.error);
+
+                    setFieldErrors({
+                      ...initialFieldErrors,
+                      ...fields,
+                    });
+                  }
+                }}
+                autoComplete="current-password"
+                required
+                editableToggle
+                disabled={true}
+                error={fieldErrors.password}
+                containerClassName="text-foreground/75 order-2 xl:order-3"
+              />
+            )}
             {email !== null && (
               <Input
                 id="email"
@@ -119,51 +225,10 @@ const MyAccountSection = ({ user }: MyAccountSectionProps) => {
                 autoComplete="email"
                 required
                 disabled={true}
-                containerClassName=" order-3 xl:order-2"
+                containerClassName="order-3 xl:order-2"
                 className="!border-b-transparent"
               />
             )}
-            <Input
-              id="password"
-              type="password"
-              label="Nueva contraseña"
-              placeholder="Nueva contraseña"
-              value={password}
-              onChange={(e) => {
-                const password = e.target.value;
-
-                setPassword(password);
-                if (password === "")
-                  return setFieldErrors((prevState) => ({
-                    ...prevState,
-                    password: null,
-                  }));
-
-                const verifiedField = changePasswordSchema.safeParse({
-                  password,
-                });
-
-                if (verifiedField.success) {
-                  setFieldErrors((prevState) => ({
-                    ...prevState,
-                    password: null,
-                  }));
-                } else {
-                  const fields = parseZodErrors(verifiedField.error);
-
-                  setFieldErrors({
-                    ...initialFieldErrors,
-                    ...fields,
-                  });
-                }
-              }}
-              autoComplete="current-password"
-              required
-              editableToggle
-              disabled={true}
-              error={fieldErrors.password}
-              containerClassName="text-foreground/75 order-2 xl:order-3"
-            />
           </div>
 
           <Button
@@ -182,80 +247,79 @@ const MyAccountSection = ({ user }: MyAccountSectionProps) => {
       <Modal
         isOpen={isOpenModal}
         onClose={() => setIsOpenModal(false)}
+        showHeader={!message}
         title="Confirmar cambios"
       >
-        <div className="flex flex-col gap-y-8">
-          <p>
-            Para guardar los cambios en tus datos personales, por favor ingresá
-            tu contraseña actual.
-          </p>
+        {message ? (
+          <MessageCard
+            {...message}
+            icon={ICON_MAP[message.icon]}
+            countdown={{
+              color: message.color,
+              start: 5,
+              onComplete: async () => {
+                await update({ name });
 
-          <p className="text-sm italic">
-            {nameUpdated && passwordUpdated
-              ? '"Estás por modificar tu nombre y tu contraseña."'
-              : nameUpdated
-                ? '"Estás a punto de actualizar tu nombre."'
-                : '"Estás a punto de cambiar tu contraseña."'}
-          </p>
-
-          <Input
-            id="current-password"
-            type="password"
-            label="Contraseña actual"
-            placeholder="Contraseña actual"
-            value={currentPassword}
-            onChange={(e) => {
-              const password = e.target.value;
-
-              setPassword(password);
-              if (password === "")
-                return setFieldErrors((prevState) => ({
-                  ...prevState,
-                  password: null,
-                }));
-
-              const verifiedField = changePasswordSchema.safeParse({
-                password,
-              });
-
-              if (verifiedField.success) {
-                setFieldErrors((prevState) => ({
-                  ...prevState,
-                  password: null,
-                }));
-              } else {
-                const fields = parseZodErrors(verifiedField.error);
-
-                setFieldErrors({
-                  ...initialFieldErrors,
-                  ...fields,
-                });
-              }
+                setIsOpenModal(false);
+              },
             }}
-            autoComplete="current-password"
-            required
-            error={fieldErrors.password}
-            containerClassName="!pt-4"
-          />
-        </div>
+          >
+            {message.content}
+          </MessageCard>
+        ) : (
+          <>
+            <div className="flex flex-col gap-y-8">
+              <p>
+                Para guardar los cambios en tus datos personales, por favor
+                ingresá tu contraseña actual.
+              </p>
 
-        <div className="flex justify-end gap-x-4">
-          <Button
-            onClick={() => setIsOpenModal(false)}
-            variant="outlined"
-            color="secondary"
-          >
-            Cancelar
-          </Button>
-          <Button
-            onClick={() => {
-              setIsOpenModal(false);
-            }}
-            color="success"
-          >
-            Aceptar
-          </Button>
-        </div>
+              <p className="text-sm italic">
+                {nameUpdated && passwordUpdated
+                  ? '"Estás por modificar tu nombre y tu contraseña."'
+                  : nameUpdated
+                    ? '"Estás a punto de actualizar tu nombre."'
+                    : '"Estás a punto de cambiar tu contraseña."'}
+              </p>
+
+              {password && (
+                <div>
+                  <Input
+                    id="current-password"
+                    type="password"
+                    label="Contraseña actual"
+                    placeholder="Contraseña actual"
+                    value={currentPassword}
+                    onChange={(e) => setCurrentPassword(e.target.value)}
+                    autoComplete="current-password"
+                    required
+                    error={fieldErrors.currentPassword}
+                    containerClassName="!pt-4"
+                  />
+
+                  <FormErrorMessage message={responseError} />
+                </div>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-x-4">
+              <Button
+                onClick={() => setIsOpenModal(false)}
+                variant="outlined"
+                color="secondary"
+              >
+                Cancelar
+              </Button>
+              <Button
+                onClick={handleUpdateUserData}
+                color="success"
+                loading={isPending}
+              >
+                Aceptar
+              </Button>
+            </div>
+          </>
+        )}
       </Modal>
     </>
   );

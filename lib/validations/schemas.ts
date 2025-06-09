@@ -4,16 +4,9 @@ import { z } from "zod";
 const name = z
     .string()
     .min(3, "El nombre debe tener al menos 3 caracteres")
-    .refine(
-        (val) =>
-            val
-                .trim()
-                .split(" ")
-                .every((word) => /^[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+$/.test(word)),
-        {
-            message: "Cada nombre debe comenzar con mayúscula",
-        },
-    );
+    .refine((value) => !/\d/.test(value), {
+        message: "El nombre de usuario no puede tener números.",
+    });
 const email = z.string().email("El correo electrónico no es válido");
 const password = z
     .string()
@@ -46,7 +39,7 @@ export const forgotPasswordSchema = z.object({
     recaptchaToken,
 });
 
-export const changePasswordSchema = z.object({
+export const updatePasswordSchema = z.object({
     password,
 });
 
@@ -54,6 +47,6 @@ export const recaptchaTokenSchema = z.object({
     recaptchaToken,
 });
 
-export const changeNameSchema = z.object({
+export const updateNameSchema = z.object({
     name,
 });

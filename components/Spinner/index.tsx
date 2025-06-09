@@ -4,6 +4,11 @@ import type { Colors } from "../Button";
 
 type SpinnerColors = Colors | "background" | "foreground";
 
+export interface SpinnerProps {
+  color?: SpinnerColors;
+  className?: string;
+}
+
 const COLORS = {
   black: "border-black",
   white: "border-white",
@@ -16,13 +21,7 @@ const COLORS = {
   danger: "border-danger",
 };
 
-const Spinner = ({
-  color = "primary",
-  className,
-}: {
-  color?: SpinnerColors;
-  className?: string;
-}) => {
+const Spinner = ({ color = "primary", className }: SpinnerProps) => {
   return (
     <span
       className={clsx(
