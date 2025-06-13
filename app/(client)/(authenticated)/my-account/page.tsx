@@ -29,7 +29,7 @@ const MyAccountPage = () => {
 
             <hr className="border-h-background w-full" />
 
-            <DeleteAccountSection />
+            <DeleteAccountSection user={user} />
           </>
         ) : (
           notFound()

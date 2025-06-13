@@ -12,7 +12,7 @@ export const GET = async (req: Request) => {
             return NextResponse.redirect(`${process.env.NEXT_PUBLIC_APP_URL}`);
         }
 
-        // Search user
+        // Search user by verify token
         const user = await prisma.user.findFirst({ where: { verifyToken } });
 
         // User not found
@@ -22,7 +22,7 @@ export const GET = async (req: Request) => {
             );
         }
 
-        // User is verified
+        // Check if the user is verified
         if (user?.emailVerified) {
             await prisma.user.update({
                 where: { id: user.id },
@@ -37,7 +37,7 @@ export const GET = async (req: Request) => {
             );
         }
 
-        // Token is expired
+        // Check if the token is expired
         if (user?.verifyTokenExp && user.verifyTokenExp <= new Date()) {
             await prisma.user.update({
                 where: { id: user.id },

@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
 
-import { hash } from "bcryptjs";
-
 import API_RESPONSE_CODE from "@/lib/api/API_RESPONSE_CODE";
 import { ErrorResponse, SuccessResponse } from "@/lib/api/types";
+import { hashPassword } from "@/lib/auth/helpers";
 import prisma from "@/lib/prisma";
 import { parseZodErrors } from "@/lib/validations/helpers";
-import { updatePasswordSchema } from "@/lib/validations/schemas";
+import { passwordSchema } from "@/lib/validations/schemas";
 
 type ResetPasswordHandler = (
     req: Request,
@@ -18,13 +17,13 @@ export const POST: ResetPasswordHandler = async (req: Request) => {
     try {
         const { token: resetToken, password } = await req.json();
 
-        // Field format verification
-        const fieldVerification = updatePasswordSchema.safeParse({
+        // Password format validation
+        const res = passwordSchema.safeParse({
             password,
         });
 
-        if (!fieldVerification.success) {
-            const fields = parseZodErrors(fieldVerification.error);
+        if (!res.success) {
+            const fields = parseZodErrors(res.error);
 
             return NextResponse.json(
                 {
@@ -40,7 +39,7 @@ export const POST: ResetPasswordHandler = async (req: Request) => {
             );
         }
 
-        // Search user with reset token
+        // Search user by reset token
         const user = await prisma.user.findFirst({
             where: {
                 resetToken,
@@ -65,7 +64,7 @@ export const POST: ResetPasswordHandler = async (req: Request) => {
             );
         }
 
-        const hashedPassword = await hash(password, 10);
+        const hashedPassword = await hashPassword(password);
 
         // Update user password
         await prisma.user.update({
@@ -96,8 +95,8 @@ export const POST: ResetPasswordHandler = async (req: Request) => {
             },
             data: {
                 id: user.id,
-                email: user.email,
                 name: user.name,
+                email: user.email,
             },
         });
     } catch (error) {

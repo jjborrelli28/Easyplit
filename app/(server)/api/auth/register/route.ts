@@ -25,11 +25,11 @@ export const POST: RegisterHandler = async (req: Request) => {
     try {
         const body = await req.json();
 
-        // Field format verification
-        const fieldVerification = registerSchema.safeParse(body);
+        // Field format validation
+        const res = registerSchema.safeParse(body);
 
-        if (!fieldVerification.success) {
-            const fields = parseZodErrors(fieldVerification.error);
+        if (!res.success) {
+            const fields = parseZodErrors(res.error);
 
             return NextResponse.json(
                 {
@@ -45,7 +45,7 @@ export const POST: RegisterHandler = async (req: Request) => {
             );
         }
 
-        const { name, email, password, recaptchaToken } = fieldVerification.data;
+        const { name, email, password, recaptchaToken } = res.data;
 
         // ReCAPTCHA verification
         try {
@@ -65,12 +65,12 @@ export const POST: RegisterHandler = async (req: Request) => {
             );
         }
 
-        // Search user
+        // Search user by email
         const existingUser = await prisma.user.findUnique({ where: { email } });
 
-        // Existing user verification (created with credentials)
+        // Check if the existing user is verified with credentials
         if (existingUser?.password) {
-            // User is verified
+            // Check if the existing is verified
             if (existingUser?.emailVerified) {
                 return NextResponse.json(
                     {
@@ -149,8 +149,7 @@ export const POST: RegisterHandler = async (req: Request) => {
                 );
             }
         }
-
-        // Existing user without credentials (e.g., created by Google)
+        // Check if the existing user is verified without credentials (e.g., created by Google)
         else if (existingUser) {
             const hashedPassword = await hashPassword(password);
 
@@ -179,8 +178,8 @@ export const POST: RegisterHandler = async (req: Request) => {
                 },
                 data: {
                     id: user.id,
-                    email: user.email,
                     name: user.name,
+                    email: user.email,
                 },
             });
         }
@@ -229,8 +228,8 @@ export const POST: RegisterHandler = async (req: Request) => {
                 },
                 data: {
                     id: user.id,
-                    email: user.email,
-                    name: user.name,
+                    name,
+                    email
                 },
             });
         }

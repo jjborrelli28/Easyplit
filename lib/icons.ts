@@ -1,9 +1,10 @@
 import {
-    MailCheck,
     AlertCircle,
     CheckCircle,
-    XCircle,
     Info,
+    MailCheck,
+    Trash,
+    XCircle,
 } from "lucide-react";
 
 export const ICON_MAP = {
@@ -12,6 +13,7 @@ export const ICON_MAP = {
     CheckCircle,
     XCircle,
     Info,
+    Trash,
 };
 
 export default ICON_MAP;

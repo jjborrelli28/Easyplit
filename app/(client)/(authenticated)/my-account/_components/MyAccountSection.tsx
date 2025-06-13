@@ -7,14 +7,12 @@ import { useSession } from "next-auth/react";
 
 import clsx from "clsx";
 
-import useUpdateUserData from "@/hooks/auth/useUpdateUserData";
+import useUpdateUser from "@/hooks/auth/useUpdateUser";
+
 import type { ResponseMessage } from "@/lib/api/types";
 import ICON_MAP from "@/lib/icons";
 import { parseZodErrors } from "@/lib/validations/helpers";
-import {
-  updateNameSchema,
-  updatePasswordSchema,
-} from "@/lib/validations/schemas";
+import { nameSchema, passwordSchema } from "@/lib/validations/schemas";
 
 import Button from "@/components/Button";
 import FormErrorMessage from "@/components/FormErrorMessage";
@@ -33,38 +31,40 @@ interface MyAccountSectionProps {
 }
 
 const MyAccountSection = ({ user }: MyAccountSectionProps) => {
-  const { mutate: updateUserData, isPending } = useUpdateUserData();
+  const { mutate: updateUser, isPending } = useUpdateUser();
   const { update } = useSession();
 
-  const currentUserData = user;
+  const currentUser = user;
 
-  const [name, setName] = useState(currentUserData.name);
+  const [name, setName] = useState(currentUser.name);
   const [password, setPassword] = useState("");
-  const [email, setEmail] = useState(currentUserData.email); // Not editable yet
+  const [email, setEmail] = useState(currentUser.email); // Not editable yet
   const [currentPassword, setCurrentPassword] = useState("");
-
   const [fieldErrors, setFieldErrors] = useState<{
     name?: string | null;
     password?: string | null;
     currentPassword?: string | null;
   }>(initialFieldErrors);
   const [responseError, setResponseError] = useState<string[] | null>(null);
-  const [message, setMessage] = useState<ResponseMessage | null>(null);
 
   const [isOpenModal, setIsOpenModal] = useState(false);
 
-  const handleUpdateUserData = async (e: FormEvent) => {
+  const [message, setMessage] = useState<ResponseMessage | null>(null);
+
+  const passwordIsModified = !!user.hasPassword && !!password;
+
+  const handleUpdateUser = async (e: FormEvent) => {
     e.preventDefault();
 
-    if (!email) return;
+    if (!user.id) return;
 
     if (password) {
-      const verifiedField = updatePasswordSchema.safeParse({
+      const res = passwordSchema.safeParse({
         password: currentPassword,
       });
 
-      if (!verifiedField.success) {
-        const fields = parseZodErrors(verifiedField.error);
+      if (!res.success) {
+        const fields = parseZodErrors(res.error);
 
         setFieldErrors({
           ...initialFieldErrors,
@@ -78,16 +78,13 @@ const MyAccountSection = ({ user }: MyAccountSectionProps) => {
     }
 
     const body = {
+      id: user.id,
       ...(name && { name }),
-      ...(password && { password }),
-      ...(password && { currentPassword }),
-      password,
-      email,
+      ...(passwordIsModified && { password, currentPassword }),
     };
 
-    updateUserData(body, {
+    updateUser(body, {
       onSuccess: (res) => {
-        setFieldErrors(initialFieldErrors);
         setResponseError(null);
         setMessage(res.message);
       },
@@ -108,12 +105,12 @@ const MyAccountSection = ({ user }: MyAccountSectionProps) => {
     });
   };
 
-  const nameUpdated = name !== currentUserData.name;
+  const nameUpdated = name !== currentUser.name;
   const passwordUpdated = password !== "";
 
-  const userDataWereEdited = nameUpdated || passwordUpdated;
+  const userWereEdited = nameUpdated || passwordUpdated;
   const fieldsWithErrors = !!fieldErrors.name || !!fieldErrors.password;
-  const isSendable = userDataWereEdited && !fieldsWithErrors;
+  const isSendable = userWereEdited && !fieldsWithErrors;
 
   return (
     <>
@@ -127,6 +124,7 @@ const MyAccountSection = ({ user }: MyAccountSectionProps) => {
                 alt="Avatar"
                 src={user.image}
                 fill
+                sizes="196px"
                 className="rounded-full"
               />
             )}
@@ -145,7 +143,7 @@ const MyAccountSection = ({ user }: MyAccountSectionProps) => {
 
                   setName(name);
 
-                  const verifiedField = updateNameSchema.safeParse({
+                  const verifiedField = nameSchema.safeParse({
                     name,
                   });
 
@@ -188,7 +186,7 @@ const MyAccountSection = ({ user }: MyAccountSectionProps) => {
                       password: null,
                     }));
 
-                  const verifiedField = updatePasswordSchema.safeParse({
+                  const verifiedField = passwordSchema.safeParse({
                     password,
                   });
 
@@ -256,7 +254,7 @@ const MyAccountSection = ({ user }: MyAccountSectionProps) => {
             icon={ICON_MAP[message.icon]}
             countdown={{
               color: message.color,
-              start: 5,
+              start: 3,
               onComplete: async () => {
                 await update({ name });
 
@@ -310,8 +308,9 @@ const MyAccountSection = ({ user }: MyAccountSectionProps) => {
               >
                 Cancelar
               </Button>
+
               <Button
-                onClick={handleUpdateUserData}
+                onClick={handleUpdateUser}
                 color="success"
                 loading={isPending}
               >

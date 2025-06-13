@@ -10,7 +10,7 @@ import useResetPassword from "@/hooks/auth/useResetPassword";
 import type { ResponseMessage } from "@/lib/api/types";
 import ICON_MAP from "@/lib/icons";
 import { parseZodErrors } from "@/lib/validations/helpers";
-import { updatePasswordSchema } from "@/lib/validations/schemas";
+import { passwordSchema } from "@/lib/validations/schemas";
 
 import AuthDivider from "@/components/AuthDivider";
 import Button from "@/components/Button";
@@ -48,7 +48,7 @@ const ResetPasswordPageContent = () => {
     setResponseError(null);
 
     const body = { password };
-    const verifiedField = updatePasswordSchema.safeParse({ password });
+    const verifiedField = passwordSchema.safeParse({ password });
 
     if (!verifiedField.success) {
       const fields = parseZodErrors(verifiedField.error);

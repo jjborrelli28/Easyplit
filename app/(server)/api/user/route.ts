@@ -7,10 +7,7 @@ import { ErrorResponse, SuccessResponse } from "@/lib/api/types";
 import { hashPassword } from "@/lib/auth/helpers";
 import prisma from "@/lib/prisma";
 import { parseZodErrors } from "@/lib/validations/helpers";
-import {
-    updateNameSchema,
-    updatePasswordSchema,
-} from "@/lib/validations/schemas";
+import { nameSchema, passwordSchema } from "@/lib/validations/schemas";
 
 type ResetPasswordHandler = (
     req: Request,
@@ -18,43 +15,66 @@ type ResetPasswordHandler = (
     NextResponse<ErrorResponse<Record<string, string>> | SuccessResponse>
 >;
 
+// Update user
 export const POST: ResetPasswordHandler = async (req: Request) => {
     try {
-        const { name, password, currentPassword, email } = await req.json();
+        const { id, name, password, currentPassword } = await req.json();
 
-        // Search user by email
-        const user = await prisma.user.findFirst({
+        // Search user by id
+        let user = await prisma.user.findFirst({
             where: {
-                email,
+                id,
             },
         });
 
+        // User not found
         if (!user) {
-            throw new Error(
-                JSON.stringify({
-                    code: API_RESPONSE_CODE.INVALID_CREDENTIALS,
-                    message: ["Usuario no encontrado."],
-                    statusCode: 400,
-                }),
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: {
+                        code: API_RESPONSE_CODE.INVALID_CREDENTIALS,
+                        message: ["Usuario no encontrado."],
+                        statusCode: 404,
+                    },
+                },
+                { status: 404 },
             );
         }
 
-        // If the name is changed
-        if (name) {
-            // Name format verification
-            const fieldVerification = updateNameSchema.safeParse({
+        const nameIsModified = name && name !== user.name
+        const passwordModified = password && password !== user.password
+
+        // Check if no changes have been made
+        if ((!nameIsModified && !passwordModified)) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: {
+                        code: API_RESPONSE_CODE.NO_CHANGES_PROVIDED,
+                        message: ["No se proporcionaron cambios para actualizar."],
+                        statusCode: 400,
+                    }
+                }
+            );
+        }
+
+        // If the name is modified
+        if (nameIsModified) {
+            // Name format validation
+            const res = nameSchema.safeParse({
                 name,
             });
 
-            if (!fieldVerification.success) {
-                const fields = parseZodErrors(fieldVerification.error);
+            if (!res.success) {
+                const fields = parseZodErrors(res.error);
 
                 return NextResponse.json(
                     {
                         success: false,
                         error: {
                             code: API_RESPONSE_CODE.INVALID_FIELD_FORMAT,
-                            message: ["Revisá los datos ingresados."],
+                            message: ["Formato de nombre incorrecto."],
                             fields,
                             statusCode: 400,
                         },
@@ -64,17 +84,17 @@ export const POST: ResetPasswordHandler = async (req: Request) => {
             }
 
             // Update user name
-            await prisma.user.update({
-                where: { id: user.id },
+            user = await prisma.user.update({
+                where: { id },
                 data: {
                     name,
                 },
             });
         }
 
-        // If the password is changed
-        if (password) {
-            // Verification of existing user with password
+        // If the password is modified
+        if (passwordModified) {
+            // Check if the user has a password
             if (!user?.password) {
                 return NextResponse.json(
                     {
@@ -89,20 +109,20 @@ export const POST: ResetPasswordHandler = async (req: Request) => {
                 );
             }
 
-            // Password format verification
-            const newPasswordVerificacion = updatePasswordSchema.safeParse({
+            // Password format validation
+            const passwordValidation = passwordSchema.safeParse({
                 password,
             });
 
-            if (!newPasswordVerificacion.success) {
-                const fields = parseZodErrors(newPasswordVerificacion.error);
+            if (!passwordValidation.success) {
+                const fields = parseZodErrors(passwordValidation.error);
 
                 return NextResponse.json(
                     {
                         success: false,
                         error: {
                             code: API_RESPONSE_CODE.INVALID_FIELD_FORMAT,
-                            message: ["Revisá los datos ingresados."],
+                            message: ["Formato de contraseña incorrecto."],
                             fields,
                             statusCode: 400,
                         },
@@ -111,20 +131,20 @@ export const POST: ResetPasswordHandler = async (req: Request) => {
                 );
             }
 
-            // CurrentPassword format verification
-            const currentPasswordVerification = updatePasswordSchema.safeParse({
+            // Current password format validation
+            const currentPassworValidation = passwordSchema.safeParse({
                 password: currentPassword,
             });
 
-            if (!currentPasswordVerification.success) {
-                const fields = parseZodErrors(currentPasswordVerification.error);
+            if (!currentPassworValidation.success) {
+                const fields = parseZodErrors(currentPassworValidation.error);
 
                 return NextResponse.json(
                     {
                         success: false,
                         error: {
                             code: API_RESPONSE_CODE.INVALID_FIELD_FORMAT,
-                            message: ["Revisá los datos ingresados."],
+                            message: ["Formato de contraseña incorrecto."],
                             fields,
                             statusCode: 400,
                         },
@@ -142,7 +162,7 @@ export const POST: ResetPasswordHandler = async (req: Request) => {
                         success: false,
                         error: {
                             code: API_RESPONSE_CODE.INVALID_CREDENTIALS,
-                            message: ["Credenciales inválidas."],
+                            message: ["La contraseña ingresada no es correcta."],
                             statusCode: 400,
                         },
                     },
@@ -153,8 +173,8 @@ export const POST: ResetPasswordHandler = async (req: Request) => {
             const hashedNewtPassword = await hashPassword(password);
 
             // Update user password
-            await prisma.user.update({
-                where: { id: user.id },
+            user = await prisma.user.update({
+                where: { id },
                 data: {
                     password: hashedNewtPassword,
                 },
@@ -182,9 +202,125 @@ export const POST: ResetPasswordHandler = async (req: Request) => {
                 ],
             },
             data: {
-                id: user.id,
-                email: user.email,
+                id,
                 name: user.name,
+                email: user.email,
+            },
+        });
+    } catch (error) {
+        console.error(error);
+
+        return NextResponse.json(
+            {
+                success: false,
+                error: {
+                    code: API_RESPONSE_CODE.INTERNAL_SERVER_ERROR,
+                    message: ["Error interno del servidor."],
+                    details: error,
+                    statusCode: 500,
+                },
+            },
+            { status: 500 },
+        );
+    }
+};
+
+type DeleteUserHandler = (
+    req: Request,
+) => Promise<
+    NextResponse<ErrorResponse<Record<string, string>> | SuccessResponse>
+>;
+
+export const DELETE: DeleteUserHandler = async (req) => {
+    try {
+        const { id, password } = await req.json();
+
+        // Search user by id
+        const user = await prisma.user.findFirst({ where: { id } });
+
+        // User not found
+        if (!user) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: {
+                        code: API_RESPONSE_CODE.INVALID_CREDENTIALS,
+                        message: ["Usuario no encontrado."],
+                        statusCode: 404,
+                    },
+                },
+                { status: 404 },
+            );
+        }
+
+        // Check if the user has a password
+        if (user?.password) {
+            // Password format validation
+            const passwordValidation = passwordSchema.safeParse({
+                password,
+            });
+
+            if (!passwordValidation.success) {
+                const fields = parseZodErrors(passwordValidation.error);
+
+                return NextResponse.json(
+                    {
+                        success: false,
+                        error: {
+                            code: API_RESPONSE_CODE.INVALID_FIELD_FORMAT,
+                            message: ["Formato de contraseña incorrecto."],
+                            fields,
+                            statusCode: 400,
+                        },
+                    },
+                    { status: 400 },
+                );
+            }
+
+            // Credential verification
+            const validUser = await compare(password, user.password);
+
+            if (!validUser) {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        error: {
+                            code: API_RESPONSE_CODE.INVALID_CREDENTIALS,
+                            message: ["La contraseña ingresada no es correcta."],
+                            statusCode: 400,
+                        },
+                    },
+                    { status: 400 },
+                );
+            }
+        }
+
+        // Remove user
+        await prisma.user.delete({
+            where: { id },
+        });
+
+        return NextResponse.json({
+            success: true,
+            code: API_RESPONSE_CODE.DATA_DELETED,
+            message: {
+                color: "success",
+                icon: "Trash",
+                title: "Cuenta eliminada",
+                content: [
+                    {
+                        text: "Tu cuenta fue eliminada correctamente.",
+                    },
+                    {
+                        text: "Serás redirigido a la página principal.",
+                        style: "muted",
+                    },
+                ],
+            },
+            data: {
+                id,
+                name: user.name,
+                email: user.email,
             },
         });
     } catch (error) {

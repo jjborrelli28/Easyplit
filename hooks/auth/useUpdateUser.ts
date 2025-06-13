@@ -3,18 +3,18 @@ import { useMutation } from "@tanstack/react-query";
 import type { AuthError, SuccessResponse } from "@/lib/api/types";
 import api from "@/lib/axios";
 
-interface UpdateUserDataFields {
+interface UpdateUserFields {
+    id: string;
     name?: string;
     password?: string;
     currentPassword?: string;
-    email: string;
 }
 
-const useUpdateUserData = () => {
+const useUpdateUser = () => {
     return useMutation<
         SuccessResponse,
-        AuthError<UpdateUserDataFields>,
-        UpdateUserDataFields
+        AuthError<UpdateUserFields>,
+        UpdateUserFields
     >({
         mutationFn: async (body) => {
             const { data } = await api.post("/user", body);
@@ -24,4 +24,4 @@ const useUpdateUserData = () => {
     });
 };
 
-export default useUpdateUserData;
+export default useUpdateUser;

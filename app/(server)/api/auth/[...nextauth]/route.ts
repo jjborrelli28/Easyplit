@@ -25,11 +25,11 @@ const handler = NextAuth({
                 recaptchaToken: { label: "ReCAPTCHA Token", type: "text" },
             },
             async authorize(credentials) {
-                // Credential format verification
-                const credentialVerification = loginSchema.safeParse(credentials);
+                // Credential format validation
+                const res = loginSchema.safeParse(credentials);
 
-                if (!credentialVerification.success) {
-                    const fields = parseZodErrors(credentialVerification.error);
+                if (!res.success) {
+                    const fields = parseZodErrors(res.error);
 
                     throw new Error(
                         JSON.stringify({
@@ -41,7 +41,7 @@ const handler = NextAuth({
                     );
                 }
 
-                const { email, password, recaptchaToken } = credentialVerification.data;
+                const { email, password, recaptchaToken } = res.data;
 
                 // ReCAPTCHA verification
                 try {
@@ -57,13 +57,13 @@ const handler = NextAuth({
                     );
                 }
 
-                // Search user
-                const existingUser = await prisma.user.findUnique({
+                // Search user by email
+                const user = await prisma.user.findUnique({
                     where: { email },
                 });
 
-                // Existing user verification
-                if (!existingUser) {
+                // User not found
+                if (!user) {
                     throw new Error(
                         JSON.stringify({
                             code: API_RESPONSE_CODE.INVALID_CREDENTIALS,
@@ -73,8 +73,8 @@ const handler = NextAuth({
                     );
                 }
 
-                // User verification with Google login
-                if (!existingUser?.password) {
+                // Check if the user has a Google loggin
+                if (!user?.password) {
                     throw new Error(
                         JSON.stringify({
                             code: API_RESPONSE_CODE.GOOGLE_ACCOUNT_EXISTS,
@@ -87,7 +87,7 @@ const handler = NextAuth({
                 }
 
                 // Credential verification
-                const validUser = await compare(password, existingUser.password);
+                const validUser = await compare(password, user.password);
 
                 if (!validUser) {
                     throw new Error(
@@ -99,12 +99,10 @@ const handler = NextAuth({
                     );
                 }
 
-                // Check if the account is verified
-                if (!existingUser?.emailVerified) {
-                    if (
-                        existingUser?.verifyTokenExp &&
-                        existingUser.verifyTokenExp <= new Date()
-                    ) {
+                // Check if the account is not verified
+                if (!user?.emailVerified) {
+                    // Check if user has an active verification token
+                    if (user?.verifyTokenExp && user.verifyTokenExp <= new Date()) {
                         throw new Error(
                             JSON.stringify({
                                 code: API_RESPONSE_CODE.EMAIL_NOT_VERIFIED,
@@ -115,8 +113,9 @@ const handler = NextAuth({
                                 statusCode: 409,
                             }),
                         );
-                    } else {
-                        // If the token expired, resend verification email
+                    }
+                    // Verification token is expired
+                    else {
                         const verifyToken = uuidv4();
                         const verifyTokenExp = new Date(Date.now() + 30 * 60 * 1000); // valid for 30 mins
 
@@ -146,10 +145,11 @@ const handler = NextAuth({
 
                 // Login
                 return {
-                    id: existingUser.id,
-                    name: existingUser.name,
-                    email: existingUser.email,
-                    image: existingUser.image,
+                    id: user.id,
+                    name: user.name,
+                    email: user.email,
+                    image: user.image,
+                    hasPassword: true,
                 };
             },
         }),
@@ -173,18 +173,20 @@ const handler = NextAuth({
     callbacks: {
         async signIn({ user, account }) {
             if (account?.provider === "google") {
+                // Search user by email
                 const existingUser = await prisma.user.findUnique({
                     where: { email: user.email! },
                     include: { accounts: true },
                 });
 
-                // If the user exists but is not linked to Google, the user will be linked to Google
+                // Check If the user exists but is not linked to Google
                 if (existingUser) {
                     const hasGoogleAccountLinked = existingUser.accounts.some(
                         (acc) => acc.provider === "google",
                     );
 
                     if (!hasGoogleAccountLinked) {
+                        // Link user with google
                         await prisma.account.create({
                             data: {
                                 userId: existingUser.id,
@@ -201,6 +203,7 @@ const handler = NextAuth({
                             },
                         });
                     }
+                    // Login
                     return true;
                 }
                 // If the user does not exist, allow NextAuth to create it
@@ -219,18 +222,19 @@ const handler = NextAuth({
                     where: { email },
                     select: {
                         id: true,
-                        email: true,
                         name: true,
+                        email: true,
                         image: true,
                         emailVerified: true,
                         password: true,
                     },
                 });
 
-                // If the user exists Update the token with the user's details
+                // If the user exists, update the token with the user's details
                 if (existingUser) {
-                    token.email = existingUser.email;
+                    token.id = existingUser.id;
                     token.name = existingUser.name;
+                    token.email = existingUser.email;
                     token.image = existingUser.image;
                     token.hasPassword = !!existingUser.password;
                 }
@@ -241,6 +245,7 @@ const handler = NextAuth({
         // Callback to modify the session before sending it to the client
         async session({ session, token }) {
             if (session.user && token) {
+                session.user.id = token.id as string;
                 session.user.name = token.name as string;
                 session.user.email = token.email as string;
                 session.user.image = token.image as string;

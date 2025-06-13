@@ -21,11 +21,11 @@ export const POST: ForgotPasswordHandler = async (req: Request) => {
     try {
         const body = await req.json();
 
-        // Field format verification
-        const fieldVerification = forgotPasswordSchema.safeParse(body);
+        // Field format validation
+        const res = forgotPasswordSchema.safeParse(body);
 
-        if (!fieldVerification.success) {
-            const fields = parseZodErrors(fieldVerification.error);
+        if (!res.success) {
+            const fields = parseZodErrors(res.error);
 
             return NextResponse.json(
                 {
@@ -41,7 +41,7 @@ export const POST: ForgotPasswordHandler = async (req: Request) => {
             );
         }
 
-        const { email, recaptchaToken } = fieldVerification.data;
+        const { email, recaptchaToken } = res.data;
 
         // ReCAPTCHA verification
         try {
@@ -61,9 +61,11 @@ export const POST: ForgotPasswordHandler = async (req: Request) => {
             );
         }
 
-        // Search user
+        // Search user by email
         const user = await prisma.user.findUnique({ where: { email } });
 
+
+        // User not found
         if (!user) {
             return NextResponse.json(
                 {
@@ -78,8 +80,9 @@ export const POST: ForgotPasswordHandler = async (req: Request) => {
             );
         }
 
-        // User has a reset token
+        // Check if the user has a reset token
         if (user?.resetToken) {
+            // Check if the user has a valid reset token
             if (user.resetTokenExp && user.resetTokenExp > new Date()) {
                 return NextResponse.json(
                     {
@@ -107,7 +110,7 @@ export const POST: ForgotPasswordHandler = async (req: Request) => {
             }
         }
 
-        // Generate token and send verification email
+        // Generate a reset token and send verification email
         const resetToken = randomBytes(32).toString("hex");
         const resetTokenExp = addHours(new Date(), 1); // valid for 60 mins
 
@@ -148,8 +151,8 @@ export const POST: ForgotPasswordHandler = async (req: Request) => {
             },
             data: {
                 id: user.id,
-                email: user.email,
                 name: user.name,
+                email
             },
         });
     } catch (error) {

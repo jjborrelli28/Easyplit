@@ -39,7 +39,7 @@ export const forgotPasswordSchema = z.object({
     recaptchaToken,
 });
 
-export const updatePasswordSchema = z.object({
+export const passwordSchema = z.object({
     password,
 });
 
@@ -47,6 +47,6 @@ export const recaptchaTokenSchema = z.object({
     recaptchaToken,
 });
 
-export const updateNameSchema = z.object({
+export const nameSchema = z.object({
     name,
 });
