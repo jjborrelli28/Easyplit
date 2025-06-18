@@ -1,22 +1,22 @@
 import { useMutation } from "@tanstack/react-query";
 
 import type {
+    DeleteUserFields,
     ErrorResponse,
-    ResetPasswordFields,
     SuccessResponse,
     UserData,
 } from "@/lib/api/types";
 import api from "@/lib/axios";
 
-const useResetPassword = () => {
+const useDeleteUser = () => {
     return useMutation<
         SuccessResponse<UserData>,
-        ErrorResponse<ResetPasswordFields>,
-        ResetPasswordFields
+        ErrorResponse<DeleteUserFields>,
+        DeleteUserFields
     >({
         mutationFn: async (body) => {
-            const { data } = await api.post<SuccessResponse<UserData>>(
-                "/auth/reset-password",
+            const { data } = await api.delete<SuccessResponse<UserData>>(
+                "/user",
                 body,
             );
 
@@ -25,4 +25,4 @@ const useResetPassword = () => {
     });
 };
 
-export default useResetPassword;
+export default useDeleteUser;

@@ -4,7 +4,12 @@ import { randomBytes } from "crypto";
 import { addHours } from "date-fns";
 
 import API_RESPONSE_CODE from "@/lib/api/API_RESPONSE_CODE";
-import type { ErrorResponse, SuccessResponse } from "@/lib/api/types";
+import type {
+    ForgotPasswordFields,
+    ServerErrorResponse,
+    SuccessResponse,
+    UserData,
+} from "@/lib/api/types";
 import { sendMail } from "@/lib/mailer";
 import prisma from "@/lib/prisma";
 import verifyRecaptcha from "@/lib/recaptcha";
@@ -14,7 +19,9 @@ import { forgotPasswordSchema } from "@/lib/validations/schemas";
 type ForgotPasswordHandler = (
     req: Request,
 ) => Promise<
-    NextResponse<ErrorResponse<Record<string, string>> | SuccessResponse>
+    NextResponse<
+        SuccessResponse<UserData> | ServerErrorResponse<ForgotPasswordFields>
+    >
 >;
 
 export const POST: ForgotPasswordHandler = async (req: Request) => {
@@ -25,7 +32,9 @@ export const POST: ForgotPasswordHandler = async (req: Request) => {
         const res = forgotPasswordSchema.safeParse(body);
 
         if (!res.success) {
-            const fields = parseZodErrors(res.error);
+            const fields = parseZodErrors(
+                res.error,
+            ) as unknown as ForgotPasswordFields;
 
             return NextResponse.json(
                 {
@@ -63,7 +72,6 @@ export const POST: ForgotPasswordHandler = async (req: Request) => {
 
         // Search user by email
         const user = await prisma.user.findUnique({ where: { email } });
-
 
         // User not found
         if (!user) {
@@ -152,7 +160,8 @@ export const POST: ForgotPasswordHandler = async (req: Request) => {
             data: {
                 id: user.id,
                 name: user.name,
-                email
+                email,
+                image: user.image,
             },
         });
     } catch (error) {

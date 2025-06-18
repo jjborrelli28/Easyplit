@@ -7,7 +7,7 @@ import { useSession } from "next-auth/react";
 
 import clsx from "clsx";
 
-import useUpdateUser from "@/hooks/auth/useUpdateUser";
+import useUpdateUser from "@/hooks/user/useUpdateUser";
 
 import type { ResponseMessage } from "@/lib/api/types";
 import ICON_MAP from "@/lib/icons";
@@ -47,7 +47,7 @@ const MyAccountSection = ({ user }: MyAccountSectionProps) => {
   }>(initialFieldErrors);
   const [responseError, setResponseError] = useState<string[] | null>(null);
 
-  const [isOpenModal, setIsOpenModal] = useState(false);
+  const [modalIsOpen, setModalIsOpen] = useState(false);
 
   const [message, setMessage] = useState<ResponseMessage | null>(null);
 
@@ -86,7 +86,7 @@ const MyAccountSection = ({ user }: MyAccountSectionProps) => {
     updateUser(body, {
       onSuccess: (res) => {
         setResponseError(null);
-        setMessage(res.message);
+        res?.message && setMessage(res.message);
       },
       onError: (res) => {
         const {
@@ -161,12 +161,12 @@ const MyAccountSection = ({ user }: MyAccountSectionProps) => {
                     });
                   }
                 }}
-                autoComplete="given-name"
+                autoComplete="name"
                 required
                 editableToggle
                 disabled={true}
                 error={fieldErrors.name}
-                containerClassName="text-foreground/75 order-1"
+                containerClassName="order-1"
               />
             )}
             {user.hasPassword && (
@@ -209,7 +209,7 @@ const MyAccountSection = ({ user }: MyAccountSectionProps) => {
                 editableToggle
                 disabled={true}
                 error={fieldErrors.password}
-                containerClassName="text-foreground/75 order-2 xl:order-3"
+                containerClassName="order-2 xl:order-3"
               />
             )}
             {email !== null && (
@@ -223,14 +223,15 @@ const MyAccountSection = ({ user }: MyAccountSectionProps) => {
                 autoComplete="email"
                 required
                 disabled={true}
+                labelClassName="!text-foreground/75"
                 containerClassName="order-3 xl:order-2"
-                className="!border-b-transparent"
+                className="text-foreground/75 !border-b-transparent"
               />
             )}
           </div>
 
           <Button
-            onClick={() => setIsOpenModal(true)}
+            onClick={() => setModalIsOpen(true)}
             className={clsx(
               "col-span-full min-w-40 justify-self-end",
               !isSendable && "!bg-gray-600 dark:!bg-gray-200",
@@ -243,8 +244,8 @@ const MyAccountSection = ({ user }: MyAccountSectionProps) => {
       </section>
 
       <Modal
-        isOpen={isOpenModal}
-        onClose={() => setIsOpenModal(false)}
+        isOpen={modalIsOpen}
+        onClose={() => setModalIsOpen(false)}
         showHeader={!message}
         title="Confirmar cambios"
       >
@@ -258,7 +259,7 @@ const MyAccountSection = ({ user }: MyAccountSectionProps) => {
               onComplete: async () => {
                 await update({ name });
 
-                setIsOpenModal(false);
+                setModalIsOpen(false);
               },
             }}
           >
@@ -274,10 +275,10 @@ const MyAccountSection = ({ user }: MyAccountSectionProps) => {
 
               <p className="text-sm italic">
                 {nameUpdated && passwordUpdated
-                  ? '"Estás por modificar tu nombre y tu contraseña."'
+                  ? "“Estás por modificar tu nombre y tu contraseña.”"
                   : nameUpdated
-                    ? '"Estás a punto de actualizar tu nombre."'
-                    : '"Estás a punto de cambiar tu contraseña."'}
+                    ? "“Estás a punto de actualizar tu nombre.”"
+                    : "“Estás a punto de cambiar tu contraseña.”"}
               </p>
 
               {password && (
@@ -302,7 +303,7 @@ const MyAccountSection = ({ user }: MyAccountSectionProps) => {
 
             <div className="flex justify-end gap-x-4">
               <Button
-                onClick={() => setIsOpenModal(false)}
+                onClick={() => setModalIsOpen(false)}
                 variant="outlined"
                 color="secondary"
               >

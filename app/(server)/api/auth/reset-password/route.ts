@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 
 import API_RESPONSE_CODE from "@/lib/api/API_RESPONSE_CODE";
-import { ErrorResponse, SuccessResponse } from "@/lib/api/types";
+import type {
+    ResetPasswordFields,
+    ServerErrorResponse,
+    SuccessResponse,
+    UserData,
+} from "@/lib/api/types";
 import { hashPassword } from "@/lib/auth/helpers";
 import prisma from "@/lib/prisma";
 import { parseZodErrors } from "@/lib/validations/helpers";
@@ -10,7 +15,9 @@ import { passwordSchema } from "@/lib/validations/schemas";
 type ResetPasswordHandler = (
     req: Request,
 ) => Promise<
-    NextResponse<ErrorResponse<Record<string, string>> | SuccessResponse>
+    NextResponse<
+        SuccessResponse<UserData> | ServerErrorResponse<ResetPasswordFields>
+    >
 >;
 
 export const POST: ResetPasswordHandler = async (req: Request) => {
@@ -23,7 +30,9 @@ export const POST: ResetPasswordHandler = async (req: Request) => {
         });
 
         if (!res.success) {
-            const fields = parseZodErrors(res.error);
+            const fields = parseZodErrors(
+                res.error,
+            ) as unknown as ResetPasswordFields;
 
             return NextResponse.json(
                 {
@@ -97,6 +106,7 @@ export const POST: ResetPasswordHandler = async (req: Request) => {
                 id: user.id,
                 name: user.name,
                 email: user.email,
+                image: user.image,
             },
         });
     } catch (error) {

@@ -3,7 +3,13 @@ import { NextResponse } from "next/server";
 import { compare } from "bcryptjs";
 
 import API_RESPONSE_CODE from "@/lib/api/API_RESPONSE_CODE";
-import { ErrorResponse, SuccessResponse } from "@/lib/api/types";
+import type {
+    DeleteUserFields,
+    ServerErrorResponse,
+    SuccessResponse,
+    UpdateUserFields,
+    UserData
+} from "@/lib/api/types";
 import { hashPassword } from "@/lib/auth/helpers";
 import prisma from "@/lib/prisma";
 import { parseZodErrors } from "@/lib/validations/helpers";
@@ -12,7 +18,9 @@ import { nameSchema, passwordSchema } from "@/lib/validations/schemas";
 type ResetPasswordHandler = (
     req: Request,
 ) => Promise<
-    NextResponse<ErrorResponse<Record<string, string>> | SuccessResponse>
+    NextResponse<
+        SuccessResponse<UserData> | ServerErrorResponse<UpdateUserFields>
+    >
 >;
 
 // Update user
@@ -42,21 +50,19 @@ export const POST: ResetPasswordHandler = async (req: Request) => {
             );
         }
 
-        const nameIsModified = name && name !== user.name
-        const passwordModified = password && password !== user.password
+        const nameIsModified = name && name !== user.name;
+        const passwordModified = password && password !== user.password;
 
         // Check if no changes have been made
-        if ((!nameIsModified && !passwordModified)) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    error: {
-                        code: API_RESPONSE_CODE.NO_CHANGES_PROVIDED,
-                        message: ["No se proporcionaron cambios para actualizar."],
-                        statusCode: 400,
-                    }
-                }
-            );
+        if (!nameIsModified && !passwordModified) {
+            return NextResponse.json({
+                success: false,
+                error: {
+                    code: API_RESPONSE_CODE.NO_CHANGES_PROVIDED,
+                    message: ["No se proporcionaron cambios para actualizar."],
+                    statusCode: 400,
+                },
+            });
         }
 
         // If the name is modified
@@ -67,7 +73,7 @@ export const POST: ResetPasswordHandler = async (req: Request) => {
             });
 
             if (!res.success) {
-                const fields = parseZodErrors(res.error);
+                const fields = parseZodErrors(res.error) as unknown as UpdateUserFields;
 
                 return NextResponse.json(
                     {
@@ -115,7 +121,9 @@ export const POST: ResetPasswordHandler = async (req: Request) => {
             });
 
             if (!passwordValidation.success) {
-                const fields = parseZodErrors(passwordValidation.error);
+                const fields = parseZodErrors(
+                    passwordValidation.error,
+                ) as unknown as UpdateUserFields;
 
                 return NextResponse.json(
                     {
@@ -137,7 +145,9 @@ export const POST: ResetPasswordHandler = async (req: Request) => {
             });
 
             if (!currentPassworValidation.success) {
-                const fields = parseZodErrors(currentPassworValidation.error);
+                const fields = parseZodErrors(
+                    currentPassworValidation.error,
+                ) as unknown as UpdateUserFields;
 
                 return NextResponse.json(
                     {
@@ -205,6 +215,7 @@ export const POST: ResetPasswordHandler = async (req: Request) => {
                 id,
                 name: user.name,
                 email: user.email,
+                image: user.image,
             },
         });
     } catch (error) {
@@ -228,7 +239,9 @@ export const POST: ResetPasswordHandler = async (req: Request) => {
 type DeleteUserHandler = (
     req: Request,
 ) => Promise<
-    NextResponse<ErrorResponse<Record<string, string>> | SuccessResponse>
+    NextResponse<
+        SuccessResponse<UserData> | ServerErrorResponse<DeleteUserFields>
+    >
 >;
 
 export const DELETE: DeleteUserHandler = async (req) => {
@@ -261,7 +274,9 @@ export const DELETE: DeleteUserHandler = async (req) => {
             });
 
             if (!passwordValidation.success) {
-                const fields = parseZodErrors(passwordValidation.error);
+                const fields = parseZodErrors(
+                    passwordValidation.error,
+                ) as unknown as DeleteUserFields;
 
                 return NextResponse.json(
                     {
@@ -321,6 +336,7 @@ export const DELETE: DeleteUserHandler = async (req) => {
                 id,
                 name: user.name,
                 email: user.email,
+                image: user.image,
             },
         });
     } catch (error) {

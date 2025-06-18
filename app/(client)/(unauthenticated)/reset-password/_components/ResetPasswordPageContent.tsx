@@ -65,7 +65,7 @@ const ResetPasswordPageContent = () => {
       onSuccess: (res) => {
         setFieldErrors(initialFieldErrors);
         setResponseError(null);
-        setMessage(res.message);
+        res?.message && setMessage(res.message);
 
         setTimeout(() => {
           router.push("/login");

@@ -3,7 +3,7 @@ import { type FormEvent, useState } from "react";
 import type { Session } from "next-auth";
 import { signOut } from "next-auth/react";
 
-import useDeleteUser from "@/hooks/auth/useDeleteUser";
+import useDeleteUser from "@/hooks/user/useDeleteUser";
 
 import type { ResponseMessage } from "@/lib/api/types";
 import ICON_MAP from "@/lib/icons";
@@ -33,7 +33,7 @@ const DeleteAccountSection = ({ user }: DeleteAccountSectionProps) => {
   }>(initialFieldErrors);
   const [responseError, setResponseError] = useState<string[] | null>(null);
 
-  const [isOpenModal, setIsOpenModal] = useState(false);
+  const [modalIsOpen, setModalIsOpen] = useState(false);
 
   const [message, setMessage] = useState<ResponseMessage | null>(null);
 
@@ -71,7 +71,7 @@ const DeleteAccountSection = ({ user }: DeleteAccountSectionProps) => {
     deleteUser(body, {
       onSuccess: (res) => {
         setResponseError(null);
-        setMessage(res.message);
+        res?.message && setMessage(res.message);
       },
       onError: (res) => {
         const {
@@ -104,7 +104,7 @@ const DeleteAccountSection = ({ user }: DeleteAccountSectionProps) => {
           </p>
 
           <Button
-            onClick={() => setIsOpenModal(true)}
+            onClick={() => setModalIsOpen(true)}
             color="danger"
             className="h-fit min-w-40 justify-self-end"
           >
@@ -114,8 +114,8 @@ const DeleteAccountSection = ({ user }: DeleteAccountSectionProps) => {
       </section>
 
       <Modal
-        isOpen={isOpenModal}
-        onClose={() => setIsOpenModal(false)}
+        isOpen={modalIsOpen}
+        onClose={() => setModalIsOpen(false)}
         showHeader={!message}
         title="¿Estás seguro que querés eliminar tu cuenta?"
       >
@@ -129,7 +129,7 @@ const DeleteAccountSection = ({ user }: DeleteAccountSectionProps) => {
               onComplete: async () => {
                 await signOut({ callbackUrl: "/" });
 
-                setIsOpenModal(false);
+                setModalIsOpen(false);
               },
             }}
           >
@@ -150,13 +150,11 @@ const DeleteAccountSection = ({ user }: DeleteAccountSectionProps) => {
                   </p>
                 </div>
 
-                {
-                  <p>
-                    {user.hasPassword
-                      ? "Para confirmar la eliminación de tu cuenta, ingresá tu contraseña actual:"
-                      : "¿Estás seguro de que querés continuar?"}
-                  </p>
-                }
+                <p>
+                  {user.hasPassword
+                    ? "Para confirmar la eliminación de tu cuenta, ingresá tu contraseña actual:"
+                    : "¿Estás seguro de que querés continuar?"}
+                </p>
               </div>
 
               {user.hasPassword && (
@@ -181,7 +179,7 @@ const DeleteAccountSection = ({ user }: DeleteAccountSectionProps) => {
 
             <div className="flex justify-end gap-x-4">
               <Button
-                onClick={() => setIsOpenModal(false)}
+                onClick={() => setModalIsOpen(false)}
                 variant="outlined"
                 color="secondary"
               >

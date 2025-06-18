@@ -1,22 +1,24 @@
 import { useMutation } from "@tanstack/react-query";
 
-import type { AuthError, SuccessResponse } from "@/lib/api/types";
+import type {
+    ErrorResponse,
+    RegisterFields,
+    SuccessResponse,
+    UserData,
+} from "@/lib/api/types";
 import api from "@/lib/axios";
-
-interface RegisterFields {
-    name: string;
-    email: string;
-    password: string;
-}
 
 const useRegister = () => {
     return useMutation<
-        SuccessResponse,
-        AuthError<RegisterFields>,
+        SuccessResponse<UserData>,
+        ErrorResponse<RegisterFields>,
         RegisterFields
     >({
         mutationFn: async (body) => {
-            const { data } = await api.post("/auth/register", body);
+            const { data } = await api.post<SuccessResponse<UserData>>(
+                "/auth/register",
+                body,
+            );
 
             return data;
         },

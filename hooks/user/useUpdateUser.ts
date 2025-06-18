@@ -2,27 +2,24 @@ import { useMutation } from "@tanstack/react-query";
 
 import type {
     ErrorResponse,
-    ResetPasswordFields,
     SuccessResponse,
+    UpdateUserFields,
     UserData,
 } from "@/lib/api/types";
 import api from "@/lib/axios";
 
-const useResetPassword = () => {
+const useUpdateUser = () => {
     return useMutation<
         SuccessResponse<UserData>,
-        ErrorResponse<ResetPasswordFields>,
-        ResetPasswordFields
+        ErrorResponse<UpdateUserFields>,
+        UpdateUserFields
     >({
         mutationFn: async (body) => {
-            const { data } = await api.post<SuccessResponse<UserData>>(
-                "/auth/reset-password",
-                body,
-            );
+            const { data } = await api.post<SuccessResponse<UserData>>("/user", body);
 
             return data;
         },
     });
 };
 
-export default useResetPassword;
+export default useUpdateUser;

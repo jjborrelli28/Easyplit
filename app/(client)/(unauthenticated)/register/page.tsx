@@ -69,7 +69,7 @@ const RegisterPage = () => {
       onSuccess: (res) => {
         setFieldErrors(initialFieldErrors);
         setResponseError(null);
-        setMessage(res.message);
+        res?.message && setMessage(res.message);
       },
       onError: (res) => {
         const {

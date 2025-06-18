@@ -50,6 +50,11 @@ model User {
   createdAt      DateTime  @default(now())
   accounts       Account[]
   sessions       Session[]
+
+  groupsCreated      Group[]              @relation("UserCreatedGroups")
+  GroupMember        GroupMember[]
+  Expense            Expense[]
+  ExpenseParticipant ExpenseParticipant[]
 }
 
 model VerificationToken {
@@ -59,4 +64,48 @@ model VerificationToken {
 
   @@unique([identifier, token])
   @@map("verification_tokens")
+}
+
+model Group {
+  id          String        @id @default(cuid())
+  name        String
+  createdAt   DateTime      @default(now())
+  createdById String        @map("created_by")
+  createdBy   User          @relation("UserCreatedGroups", fields: [createdById], references: [id])
+  members     GroupMember[]
+  expenses    Expense[]
+}
+
+model GroupMember {
+  id      String @id @default(cuid())
+  userId  String
+  groupId String
+  user    User   @relation(fields: [userId], references: [id])
+  group   Group  @relation(fields: [groupId], references: [id])
+
+  @@unique([userId, groupId])
+}
+
+model Expense {
+  id           String               @id @default(cuid())
+  title        String
+  amount       Float
+  paidById     String               @map("paid_by")
+  paidBy       User                 @relation(fields: [paidById], references: [id])
+  groupId      String?
+  group        Group?               @relation(fields: [groupId], references: [id])
+  createdAt    DateTime             @default(now())
+  participants ExpenseParticipant[]
+}
+
+model ExpenseParticipant {
+  id        String @id @default(cuid())
+  expenseId String
+  userId    String
+  amount    Float
+
+  expense Expense @relation(fields: [expenseId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@unique([expenseId, userId])
 }

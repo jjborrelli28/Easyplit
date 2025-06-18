@@ -10,7 +10,7 @@ import { signIn } from "next-auth/react";
 
 import googleLogo from "@/public/assets/logos/Google.svg?url";
 
-import type { ErrorResponse } from "@/lib/api/types";
+import type { ServerErrorResponse } from "@/lib/api/types";
 import { parseZodErrors } from "@/lib/validations/helpers";
 import { loginSchema, recaptchaTokenSchema } from "@/lib/validations/schemas";
 
@@ -80,9 +80,8 @@ const LoginPage = () => {
         const {
           message,
           fields,
-        }: ErrorResponse<Record<string, string>>["error"] = JSON.parse(
-          res.error,
-        );
+        }: ServerErrorResponse<{ email?: string; password?: string }>["error"] =
+          JSON.parse(res.error);
 
         if (fields) {
           setFieldErrors({

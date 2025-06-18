@@ -1,20 +1,24 @@
 import { useMutation } from "@tanstack/react-query";
 
-import type { AuthError, SuccessResponse } from "@/lib/api/types";
+import type {
+    ErrorResponse,
+    ForgotPasswordFields,
+    SuccessResponse,
+    UserData,
+} from "@/lib/api/types";
 import api from "@/lib/axios";
-
-interface ForgotPasswordFields {
-    email: string;
-}
 
 const useForgotPassword = () => {
     return useMutation<
-        SuccessResponse,
-        AuthError<ForgotPasswordFields>,
+        SuccessResponse<UserData>,
+        ErrorResponse<ForgotPasswordFields>,
         ForgotPasswordFields
     >({
         mutationFn: async (body) => {
-            const { data } = await api.post("/auth/forgot-password", body);
+            const { data } = await api.post<SuccessResponse<UserData>>(
+                "/auth/forgot-password",
+                body,
+            );
 
             return data;
         },

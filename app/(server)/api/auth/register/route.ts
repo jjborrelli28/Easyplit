@@ -3,7 +3,12 @@ import { NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
 
 import API_RESPONSE_CODE from "@/lib/api/API_RESPONSE_CODE";
-import type { ErrorResponse, SuccessResponse } from "@/lib/api/types";
+import type {
+    RegisterFields,
+    ServerErrorResponse,
+    SuccessResponse,
+    UserData,
+} from "@/lib/api/types";
 import {
     getRandomColorPair,
     hashPassword,
@@ -18,7 +23,7 @@ import { registerSchema } from "@/lib/validations/schemas";
 type RegisterHandler = (
     req: Request,
 ) => Promise<
-    NextResponse<ErrorResponse<Record<string, string>> | SuccessResponse>
+    NextResponse<SuccessResponse<UserData> | ServerErrorResponse<RegisterFields>>
 >;
 
 export const POST: RegisterHandler = async (req: Request) => {
@@ -29,7 +34,7 @@ export const POST: RegisterHandler = async (req: Request) => {
         const res = registerSchema.safeParse(body);
 
         if (!res.success) {
-            const fields = parseZodErrors(res.error);
+            const fields = parseZodErrors(res.error) as unknown as RegisterFields;
 
             return NextResponse.json(
                 {
@@ -113,8 +118,9 @@ export const POST: RegisterHandler = async (req: Request) => {
                     },
                     data: {
                         id: existingUser.id,
-                        email: existingUser.email,
                         name: existingUser.name,
+                        email: existingUser.email,
+                        image: existingUser.image,
                     },
                 });
             } else {
@@ -180,6 +186,7 @@ export const POST: RegisterHandler = async (req: Request) => {
                     id: user.id,
                     name: user.name,
                     email: user.email,
+                    image: user.image,
                 },
             });
         }
@@ -229,7 +236,8 @@ export const POST: RegisterHandler = async (req: Request) => {
                 data: {
                     id: user.id,
                     name,
-                    email
+                    email,
+                    image,
                 },
             });
         }
