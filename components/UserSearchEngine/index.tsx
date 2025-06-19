@@ -45,7 +45,7 @@ const UserSearchEngine = ({
     <div className="relative w-full max-w-md">
       <Input value={query} onChange={handleChange} placeholder={placeholder} />
       {users.length > 0 && (
-        <ul className="bg-h-background border-secondary absolute top-full right-0 left-0 z-10 max-h-60 overflow-y-auto border !border-t-0 shadow-xl">
+        <ul className="bg-h-background border-background absolute top-full right-0 left-0 z-10 max-h-60 overflow-y-auto border !border-t-0 shadow-xl">
           {users.map((user, i) => (
             <li
               key={user.id}
@@ -65,9 +65,10 @@ const UserSearchEngine = ({
                   src={user.image}
                   height={40}
                   width={40}
-                  className="border-secondary h-12 w-12 rounded-full border-2"
+                  className="border-foreground group-hover:border-background h-12 w-12 rounded-full border-2 transition-colors duration-300"
                 />
               )}
+
               <div className="group-hover:bg-background bg-foreground h-12 w-[1px] transition-colors duration-300" />
 
               <div className="flex w-full flex-col justify-center overflow-hidden">
