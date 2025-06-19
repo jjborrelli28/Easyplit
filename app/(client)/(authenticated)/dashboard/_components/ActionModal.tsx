@@ -103,7 +103,11 @@ const ActionModal = ({ type, onClose, ...restProps }: ActionModalProps) => {
         {members.length > 0 && (
           <div className="flex flex-wrap gap-2">
             {members.map((member, i) => (
-              <Badge key={i} onClick={() => handleRemove(member.id)}>
+              <Badge
+                key={i}
+                onClick={() => handleRemove(member.id)}
+                color="secondary"
+              >
                 {member.name}
               </Badge>
             ))}
