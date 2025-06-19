@@ -8,10 +8,11 @@ import Button from "@/components/Button";
 import Input from "@/components/Input";
 import Modal, { type ModalProps } from "@/components/Modal";
 import UserSearchEngine from "@/components/UserSearchEngine";
+import Badge from "@/components/Badge";
 
 export enum ACTION_TYPE {
   CREATE_EXPENSE = "CREATE_EXPENSE",
-  CREATE_GROUP = "CREATE=GROUP",
+  CREATE_GROUP = "CREATE_GROUP",
 }
 
 const initialFieldErrors = {
@@ -24,6 +25,7 @@ interface ActionModalProps extends Omit<ModalProps, "children"> {
 
 const ActionModal = ({ type, onClose, ...restProps }: ActionModalProps) => {
   const [actionName, setActionName] = useState("");
+  const [members, setMembers] = useState<UserData[]>([]);
 
   const [fieldErrors, setFieldErrors] = useState<{
     actionName?: string | null;
@@ -34,7 +36,13 @@ const ActionModal = ({ type, onClose, ...restProps }: ActionModalProps) => {
   };
 
   const handleSelect = (user: UserData) => {
-    console.log("Usuario seleccionado:", user);
+    setMembers((prevState) => [...prevState, user]);
+  };
+
+  const handleRemove = (idToRemove: string) => {
+    setMembers((prevState) =>
+      prevState.filter((member) => member.id !== idToRemove),
+    );
   };
 
   return (
@@ -89,7 +97,18 @@ const ActionModal = ({ type, onClose, ...restProps }: ActionModalProps) => {
         <UserSearchEngine
           placeholder={`Añadir integrantes al ${type === ACTION_TYPE.CREATE_EXPENSE ? "gasto" : "grupo"}`}
           onSelect={handleSelect}
+          excludeUserIds={members.map((u) => u.id)}
         />
+
+        {members.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {members.map((member, i) => (
+              <Badge key={i} onClick={() => handleRemove(member.id)}>
+                {member.name}
+              </Badge>
+            ))}
+          </div>
+        )}
 
         <Button type="submit">Crear</Button>
       </form>

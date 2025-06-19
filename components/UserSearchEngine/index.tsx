@@ -18,22 +18,41 @@ import Input from "../Input";
 interface UserSearchEngineProps {
   onSelect: (user: UserData) => void;
   placeholder?: string;
+  excludeUserIds?: string[];
 }
 
 const UserSearchEngine = ({
   placeholder = "Buscar por nombre o email",
   onSelect,
+  excludeUserIds = [],
 }: UserSearchEngineProps) => {
   const { data } = useSession();
 
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
 
-  const { data: users = [] } = useSearchUsers(debouncedQuery, data?.user.id);
+  const effectiveExcludedIds = useMemo(() => {
+    const ids = new Set<string>(excludeUserIds);
+
+    if (data?.user.id) ids.add(data.user.id);
+
+    return Array.from(ids);
+  }, [excludeUserIds, data?.user.id]);
+
+  const { data: users = [] } = useSearchUsers(
+    debouncedQuery,
+    effectiveExcludedIds,
+  );
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(e.target.value);
     debouncedUpdate(e.target.value);
+  };
+
+  const handleSelect = (user: UserData) => {
+    onSelect(user);
+    setQuery("");
+    setDebouncedQuery("");
   };
 
   const debouncedUpdate = useMemo(
@@ -49,11 +68,7 @@ const UserSearchEngine = ({
           {users.map((user, i) => (
             <li
               key={user.id}
-              onClick={() => {
-                onSelect(user);
-                setQuery("");
-                setDebouncedQuery("");
-              }}
+              onClick={() => handleSelect(user)}
               className={clsx(
                 "hover:bg-primary hover:text-background group flex cursor-pointer gap-x-4 p-4 transition-colors duration-300",
                 i % 2 === 0 ? "bg-background/50" : "bg-h-background",

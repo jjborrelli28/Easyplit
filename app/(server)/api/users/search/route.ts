@@ -6,7 +6,7 @@ import API_RESPONSE_CODE from "@/lib/api/API_RESPONSE_CODE";
 export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const q = searchParams.get("q");
-    const excludeUserId = searchParams.get("excludeUserId");
+    const excludeUserIdsParam = searchParams.get("excludeUserIds");
 
     if (!q || q.length < 2) {
         return NextResponse.json({
@@ -15,6 +15,10 @@ export async function GET(req: Request) {
             data: [],
         });
     }
+
+    const excludeUserIds = excludeUserIdsParam
+        ? excludeUserIdsParam.split(",").map((id) => id.trim())
+        : [];
 
     try {
         const users = await prisma.user.findMany({
@@ -26,10 +30,10 @@ export async function GET(req: Request) {
                             { name: { contains: q, mode: "insensitive" } },
                         ],
                     },
-                    excludeUserId
+                    excludeUserIds.length > 0
                         ? {
                             id: {
-                                not: excludeUserId,
+                                notIn: excludeUserIds,
                             },
                         }
                         : {},
