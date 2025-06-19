@@ -22,6 +22,7 @@ export default meta;
 
 type Story = StoryObj<typeof UserSearchEngine>;
 
+// TODO: Add mockup data
 export const Example: Story = {
   render: (args) => {
     const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
