@@ -8,6 +8,7 @@ import { useSession } from "next-auth/react";
 
 import clsx from "clsx";
 import debounce from "lodash.debounce";
+import { Search } from "lucide-react";
 
 import { useSearchUsers } from "@/hooks/users/useSearchUsers";
 
@@ -30,6 +31,7 @@ const UserSearchEngine = ({
 
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [isFocused, setIsFocused] = useState(false);
 
   const effectiveExcludedIds = useMemo(() => {
     const ids = new Set<string>(excludeUserIds);
@@ -62,7 +64,21 @@ const UserSearchEngine = ({
 
   return (
     <div className="relative w-full max-w-md">
-      <Input value={query} onChange={handleChange} placeholder={placeholder} />
+      <Input
+        value={query}
+        onChange={handleChange}
+        placeholder={placeholder}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
+      />
+
+      <Search
+        className={clsx(
+          "text-foreground/50 pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 transition-colors duration-300",
+          isFocused && "text-primary",
+        )}
+      />
+
       {users.length > 0 && (
         <ul className="bg-h-background border-background absolute top-full right-0 left-0 z-10 max-h-60 overflow-y-auto border !border-t-0 shadow-xl">
           {users.map((user, i) => (

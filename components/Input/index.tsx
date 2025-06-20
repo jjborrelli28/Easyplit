@@ -21,8 +21,8 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   fullWidth?: boolean;
   editableToggle?: boolean;
   containerClassName?: string;
-  className?: string;
   labelClassName?: string;
+  className?: string;
 }
 
 const Input = ({
@@ -37,8 +37,8 @@ const Input = ({
   editableToggle = false,
   disabled: rawDisabled = false,
   containerClassName,
-  className,
   labelClassName,
+  className,
   ...props
 }: InputProps) => {
   const inputRef = useRef<HTMLInputElement>(null);

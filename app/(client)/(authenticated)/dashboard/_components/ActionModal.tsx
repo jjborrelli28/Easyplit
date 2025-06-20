@@ -4,11 +4,12 @@ import type { UserData } from "@/lib/api/types";
 import { parseZodErrors } from "@/lib/validations/helpers";
 import { nameSchema } from "@/lib/validations/schemas";
 
+import AmountInput, { initialAmoutValue } from "@/components/AmountInput";
+import Badge from "@/components/Badge";
 import Button from "@/components/Button";
 import Input from "@/components/Input";
 import Modal, { type ModalProps } from "@/components/Modal";
 import UserSearchEngine from "@/components/UserSearchEngine";
-import Badge from "@/components/Badge";
 
 export enum ACTION_TYPE {
   CREATE_EXPENSE = "CREATE_EXPENSE",
@@ -26,6 +27,7 @@ interface ActionModalProps extends Omit<ModalProps, "children"> {
 const ActionModal = ({ type, onClose, ...restProps }: ActionModalProps) => {
   const [actionName, setActionName] = useState("");
   const [members, setMembers] = useState<UserData[]>([]);
+  const [amount, setAmount] = useState(initialAmoutValue);
 
   const [fieldErrors, setFieldErrors] = useState<{
     actionName?: string | null;
@@ -45,9 +47,17 @@ const ActionModal = ({ type, onClose, ...restProps }: ActionModalProps) => {
     );
   };
 
+  const handleClose = () => {
+    setActionName("");
+    setMembers([]);
+    setAmount(initialAmoutValue);
+
+    onClose();
+  };
+
   return (
     <Modal
-      onClose={() => onClose()}
+      onClose={handleClose}
       //     showHeader={!message}
       title={
         type === ACTION_TYPE.CREATE_EXPENSE
@@ -60,6 +70,11 @@ const ActionModal = ({ type, onClose, ...restProps }: ActionModalProps) => {
         <Input
           id="name"
           type="text"
+          label={
+            type === ACTION_TYPE.CREATE_EXPENSE
+              ? "Nombre del gasto"
+              : "Nombre del grupo"
+          }
           placeholder={
             type === ACTION_TYPE.CREATE_EXPENSE
               ? "Nombre del gasto"
@@ -94,27 +109,42 @@ const ActionModal = ({ type, onClose, ...restProps }: ActionModalProps) => {
           error={fieldErrors.actionName}
         />
 
-        <UserSearchEngine
-          placeholder={`Añadir integrantes al ${type === ACTION_TYPE.CREATE_EXPENSE ? "gasto" : "grupo"}`}
-          onSelect={handleSelect}
-          excludeUserIds={members.map((u) => u.id)}
-        />
+        <div className="flex flex-col gap-y-4">
+          <UserSearchEngine
+            placeholder="Buscar personas..."
+            onSelect={handleSelect}
+            excludeUserIds={members.map((u) => u.id)}
+          />
 
-        {members.length > 0 && (
-          <div className="flex flex-wrap gap-2">
-            {members.map((member, i) => (
-              <Badge
-                key={i}
-                onClick={() => handleRemove(member.id)}
-                color="secondary"
-              >
-                {member.name}
-              </Badge>
-            ))}
-          </div>
+          {members.length > 0 && (
+            <div className="flex flex-col gap-y-4">
+              <p className="text-primary text-sm font-semibold">
+                Integrantes del{" "}
+                {type === ACTION_TYPE.CREATE_EXPENSE ? "gasto" : "grupo"}
+              </p>
+
+              <div className="flex flex-wrap gap-2">
+                {members.map((member, i) => (
+                  <Badge
+                    key={i}
+                    onClick={() => handleRemove(member.id)}
+                    color="secondary"
+                  >
+                    {member.name}
+                  </Badge>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        {type === ACTION_TYPE.CREATE_EXPENSE && (
+          <AmountInput label="Monto" value={amount} onChange={setAmount} />
         )}
 
-        <Button type="submit">Crear</Button>
+        <Button type="submit" fullWidth>
+          Crear
+        </Button>
       </form>
     </Modal>
   );

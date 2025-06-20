@@ -216,3 +216,19 @@ input:-webkit-autofill {
 .animate-slide-bar {
   animation: slide-bar 1s linear infinite;
 }
+
+@keyframes cursor {
+  0% {
+    background-color: transparent;
+  }
+  50% {
+    background-color: var(--primary);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.animate-cursor {
+  animation: cursor 900ms ease-in-out infinite;
+}
