@@ -55,6 +55,13 @@ export const Secondary: Story = {
   },
 };
 
+export const Info: Story = {
+  args: {
+    children: "Button",
+    color: "info",
+  },
+};
+
 export const Success: Story = {
   args: {
     children: "Button",

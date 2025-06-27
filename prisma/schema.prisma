@@ -88,7 +88,7 @@ model GroupMember {
 
 model Expense {
   id           String               @id @default(cuid())
-  title        String
+  name         String
   amount       Float
   paidById     String               @map("paid_by")
   paidBy       User                 @relation(fields: [paidById], references: [id])
@@ -104,7 +104,7 @@ model ExpenseParticipant {
   userId    String
   amount    Float
 
-  expense Expense @relation(fields: [expenseId], references: [id])
+  expense Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
   user    User    @relation(fields: [userId], references: [id])
 
   @@unique([expenseId, userId])

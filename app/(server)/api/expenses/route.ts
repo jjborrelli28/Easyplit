@@ -1,32 +1,38 @@
 import { NextResponse } from "next/server";
 
-import type { Group } from "@prisma/client";
+import type { Expense } from "@prisma/client";
 
 import API_RESPONSE_CODE from "@/lib/api/API_RESPONSE_CODE";
 import type {
-  CreateGroupFields,
+  CreateExpenseFields,
+  DeleteExpenseFields,
   ServerErrorResponse,
   SuccessResponse,
 } from "@/lib/api/types";
 import prisma from "@/lib/prisma";
 import { parseZodErrors } from "@/lib/validations/helpers";
-import { createGroupSchema } from "@/lib/validations/schemas";
+import {
+  createExpenseSchema,
+  deleteExpenseSchema,
+} from "@/lib/validations/schemas";
 
-type CreateGroupHandler = (
+type CreateExpenseHandler = (
   req: Request,
 ) => Promise<
-  NextResponse<SuccessResponse<Group> | ServerErrorResponse<CreateGroupFields>>
+  NextResponse<
+    SuccessResponse<Expense> | ServerErrorResponse<CreateExpenseFields>
+  >
 >;
 
-// Create group
-export const POST: CreateGroupHandler = async (req: Request) => {
+// Create expense
+export const POST: CreateExpenseHandler = async (req: Request) => {
   const body = await req.json();
 
   // Format validation
-  const res = createGroupSchema.safeParse(body);
+  const res = createExpenseSchema.safeParse(body);
 
   if (!res.success) {
-    const fields = parseZodErrors(res.error) as unknown as CreateGroupFields;
+    const fields = parseZodErrors(res.error) as unknown as CreateExpenseFields;
 
     return NextResponse.json(
       {
@@ -42,26 +48,31 @@ export const POST: CreateGroupHandler = async (req: Request) => {
     );
   }
 
-  const { name, createdById, memberIds } = res.data;
+  const { name, createdById, amount, participantIds, groupId } = res.data;
 
   try {
-    // Create group
-    const group = await prisma.group.create({
+    // Create expense
+    const expense = await prisma.expense.create({
       data: {
         name,
-        createdById,
-        members: {
-          create: memberIds.map((userId: string) => ({
+        amount,
+        paidById: createdById,
+        groupId: groupId || null,
+        participants: {
+          create: participantIds.map((userId: string) => ({
             userId,
+            amount: 0,
           })),
         },
       },
       include: {
-        members: {
+        participants: {
           include: {
             user: true,
           },
         },
+        paidBy: true,
+        group: true,
       },
     });
 
@@ -71,14 +82,14 @@ export const POST: CreateGroupHandler = async (req: Request) => {
       message: {
         color: "success",
         icon: "CheckCircle",
-        title: "¡Grupo creado con éxito!",
+        title: "¡Gasto creado con éxito!",
         content: [
           {
-            text: "Ya puedes ingresar a tu grupo y comenzar a agregar gastos.",
+            text: "Ya puedes ver el detalle del gasto en tu grupo.",
           },
         ],
       },
-      data: group,
+      data: expense,
     });
   } catch (error) {
     console.error(error);
@@ -98,16 +109,16 @@ export const POST: CreateGroupHandler = async (req: Request) => {
   }
 };
 
-type GetLinkedGroupsHandler = (
+type GetLinkedExpensesHandler = (
   req: Request,
 ) => Promise<
   NextResponse<
-    SuccessResponse<Group[]> | ServerErrorResponse<CreateGroupFields>
+    SuccessResponse<Expense[]> | ServerErrorResponse<CreateExpenseFields>
   >
 >;
 
-// Get linked groups
-export const GET: GetLinkedGroupsHandler = async (req: Request) => {
+// Get linked expenses
+export const GET: GetLinkedExpensesHandler = async (req: Request) => {
   const { searchParams } = new URL(req.url);
   const userId = searchParams.get("userId");
 
@@ -115,34 +126,46 @@ export const GET: GetLinkedGroupsHandler = async (req: Request) => {
   if (!userId) {
     return NextResponse.json({
       success: true,
-      code: API_RESPONSE_CODE.USERS_FOUND,
+      code: API_RESPONSE_CODE.DATA_FETCHED,
       data: [],
     });
   }
 
   try {
-    // Search linked group by user id
-    const groups = await prisma.group.findMany({
+    // Search expenses where the user is a participant or paid the expense
+    const expenses = await prisma.expense.findMany({
       where: {
-        members: {
-          some: {
-            userId,
+        OR: [
+          {
+            participants: {
+              some: {
+                userId,
+              },
+            },
           },
-        },
+          {
+            paidById: userId,
+          },
+        ],
       },
       include: {
-        members: {
+        participants: {
           include: {
             user: true,
           },
         },
+        paidBy: true,
+        group: true,
+      },
+      orderBy: {
+        createdAt: "desc",
       },
     });
 
     return NextResponse.json({
       success: true,
       code: API_RESPONSE_CODE.DATA_FETCHED,
-      data: groups,
+      data: expenses,
     });
   } catch (error) {
     console.error(error);
@@ -163,38 +186,72 @@ export const GET: GetLinkedGroupsHandler = async (req: Request) => {
 
 type DeleteExpenseHandler = (
   req: Request,
-  params: { params: { expenseId: string } }
 ) => Promise<
-  NextResponse<SuccessResponse<null> | ServerErrorResponse<null>>
+  NextResponse<
+    SuccessResponse<Expense> | ServerErrorResponse<DeleteExpenseFields>
+  >
 >;
 
-export const DELETE: DeleteExpenseHandler = async (
-  req,
-  { params: { expenseId } }
-) => {
+// Delete expene
+export const DELETE: DeleteExpenseHandler = async (req) => {
   try {
-    // Check if expense exists
-    const existingExpense = await prisma.expense.findUnique({
-      where: { id: expenseId },
+    const body = await req.json();
+
+    // Field format validation
+    const res = deleteExpenseSchema.safeParse(body);
+
+    if (!res.success) {
+      const fields = parseZodErrors(
+        res.error,
+      ) as unknown as DeleteExpenseFields;
+
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: API_RESPONSE_CODE.INVALID_FIELD_FORMAT,
+            message: ["ID de gasto inválido."],
+            fields,
+            statusCode: 400,
+          },
+        },
+        { status: 400 },
+      );
+    }
+
+    const { id } = res.data;
+
+    // Search expense by id
+    const expense = await prisma.expense.findUnique({
+      where: { id },
+      include: {
+        participants: {
+          include: {
+            user: true,
+          },
+        },
+        paidBy: true,
+        group: true,
+      },
     });
 
-    if (!existingExpense) {
+    if (!expense) {
       return NextResponse.json(
         {
           success: false,
           error: {
             code: API_RESPONSE_CODE.NOT_FOUND,
-            message: ["No se encontró el gasto."],
+            message: ["Gasto no encontrado."],
             statusCode: 404,
           },
         },
-        { status: 404 }
+        { status: 404 },
       );
     }
 
     // Delete expense
     await prisma.expense.delete({
-      where: { id: expenseId },
+      where: { id },
     });
 
     return NextResponse.json({
@@ -203,14 +260,14 @@ export const DELETE: DeleteExpenseHandler = async (
       message: {
         color: "success",
         icon: "Trash",
-        title: "¡Gasto eliminado!",
+        title: "Gasto eliminado",
         content: [
           {
             text: "El gasto fue eliminado correctamente.",
           },
         ],
       },
-      data: null,
+      data: expense,
     });
   } catch (error) {
     console.error(error);
@@ -221,11 +278,11 @@ export const DELETE: DeleteExpenseHandler = async (
         error: {
           code: API_RESPONSE_CODE.INTERNAL_SERVER_ERROR,
           message: ["Error interno del servidor."],
-          statusCode: 500,
           details: error,
+          statusCode: 500,
         },
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 };

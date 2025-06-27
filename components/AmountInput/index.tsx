@@ -11,6 +11,10 @@ const formatRawToAmount = (raw: string): string => {
   const intPart = digits.slice(0, -2);
   const decimalPart = digits.slice(-2);
 
+  if (decimalPart === "00" && intPart.replace(/^0+/, "") !== "") {
+    return intPart.replace(/^0+/, "") || "0";
+  }
+
   return `${intPart}.${decimalPart}`;
 };
 
@@ -20,6 +24,15 @@ const splitAmount = (formatted: string) => {
     integerPart: int || "0",
     decimalPart: dec?.padEnd(2, "0").slice(0, 2) || "00",
   };
+};
+
+const parseOnlyNumbers = (value: string): string => {
+  if (value === initialAmoutValue) return "";
+
+  const onlyNumbers = value.replace(/\D/g, "");
+  const noLeadingZeros = onlyNumbers.replace(/^0+/, "");
+
+  return noLeadingZeros === "" ? "0" : noLeadingZeros;
 };
 
 interface AmountInputProps {
@@ -71,6 +84,19 @@ const AmountInput = ({
     }
   }, [inputWidth, numberWidth, fontScale]);
 
+  const forceCursorToEnd = (e: React.SyntheticEvent<HTMLInputElement>) => {
+    const input = e.currentTarget;
+    const length = input.value.length;
+
+    input.setSelectionRange(length, length);
+  };
+
+  const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    setIsFocused(true);
+
+    forceCursorToEnd(e);
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value;
     const digitsOnly = raw.replace(/\D/g, "");
@@ -109,13 +135,16 @@ const AmountInput = ({
           }}
           id={id}
           name={name}
-          disabled={disabled}
           inputMode="numeric"
           pattern="[0-9]*"
+          disabled={disabled}
+          value={parseOnlyNumbers(value)}
           onChange={handleChange}
-          onFocus={() => setIsFocused(true)}
+          onFocus={handleFocus}
           onBlur={() => setIsFocused(false)}
-          className="absolute top-0 left-0 h-full w-full opacity-0"
+          onClick={forceCursorToEnd}
+          onKeyUp={forceCursorToEnd}
+          className="absolute top-0 left-0 h-full w-full opacity-100"
         />
 
         <div

@@ -28,6 +28,7 @@ const DeleteAccountSection = ({ user }: DeleteAccountSectionProps) => {
   const { mutate: deleteUser, isPending } = useDeleteUser();
 
   const [password, setPassword] = useState("");
+
   const [fieldErrors, setFieldErrors] = useState<{
     password?: string | null;
   }>(initialFieldErrors);

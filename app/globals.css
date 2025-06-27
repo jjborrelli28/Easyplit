@@ -12,6 +12,7 @@
     --h-foreground: #333333;
     --primary: #5a7b00;
     --secondary: #191919;
+    --info: #1363bf;
     --success: #19944a;
     --warning: #d4a900;
     --danger: #c13232;
@@ -27,6 +28,7 @@
     --h-foreground: #f2ffcc;
     --primary: #caff33;
     --secondary: #fefffa;
+    --info: #a4cfff;
     --success: #22c55e;
     --warning: #facc15;
     --danger: #ef4444;
@@ -42,6 +44,7 @@
   --color-white: var(--white);
   --color-primary: var(--primary);
   --color-secondary: var(--secondary);
+  --color-info: var(--info);
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);

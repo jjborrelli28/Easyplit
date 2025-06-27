@@ -10,7 +10,13 @@ import clsx from "clsx";
 import Spinner from "../Spinner";
 
 type Variant = "contained" | "outlined" | "text";
-export type Colors = "primary" | "secondary" | "success" | "warning" | "danger";
+export type Colors =
+  | "primary"
+  | "secondary"
+  | "info"
+  | "success"
+  | "warning"
+  | "danger";
 
 interface BaseProps {
   variant?: Variant;
@@ -50,6 +56,12 @@ const COLORS: Record<Colors, Record<Variant, string>> = {
     outlined:
       "border border-secondary text-secondary hover:bg-secondary hover:text-background",
     text: "text-secondary hover:text-secondary/90",
+  },
+  info: {
+    contained: "bg-info text-background hover:bg-info/90",
+    outlined:
+      "border border-info text-info hover:bg-info hover:text-background",
+    text: "text-info hover:text-info/90",
   },
   success: {
     contained: "bg-success text-background hover:bg-success/90",

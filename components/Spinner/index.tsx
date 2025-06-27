@@ -16,6 +16,7 @@ const COLORS = {
   foreground: "border-foreground",
   primary: "border-primary",
   secondary: "border-secondary",
+  info: "border-info",
   success: "border-success",
   warning: "border-warning",
   danger: "border-danger",

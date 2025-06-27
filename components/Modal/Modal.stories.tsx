@@ -1,6 +1,5 @@
-import { useState } from "react";
-
 import type { Meta, StoryObj } from "@storybook/react";
+import { useArgs } from "storybook/internal/preview-api";
 
 import Modal from ".";
 import Button from "../Button";
@@ -20,13 +19,17 @@ type Story = StoryObj<typeof meta>;
 
 export const Example: Story = {
   render: (args) => {
-    const [isOpen, setIsOpen] = useState(true);
+    const [{ isOpen }, updateArgs] = useArgs();
 
     return (
       <>
-        <Button onClick={() => setIsOpen(true)}>Abrir Modal</Button>
+        <Button onClick={() => updateArgs({ isOpen: true })}>Open Modal</Button>
 
-        <Modal {...args} isOpen={isOpen} onClose={() => setIsOpen(false)}>
+        <Modal
+          {...args}
+          isOpen={isOpen}
+          onClose={() => updateArgs({ isOpen: false })}
+        >
           <div className="flex flex-col gap-y-8">
             <p>
               Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do
@@ -39,7 +42,7 @@ export const Example: Story = {
             </p>
             <div className="flex justify-end gap-x-4">
               <Button
-                onClick={() => setIsOpen(false)}
+                onClick={() => updateArgs({ isOpen: false })}
                 variant="outlined"
                 color="secondary"
               >
@@ -48,7 +51,7 @@ export const Example: Story = {
               <Button
                 onClick={() => {
                   alert("Confirmed action");
-                  setIsOpen(false);
+                  updateArgs({ isOpen: false });
                 }}
                 color="success"
               >

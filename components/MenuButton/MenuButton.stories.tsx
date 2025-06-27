@@ -23,7 +23,7 @@ export const Example: Story = {
     const [{ isOpen }, updateArgs] = useArgs();
 
     const handleToggleMenu = () => {
-      updateArgs({ isOpen: !open });
+      updateArgs({ isOpen: !isOpen });
     };
 
     return <MenuButton {...args} isOpen={isOpen} onClick={handleToggleMenu} />;

@@ -26,6 +26,7 @@ export interface MessageCardProps {
 const COLORS = {
   primary: { borderColor: "border-primary", titleColor: "text-primary" },
   secondary: { borderColor: "border-secondary", titleColor: "text-secondary" },
+  info: { borderColor: "border-info", titleColor: "text-info" },
   success: { borderColor: "border-success", titleColor: "text-success" },
   warning: { borderColor: "border-warning", titleColor: "text-warning" },
   danger: { borderColor: "border-danger", titleColor: "text-danger" },

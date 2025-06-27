@@ -50,3 +50,41 @@ export const recaptchaTokenSchema = z.object({
 export const nameSchema = z.object({
     name,
 });
+
+export const createExpenseSchema = z.object({
+    name: z
+        .string({
+            required_error: "El nombre del gasto es obligatorio.",
+        })
+        .min(3, "El nombre del gasto debe tener al menos 3 caracteres."),
+    createdById: z.string(),
+    amount: z.number({
+        required_error: "El monto es obligatorio.",
+    }),
+    participantIds: z
+        .array(z.string(), {
+            required_error: "Debes agregar al menos 2 participantes al gasto.",
+        })
+        .min(2, "El gasto debe tener al menos 2 participantes."),
+    groupId: z.string().optional(),
+});
+
+export const deleteExpenseSchema = z.object({
+    id: z.string().min(1),
+});
+
+export const createGroupSchema = z.object({
+    name: z
+        .string({
+            required_error: "El nombre del grupo es obligatorio.",
+        })
+        .min(3, "El nombre del grupo debe tener al menos 3 caracteres."),
+    createdById: z.string({
+        required_error: "El ID del creador es obligatorio.",
+    }),
+    memberIds: z
+        .array(z.string(), {
+            required_error: "Debes agregar al menos 2 miembros al grupo.",
+        })
+        .min(2, "El grupo debe tener al menos 2 miembros."),
+});

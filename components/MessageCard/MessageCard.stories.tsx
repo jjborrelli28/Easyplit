@@ -1,7 +1,13 @@
 import type { Meta, StoryObj } from "@storybook/react";
 import { fn } from "@storybook/test";
 
-import { CheckCircle, CircleAlert, CircleX, MailCheck } from "lucide-react";
+import {
+  CheckCircle,
+  CircleAlert,
+  CircleX,
+  InfoIcon,
+  MailCheck,
+} from "lucide-react";
 
 import MessageCard from "@/components/MessageCard";
 
@@ -36,6 +42,13 @@ export const Secondary: Story = {
   args: {
     color: "secondary",
     icon: MailCheck,
+  },
+};
+
+export const Info: Story = {
+  args: {
+    color: "info",
+    icon: InfoIcon,
   },
 };
 

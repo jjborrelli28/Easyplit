@@ -20,8 +20,8 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 const mockupErrorMessage = [
-  "Este campo es obligatorio.",
-  "El valor ingresado no es válido.",
+  "This field is required.",
+  "The value entered is invalid.",
 ];
 
 export const Example: Story = {
@@ -39,7 +39,7 @@ export const Example: Story = {
     return (
       <div className="flex flex-col gap-y-4">
         <Button onClick={handleToggleFormErrorMessage} fullWidth>
-          {message ? "Ocultar mensaje de error" : "Mostrar mensaje de error"}
+          {message ? "Hide error message" : "Show error message"}
         </Button>
 
         <hr className="border-foreground" />

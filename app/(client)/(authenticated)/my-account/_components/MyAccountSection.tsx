@@ -40,6 +40,7 @@ const MyAccountSection = ({ user }: MyAccountSectionProps) => {
   const [password, setPassword] = useState("");
   const [email, setEmail] = useState(currentUser.email); // Not editable yet
   const [currentPassword, setCurrentPassword] = useState("");
+
   const [fieldErrors, setFieldErrors] = useState<{
     name?: string | null;
     password?: string | null;

@@ -51,14 +51,14 @@ const Modal = ({
         role="dialog"
         aria-modal="true"
         className={clsx(
-          "bg-h-background flex w-full max-w-md flex-col gap-y-8 p-4 shadow-xl lg:p-8",
+          "bg-background border-h-background flex w-full max-w-md flex-col gap-y-8 border p-4 shadow-xl lg:p-8",
           className,
         )}
       >
         {showHeader && (
           <div
             className={clsx(
-              "flex items-center justify-between",
+              "flex items-start justify-between",
               headerClassName,
             )}
           >

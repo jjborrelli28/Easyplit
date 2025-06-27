@@ -10,7 +10,7 @@ import clsx from "clsx";
 import debounce from "lodash.debounce";
 import { Search } from "lucide-react";
 
-import { useSearchUsers } from "@/hooks/users/useSearchUsers";
+import useSearchUsers from "@/hooks/users/useSearchUsers";
 
 import type { UserData } from "@/lib/api/types";
 
@@ -32,6 +32,7 @@ const UserSearchEngine = ({
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
 
   const effectiveExcludedIds = useMemo(() => {
     const ids = new Set<string>(excludeUserIds);
@@ -46,8 +47,14 @@ const UserSearchEngine = ({
     effectiveExcludedIds,
   );
 
+  const debouncedUpdate = useMemo(
+    () => debounce((val: string) => setDebouncedQuery(val), 300),
+    [],
+  );
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(e.target.value);
+    setHighlightedIndex(-1);
     debouncedUpdate(e.target.value);
   };
 
@@ -55,12 +62,26 @@ const UserSearchEngine = ({
     onSelect(user);
     setQuery("");
     setDebouncedQuery("");
+    setHighlightedIndex(-1);
   };
 
-  const debouncedUpdate = useMemo(
-    () => debounce((val: string) => setDebouncedQuery(val), 300),
-    [],
-  );
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!users.length) return;
+
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+
+      setHighlightedIndex((prev) => (prev < users.length - 1 ? prev + 1 : 0));
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+
+      setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : users.length - 1));
+    } else if (e.key === "Enter" && highlightedIndex >= 0) {
+      e.preventDefault();
+
+      handleSelect(users[highlightedIndex]);
+    }
+  };
 
   return (
     <div className="relative w-full max-w-md">
@@ -70,6 +91,7 @@ const UserSearchEngine = ({
         placeholder={placeholder}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
+        onKeyDown={handleKeyDown}
       />
 
       <Search
@@ -84,10 +106,14 @@ const UserSearchEngine = ({
           {users.map((user, i) => (
             <li
               key={user.id}
-              onClick={() => handleSelect(user)}
+              onMouseDown={() => handleSelect(user)}
               className={clsx(
-                "hover:bg-primary hover:text-background group flex cursor-pointer gap-x-4 p-4 transition-colors duration-300",
-                i % 2 === 0 ? "bg-background/50" : "bg-h-background",
+                "group flex cursor-pointer gap-x-4 p-4 transition-colors duration-300",
+                highlightedIndex === i
+                  ? "bg-primary text-background"
+                  : i % 2 === 0
+                    ? "bg-background/50"
+                    : "bg-h-background",
               )}
             >
               {user.image && (
@@ -96,11 +122,23 @@ const UserSearchEngine = ({
                   src={user.image}
                   height={40}
                   width={40}
-                  className="border-foreground group-hover:border-background h-12 w-12 rounded-full border-2 transition-colors duration-300"
+                  className={clsx(
+                    "h-12 w-12 rounded-full border-2 transition-colors duration-300",
+                    highlightedIndex === i
+                      ? "border-background"
+                      : "border-foreground group-hover:border-background",
+                  )}
                 />
               )}
 
-              <div className="group-hover:bg-background bg-foreground h-12 w-[1px] transition-colors duration-300" />
+              <div
+                className={clsx(
+                  "h-12 w-[1px] transition-colors duration-300",
+                  highlightedIndex === i
+                    ? "bg-background"
+                    : "bg-foreground group-hover:bg-background",
+                )}
+              />
 
               <div className="flex w-full flex-col justify-center overflow-hidden">
                 <p className="truncate font-semibold">{user.name}</p>

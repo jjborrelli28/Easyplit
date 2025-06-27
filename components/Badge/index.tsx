@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ReactNode, Ref } from "react";
 
 import clsx from "clsx";
 import { X } from "lucide-react";
@@ -6,16 +6,18 @@ import { X } from "lucide-react";
 import type { Colors } from "../Button";
 import Button from "../Button";
 
-const BASE_STYLES = "inline-block rounded-full px-3 py-1 group";
+const BASE_STYLES = "inline-block rounded-full px-3 py-1 group max-w-[200px]";
 
 const COLORS = {
   primary: "bg-primary text-background",
   secondary: "bg-secondary text-background",
-  success: "bg-success text-white",
-  warning: "bg-warning text-white",
-  danger: "bg-danger text-white",
+  info: "bg-info text-background",
+  success: "bg-success text-background",
+  warning: "bg-warning text-background",
+  danger: "bg-danger text-background",
 };
 export interface BadgeProps {
+  ref?: Ref<HTMLSpanElement>;
   children: ReactNode;
   color?: Colors;
   onClick?: VoidFunction;
@@ -23,15 +25,16 @@ export interface BadgeProps {
 }
 
 const Badge = ({
+  ref,
   children,
   color = "primary",
   onClick,
   className,
 }: BadgeProps) => {
   return (
-    <span className={clsx(BASE_STYLES, COLORS[color], className)}>
-      <span className="flex items-center text-xs font-semibold">
-        {children}
+    <span ref={ref} className={clsx(BASE_STYLES, COLORS[color], className)}>
+      <span className="flex items-center truncate text-xs font-semibold">
+        <span className="truncate">{children}</span>
 
         {!!onClick && (
           <Button

@@ -26,7 +26,7 @@ export const Example: Story = {
     const [{ isOpen }, updateArgs] = useArgs();
 
     const handleToggleCollapse = () => {
-      updateArgs({ isOpen: !open });
+      updateArgs({ isOpen: !isOpen });
     };
 
     return (

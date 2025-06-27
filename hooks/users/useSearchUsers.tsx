@@ -16,7 +16,7 @@ const searchUsers = async (q: string, excludeUserIds?: string[]) => {
   return data.data;
 };
 
-export const useSearchUsers = (q: string, excludeUserIds?: string[]) => {
+const useSearchUsers = (q: string, excludeUserIds?: string[]) => {
   return useQuery({
     queryKey: ["search-users", q, ...(excludeUserIds ?? [])],
     queryFn: () => searchUsers(q, excludeUserIds),
@@ -24,3 +24,5 @@ export const useSearchUsers = (q: string, excludeUserIds?: string[]) => {
     staleTime: 1000 * 10,
   });
 };
+
+export default useSearchUsers;

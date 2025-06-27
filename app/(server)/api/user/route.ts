@@ -8,14 +8,14 @@ import type {
     ServerErrorResponse,
     SuccessResponse,
     UpdateUserFields,
-    UserData
+    UserData,
 } from "@/lib/api/types";
 import { hashPassword } from "@/lib/auth/helpers";
 import prisma from "@/lib/prisma";
 import { parseZodErrors } from "@/lib/validations/helpers";
 import { nameSchema, passwordSchema } from "@/lib/validations/schemas";
 
-type ResetPasswordHandler = (
+type UpdateUserHandler = (
     req: Request,
 ) => Promise<
     NextResponse<
@@ -24,7 +24,7 @@ type ResetPasswordHandler = (
 >;
 
 // Update user
-export const POST: ResetPasswordHandler = async (req: Request) => {
+export const POST: UpdateUserHandler = async (req: Request) => {
     try {
         const { id, name, password, currentPassword } = await req.json();
 

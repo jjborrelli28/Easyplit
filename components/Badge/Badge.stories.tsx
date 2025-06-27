@@ -33,6 +33,13 @@ export const Secondary: Story = {
   },
 };
 
+export const Info: Story = {
+  args: {
+    children: "Info",
+    color: "info",
+  },
+};
+
 export const Success: Story = {
   args: {
     children: "Success",
