@@ -8,10 +8,16 @@ import type {
 } from "@/lib/api/types";
 import axios from "@/lib/axios";
 
+interface FieldErrorsCreateExpense
+  extends Omit<CreateExpenseFields, "amount" | "participantIds"> {
+  amount: string;
+  participantIds: string;
+}
+
 const useCreateExpense = () => {
   return useMutation<
     SuccessResponse<ExpenseData>,
-    ErrorResponse<CreateExpenseFields>,
+    ErrorResponse<FieldErrorsCreateExpense>,
     CreateExpenseFields
   >({
     mutationFn: async (body) => {

@@ -87,30 +87,6 @@ export interface DeleteUserFields {
     };
 }
 
-// Groups
-export interface CreateGroupFields {
-    name: string;
-    createdById: string;
-    memberIds: string[];
-}
-
-export interface GroupMember {
-    id: string;
-    userId: string;
-    groupId: string;
-    user: CompletedUserData;
-    group: Group;
-}
-
-export interface GroupData {
-    id: string;
-    name: string;
-    createdAt: Date;
-    createdById: string;
-    members: GroupMember[];
-    expenses: Expense[];
-}
-
 // Expenses
 export interface CreateExpenseFields {
     name: string;
@@ -142,5 +118,29 @@ export interface ExpenseData {
 }
 
 export interface DeleteExpenseFields {
-    data: { id?: string; }
+    data: { id?: string };
+}
+
+// Groups
+export interface CreateGroupFields {
+    name: string;
+    createdById: string;
+    memberIds: string[];
+}
+
+export interface GroupMember {
+    id: string;
+    userId: string;
+    groupId: string;
+    user: CompletedUserData;
+    group: Group;
+}
+
+export interface GroupData {
+    id: string;
+    name: string;
+    createdAt: Date;
+    createdById: string;
+    members: GroupMember[];
+    expenses: Expense[];
 }

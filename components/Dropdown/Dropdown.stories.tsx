@@ -14,7 +14,7 @@ const meta: Meta<typeof Dropdown> = {
     },
     color: {
       control: { type: "select" },
-      options: ["primary", "secondary", "success", "warning", "danger"],
+      options: ["primary", "secondary", "info", "success", "warning", "danger"],
     },
   },
   args: {

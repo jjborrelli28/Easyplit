@@ -58,9 +58,14 @@ export const createExpenseSchema = z.object({
         })
         .min(3, "El nombre del gasto debe tener al menos 3 caracteres."),
     createdById: z.string(),
-    amount: z.number({
-        required_error: "El monto es obligatorio.",
-    }),
+    amount: z
+        .number({
+            required_error: "El monto es obligatorio.",
+        })
+        .refine((val) => val !== 0, {
+            message: "El monto no puede ser $0.",
+        })
+    ,
     participantIds: z
         .array(z.string(), {
             required_error: "Debes agregar al menos 2 participantes al gasto.",

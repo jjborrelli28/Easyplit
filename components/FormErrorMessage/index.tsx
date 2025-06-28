@@ -5,17 +5,19 @@ import Collapse from "../Collapse";
 
 interface FormErrorMessageProps {
   message?: string[] | null;
+  className?: string;
   containerClassName?: string;
   paragraphClassName?: string;
 }
 
 const FormErrorMessage = ({
   message,
+  className,
   containerClassName,
   paragraphClassName,
 }: FormErrorMessageProps) => {
   return (
-    <Collapse isOpen={!!message}>
+    <Collapse isOpen={!!message} className={className}>
       <div
         className={clsx(
           "border-danger text-danger mt-2 mb-3 flex items-center border",

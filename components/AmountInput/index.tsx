@@ -3,6 +3,7 @@
 import { type CSSProperties, useEffect, useRef, useState } from "react";
 
 import clsx from "clsx";
+import Collapse from "../Collapse";
 
 export const initialAmoutValue = "0.00";
 
@@ -43,8 +44,9 @@ interface AmountInputProps {
   id?: string;
   name?: string;
   disabled?: boolean;
-  containerClassName?: string;
+  error?: string | null;
   className?: string;
+  containerClassName?: string;
 }
 
 const AmountInput = ({
@@ -55,8 +57,9 @@ const AmountInput = ({
   id,
   name,
   disabled = false,
-  containerClassName,
+  error,
   className,
+  containerClassName,
 }: AmountInputProps) => {
   const hasMounted = useRef(false);
 
@@ -144,7 +147,7 @@ const AmountInput = ({
           onBlur={() => setIsFocused(false)}
           onClick={forceCursorToEnd}
           onKeyUp={forceCursorToEnd}
-          className="absolute top-0 left-0 h-full w-full opacity-100"
+          className="absolute top-0 left-0 h-full w-full opacity-0"
         />
 
         <div
@@ -194,6 +197,10 @@ const AmountInput = ({
           </span>
         </div>
       </div>
+
+      <Collapse isOpen={!!error}>
+        <p className="text-danger mt-1 ml-1 text-start text-xs">{error}</p>
+      </Collapse>
     </fieldset>
   );
 };

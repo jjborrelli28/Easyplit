@@ -8,13 +8,13 @@ import { CircleChevronDown, Receipt, Trash, Users } from "lucide-react";
 import useDeleteExpense from "@/hooks/expenses/useDeleteExpense";
 
 import type { ExpenseData, GroupData, ResponseMessage } from "@/lib/api/types";
+import ICON_MAP from "@/lib/icons";
 
 import Badge from "../Badge";
 import Button from "../Button";
 import Collapse from "../Collapse";
-import Modal from "../Modal";
 import MessageCard from "../MessageCard";
-import ICON_MAP from "@/lib/icons";
+import Modal from "../Modal";
 
 export enum CARD_TYPE {
   EXPENSE = "EXPENSE",
@@ -34,7 +34,6 @@ const Card = ({ type, data, loggedInUser }: CardProps) => {
   const [deleteModalIsOpen, setDeleteModalIsOpen] = useState(false);
   const [participantsIsOpen, setParticipantsIsOpen] = useState(false);
 
-  const [responseError, setResponseError] = useState<string[] | null>(null);
   const [message, setMessage] = useState<ResponseMessage | null>(null);
 
   if (!data || !loggedInUser) return null;
@@ -53,15 +52,21 @@ const Card = ({ type, data, loggedInUser }: CardProps) => {
 
       deleteExpense(body, {
         onSuccess: (res) => {
-          setResponseError(null);
           res?.message && setMessage(res.message);
         },
         onError: (res) => {
           const {
-            error: { message, fields },
+            error: { message },
           } = res.response.data;
 
-          setResponseError(message);
+          setMessage({
+            color: "danger",
+            icon: "CircleX",
+            title: `No se puedo eliminar el ${type === CARD_TYPE.EXPENSE ? "gasto" : "grupo"}`,
+            content: message.map((paragraph) => ({
+              text: paragraph,
+            })),
+          });
         },
       });
     } else {
@@ -171,6 +176,7 @@ const Card = ({ type, data, loggedInUser }: CardProps) => {
               start: 3,
               onComplete: async () => {
                 setDeleteModalIsOpen(false);
+                setMessage(null);
               },
             }}
           >

@@ -20,6 +20,7 @@ type DropdownProps = ButtonProps & {
 const hoveredItemColors = {
   primary: "hover:bg-primary hover:!text-background",
   secondary: "hover:bg-secondary hover:!text-background",
+  info: "hover:bg-info hover:!text-background",
   success: "hover:bg-success hover:!text-background",
   warning: "hover:bg-warning hover:!text-background",
   danger: "hover:bg-danger hover:!text-background",

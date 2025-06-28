@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 
-import type { Group } from "@prisma/client";
-
 import API_RESPONSE_CODE from "@/lib/api/API_RESPONSE_CODE";
 import type {
   CreateGroupFields,
+  GroupData,
   ServerErrorResponse,
   SuccessResponse,
 } from "@/lib/api/types";
@@ -15,7 +14,9 @@ import { createGroupSchema } from "@/lib/validations/schemas";
 type CreateGroupHandler = (
   req: Request,
 ) => Promise<
-  NextResponse<SuccessResponse<Group> | ServerErrorResponse<CreateGroupFields>>
+  NextResponse<
+    SuccessResponse<GroupData> | ServerErrorResponse<CreateGroupFields>
+  >
 >;
 
 // Create group
@@ -78,7 +79,7 @@ export const POST: CreateGroupHandler = async (req: Request) => {
           },
         ],
       },
-      data: group,
+      data: group as GroupData,
     });
   } catch (error) {
     console.error(error);
@@ -102,7 +103,7 @@ type GetLinkedGroupsHandler = (
   req: Request,
 ) => Promise<
   NextResponse<
-    SuccessResponse<Group[]> | ServerErrorResponse<CreateGroupFields>
+    SuccessResponse<GroupData[]> | ServerErrorResponse<CreateGroupFields>
   >
 >;
 
@@ -142,7 +143,7 @@ export const GET: GetLinkedGroupsHandler = async (req: Request) => {
     return NextResponse.json({
       success: true,
       code: API_RESPONSE_CODE.DATA_FETCHED,
-      data: groups,
+      data: groups as GroupData[],
     });
   } catch (error) {
     console.error(error);
@@ -157,75 +158,6 @@ export const GET: GetLinkedGroupsHandler = async (req: Request) => {
         },
       },
       { status: 500 },
-    );
-  }
-};
-
-type DeleteExpenseHandler = (
-  req: Request,
-  params: { params: { expenseId: string } }
-) => Promise<
-  NextResponse<SuccessResponse<null> | ServerErrorResponse<null>>
->;
-
-export const DELETE: DeleteExpenseHandler = async (
-  req,
-  { params: { expenseId } }
-) => {
-  try {
-    // Check if expense exists
-    const existingExpense = await prisma.expense.findUnique({
-      where: { id: expenseId },
-    });
-
-    if (!existingExpense) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: {
-            code: API_RESPONSE_CODE.NOT_FOUND,
-            message: ["No se encontró el gasto."],
-            statusCode: 404,
-          },
-        },
-        { status: 404 }
-      );
-    }
-
-    // Delete expense
-    await prisma.expense.delete({
-      where: { id: expenseId },
-    });
-
-    return NextResponse.json({
-      success: true,
-      code: API_RESPONSE_CODE.DATA_DELETED,
-      message: {
-        color: "success",
-        icon: "Trash",
-        title: "¡Gasto eliminado!",
-        content: [
-          {
-            text: "El gasto fue eliminado correctamente.",
-          },
-        ],
-      },
-      data: null,
-    });
-  } catch (error) {
-    console.error(error);
-
-    return NextResponse.json(
-      {
-        success: false,
-        error: {
-          code: API_RESPONSE_CODE.INTERNAL_SERVER_ERROR,
-          message: ["Error interno del servidor."],
-          statusCode: 500,
-          details: error,
-        },
-      },
-      { status: 500 }
     );
   }
 };

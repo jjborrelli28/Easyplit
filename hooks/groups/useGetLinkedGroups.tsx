@@ -17,6 +17,7 @@ const useGetLinkedGroups = (userId?: string | null) => {
     queryFn: () => getLinkedGroups(userId),
     enabled: !!userId,
     staleTime: 1000 * 10,
+    refetchInterval: 3000,
   });
 };
 

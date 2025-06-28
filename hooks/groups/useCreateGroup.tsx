@@ -8,10 +8,14 @@ import type {
 } from "@/lib/api/types";
 import axios from "@/lib/axios";
 
+interface FieldErrorsCreateGroup extends Omit<CreateGroupFields, "memberIds"> {
+  memberIds: string;
+}
+
 const useCreateGroup = () => {
   return useMutation<
     SuccessResponse<GroupData>,
-    ErrorResponse<CreateGroupFields>,
+    ErrorResponse<FieldErrorsCreateGroup>,
     CreateGroupFields
   >({
     mutationFn: async (body) => {

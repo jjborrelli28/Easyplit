@@ -2,16 +2,16 @@ import { type FormEvent, useState } from "react";
 
 import { useSession } from "next-auth/react";
 
+import useCreateExpense from "@/hooks/expenses/useCreateExpense";
 import useCreateGroup from "@/hooks/groups/useCreateGroup";
+
 import type { ResponseMessage, UserData } from "@/lib/api/types";
 import ICON_MAP from "@/lib/icons";
-import { parseZodErrors } from "@/lib/validations/helpers";
-import { nameSchema } from "@/lib/validations/schemas";
 
-import useCreateExpense from "@/hooks/expenses/useCreateExpense";
 import AmountInput, { initialAmoutValue } from "../AmountInput";
 import Badge from "../Badge";
 import Button from "../Button";
+import FormErrorMessage from "../FormErrorMessage";
 import Input from "../Input";
 import MessageCard from "../MessageCard";
 import Modal, { type ModalProps } from "../Modal";
@@ -23,7 +23,10 @@ export enum ACTION_TYPE {
 }
 
 const initialFieldErrors = {
-  actionName: null,
+  name: null,
+  participantIds: null,
+  memberIds: null,
+  amount: null,
 };
 
 interface ActionModalProps extends Omit<ModalProps, "children"> {
@@ -38,11 +41,14 @@ const ActionModal = ({ type, onClose, ...restProps }: ActionModalProps) => {
   const { mutate: createGroup, isPending: groupIsPending } = useCreateGroup();
 
   const [actionName, setActionName] = useState("");
-  const [members, setMembers] = useState<UserData[]>([]);
+  const [participants, setParticipants] = useState<UserData[]>([]);
   const [amount, setAmount] = useState(initialAmoutValue);
 
   const [fieldErrors, setFieldErrors] = useState<{
-    actionName?: string | null;
+    name?: string | null;
+    participantIds?: string | null;
+    memberIds?: string | null;
+    amount?: string | null;
   }>(initialFieldErrors);
   const [responseError, setResponseError] = useState<string[] | null>(null);
 
@@ -54,6 +60,9 @@ const ActionModal = ({ type, onClose, ...restProps }: ActionModalProps) => {
   const handleSubmitAction = (e: FormEvent) => {
     e.preventDefault();
 
+    setFieldErrors(initialFieldErrors);
+    setResponseError(null);
+
     if (!createdById)
       return setResponseError([
         "No se pudo crear el grupo porque no se encontró un usuario autenticado.",
@@ -63,7 +72,7 @@ const ActionModal = ({ type, onClose, ...restProps }: ActionModalProps) => {
     if (type === ACTION_TYPE.CREATE_EXPENSE) {
       const participantIds = [
         createdById,
-        ...members.map((member) => member.id),
+        ...participants.map((member) => member.id),
       ];
       const body = {
         name: actionName,
@@ -93,7 +102,10 @@ const ActionModal = ({ type, onClose, ...restProps }: ActionModalProps) => {
         },
       });
     } else {
-      const memberIds = [createdById, ...members.map((member) => member.id)];
+      const memberIds = [
+        createdById,
+        ...participants.map((member) => member.id),
+      ];
       const body = { name: actionName, createdById, memberIds };
 
       createGroup(body, {
@@ -120,19 +132,20 @@ const ActionModal = ({ type, onClose, ...restProps }: ActionModalProps) => {
   };
 
   const handleSelect = (user: UserData) => {
-    setMembers((prevState) => [...prevState, user]);
+    setParticipants((prevState) => [...prevState, user]);
   };
 
   const handleRemove = (idToRemove: string) => {
-    setMembers((prevState) =>
+    setParticipants((prevState) =>
       prevState.filter((member) => member.id !== idToRemove),
     );
   };
 
   const handleClose = () => {
     setActionName("");
-    setMembers([]);
-    setAmount(initialAmoutValue);
+    setParticipants([]);
+    setFieldErrors(initialFieldErrors);
+    setResponseError(null);
     setMessage(null);
     onClose();
   };
@@ -180,38 +193,21 @@ const ActionModal = ({ type, onClose, ...restProps }: ActionModalProps) => {
               const name = e.target.value;
 
               setActionName(name);
-
-              const verifiedField = nameSchema.safeParse({
-                name,
-              });
-
-              if (verifiedField.success) {
-                setFieldErrors((prevState) => ({
-                  ...prevState,
-                  name: null,
-                }));
-              } else {
-                const fields = parseZodErrors(verifiedField.error);
-
-                setFieldErrors({
-                  ...initialFieldErrors,
-                  ...fields,
-                });
-              }
             }}
             autoComplete="action-name"
             required
-            error={fieldErrors.actionName}
+            error={fieldErrors.name}
           />
 
           <div className="flex flex-col gap-y-4">
             <UserSearchEngine
               placeholder="Buscar personas..."
               onSelect={handleSelect}
-              excludeUserIds={members.map((u) => u.id)}
+              excludeUserIds={participants.map((u) => u.id)}
+              error={fieldErrors.participantIds ?? fieldErrors.memberIds}
             />
 
-            {members.length > 0 && (
+            {participants.length > 0 && (
               <div className="flex flex-col gap-y-4">
                 <p className="text-primary text-sm font-semibold">
                   Integrantes del{" "}
@@ -219,7 +215,7 @@ const ActionModal = ({ type, onClose, ...restProps }: ActionModalProps) => {
                 </p>
 
                 <div className="flex flex-wrap gap-2">
-                  {members.map((member, i) => (
+                  {participants.map((member, i) => (
                     <Badge
                       key={i}
                       onClick={() => handleRemove(member.id)}
@@ -234,12 +230,19 @@ const ActionModal = ({ type, onClose, ...restProps }: ActionModalProps) => {
           </div>
 
           {type === ACTION_TYPE.CREATE_EXPENSE && (
-            <AmountInput label="Monto" value={amount} onChange={setAmount} />
+            <AmountInput
+              label="Monto"
+              value={amount}
+              onChange={setAmount}
+              error={fieldErrors.amount}
+            />
           )}
 
           <Button type="submit" loading={isLoading} fullWidth>
             Crear
           </Button>
+
+          <FormErrorMessage message={responseError} className="-mt-8" />
         </form>
       )}
     </Modal>

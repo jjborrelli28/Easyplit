@@ -18,6 +18,7 @@ const COLORS = {
   foreground: "text-foreground",
   primary: "text-primary",
   secondary: "text-secondary",
+  info: "text-info",
   success: "text-success",
   warning: "text-warning",
   danger: "text-danger",

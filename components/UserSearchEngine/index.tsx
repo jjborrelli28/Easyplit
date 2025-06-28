@@ -15,17 +15,20 @@ import useSearchUsers from "@/hooks/users/useSearchUsers";
 import type { UserData } from "@/lib/api/types";
 
 import Input from "../Input";
+import Collapse from "../Collapse";
 
 interface UserSearchEngineProps {
   onSelect: (user: UserData) => void;
   placeholder?: string;
   excludeUserIds?: string[];
+  error?: string | null;
 }
 
 const UserSearchEngine = ({
   placeholder = "Buscar por nombre o email",
   onSelect,
   excludeUserIds = [],
+  error,
 }: UserSearchEngineProps) => {
   const { data } = useSession();
 
@@ -149,6 +152,10 @@ const UserSearchEngine = ({
           ))}
         </ul>
       )}
+
+      <Collapse isOpen={!!error}>
+        <p className="text-danger mt-1 ml-1 text-start text-xs">{error}</p>
+      </Collapse>
     </div>
   );
 };

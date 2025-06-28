@@ -1,11 +1,10 @@
 import { NextResponse } from "next/server";
 
-import type { Expense } from "@prisma/client";
-
 import API_RESPONSE_CODE from "@/lib/api/API_RESPONSE_CODE";
 import type {
   CreateExpenseFields,
   DeleteExpenseFields,
+  ExpenseData,
   ServerErrorResponse,
   SuccessResponse,
 } from "@/lib/api/types";
@@ -20,7 +19,7 @@ type CreateExpenseHandler = (
   req: Request,
 ) => Promise<
   NextResponse<
-    SuccessResponse<Expense> | ServerErrorResponse<CreateExpenseFields>
+    SuccessResponse<ExpenseData> | ServerErrorResponse<CreateExpenseFields>
   >
 >;
 
@@ -89,7 +88,7 @@ export const POST: CreateExpenseHandler = async (req: Request) => {
           },
         ],
       },
-      data: expense,
+      data: expense as ExpenseData,
     });
   } catch (error) {
     console.error(error);
@@ -113,7 +112,7 @@ type GetLinkedExpensesHandler = (
   req: Request,
 ) => Promise<
   NextResponse<
-    SuccessResponse<Expense[]> | ServerErrorResponse<CreateExpenseFields>
+    SuccessResponse<ExpenseData[]> | ServerErrorResponse<CreateExpenseFields>
   >
 >;
 
@@ -165,7 +164,7 @@ export const GET: GetLinkedExpensesHandler = async (req: Request) => {
     return NextResponse.json({
       success: true,
       code: API_RESPONSE_CODE.DATA_FETCHED,
-      data: expenses,
+      data: expenses as ExpenseData[],
     });
   } catch (error) {
     console.error(error);
@@ -188,7 +187,7 @@ type DeleteExpenseHandler = (
   req: Request,
 ) => Promise<
   NextResponse<
-    SuccessResponse<Expense> | ServerErrorResponse<DeleteExpenseFields>
+    SuccessResponse<ExpenseData> | ServerErrorResponse<DeleteExpenseFields>
   >
 >;
 
@@ -267,7 +266,7 @@ export const DELETE: DeleteExpenseHandler = async (req) => {
           },
         ],
       },
-      data: expense,
+      data: expense as ExpenseData,
     });
   } catch (error) {
     console.error(error);
