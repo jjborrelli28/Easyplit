@@ -3,7 +3,7 @@ import { type FormEvent, useState } from "react";
 import { Session } from "next-auth";
 
 import clsx from "clsx";
-import { CircleChevronDown, Receipt, Trash, Users } from "lucide-react";
+import { CircleChevronDown, Component, Receipt, Trash } from "lucide-react";
 
 import useDeleteExpense from "@/hooks/expenses/useDeleteExpense";
 
@@ -14,6 +14,7 @@ import useDeleteGroup from "@/hooks/groups/useDeleteGroup";
 import Badge from "../Badge";
 import Button from "../Button";
 import Collapse from "../Collapse";
+import { options } from "../GroupTypeSelector";
 import MessageCard from "../MessageCard";
 import Modal from "../Modal";
 import Tooltip from "../Tooltip";
@@ -96,7 +97,11 @@ const Card = ({ type, data, loggedInUser }: CardProps) => {
     }
   };
 
-  const Icon = type === CARD_TYPE.EXPENSE ? Receipt : Users;
+  const Icon =
+    type === CARD_TYPE.EXPENSE
+      ? Receipt
+      : (options.find((option) => option.type === (data as GroupData).type)
+          ?.icon ?? Component);
   const participants =
     type === CARD_TYPE.EXPENSE
       ? (data as ExpenseData).participants.filter(
@@ -121,7 +126,7 @@ const Card = ({ type, data, loggedInUser }: CardProps) => {
             <Tooltip
               content={data.name}
               color="info"
-              containerClassName="max-w-1/2 truncate"
+              containerClassName="lg:max-w-1/2 truncate"
             >
               <p className="group-hover:text-primary truncate text-lg font-semibold transition-colors duration-300 lg:w-fit">
                 {data.name}
@@ -132,7 +137,7 @@ const Card = ({ type, data, loggedInUser }: CardProps) => {
               <Tooltip
                 content={`$${(data as ExpenseData).amount}`}
                 color="info"
-                containerClassName="max-w-1/2 truncate"
+                containerClassName="lg:max-w-1/2 truncate"
               >
                 <p className="text-primary truncate text-lg font-semibold">
                   ${(data as ExpenseData).amount}

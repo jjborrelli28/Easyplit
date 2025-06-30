@@ -66,9 +66,19 @@ model VerificationToken {
   @@map("verification_tokens")
 }
 
+enum GroupType {
+  HOUSEHOLD
+  TRIP
+  FRIENDS
+  COUPLE
+  FAMILY
+  OTHER
+}
+
 model Group {
   id          String        @id @default(cuid())
   name        String
+  type        GroupType     @default(OTHER)
   createdAt   DateTime      @default(now())
   createdById String        @map("created_by")
   createdBy   User          @relation("UserCreatedGroups", fields: [createdById], references: [id])

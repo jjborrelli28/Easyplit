@@ -1,3 +1,4 @@
+import { GROUP_TYPE } from "@/components/GroupTypeSelector";
 import { z } from "zod";
 
 // Rules
@@ -64,8 +65,7 @@ export const createExpenseSchema = z.object({
         })
         .refine((val) => val !== 0, {
             message: "El monto no puede ser $0.",
-        })
-    ,
+        }),
     participantIds: z
         .array(z.string(), {
             required_error: "Debes agregar al menos 2 participantes al gasto.",
@@ -80,6 +80,10 @@ export const createGroupSchema = z.object({
             required_error: "El nombre del grupo es obligatorio.",
         })
         .min(3, "El nombre del grupo debe tener al menos 3 caracteres."),
+    type: z.nativeEnum(GROUP_TYPE, {
+        required_error: "El tipo de grupo es obligatorio.",
+        invalid_type_error: "El tipo de grupo no es válido.",
+    }),
     createdById: z.string({
         required_error: "El ID del creador es obligatorio.",
     }),
@@ -88,4 +92,5 @@ export const createGroupSchema = z.object({
             required_error: "Debes agregar al menos 2 miembros al grupo.",
         })
         .min(2, "El grupo debe tener al menos 2 miembros."),
+
 });

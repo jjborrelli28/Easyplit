@@ -12,6 +12,7 @@ import AmountInput, { initialAmoutValue } from "../AmountInput";
 import Badge from "../Badge";
 import Button from "../Button";
 import FormErrorMessage from "../FormErrorMessage";
+import GroupTypeSelector, { GROUP_TYPE } from "../GroupTypeSelector";
 import Input from "../Input";
 import MessageCard from "../MessageCard";
 import Modal, { type ModalProps } from "../Modal";
@@ -27,6 +28,7 @@ const initialFieldErrors = {
   participantIds: null,
   memberIds: null,
   amount: null,
+  groupType: null,
 };
 
 interface ActionModalProps extends Omit<ModalProps, "children"> {
@@ -43,12 +45,14 @@ const ActionModal = ({ type, onClose, ...restProps }: ActionModalProps) => {
   const [actionName, setActionName] = useState("");
   const [participants, setParticipants] = useState<UserData[]>([]);
   const [amount, setAmount] = useState(initialAmoutValue);
+  const [groupType, setGroupType] = useState<GROUP_TYPE | undefined>();
 
   const [fieldErrors, setFieldErrors] = useState<{
     name?: string | null;
     participantIds?: string | null;
     memberIds?: string | null;
     amount?: string | null;
+    groupType?: string | null;
   }>(initialFieldErrors);
   const [responseError, setResponseError] = useState<string[] | null>(null);
 
@@ -106,7 +110,12 @@ const ActionModal = ({ type, onClose, ...restProps }: ActionModalProps) => {
         createdById,
         ...participants.map((member) => member.id),
       ];
-      const body = { name: actionName, createdById, memberIds };
+      const body = {
+        name: actionName,
+        type: groupType,
+        createdById,
+        memberIds,
+      };
 
       createGroup(body, {
         onSuccess: (res) => {
@@ -121,6 +130,7 @@ const ActionModal = ({ type, onClose, ...restProps }: ActionModalProps) => {
           if (fields) {
             setFieldErrors({
               ...initialFieldErrors,
+              ...(fields?.type && { groupType: fields.type }),
               ...fields,
             });
           } else {
@@ -235,6 +245,14 @@ const ActionModal = ({ type, onClose, ...restProps }: ActionModalProps) => {
               value={amount}
               onChange={setAmount}
               error={fieldErrors.amount}
+            />
+          )}
+
+          {type === ACTION_TYPE.CREATE_GROUP && (
+            <GroupTypeSelector
+              value={groupType}
+              onChange={setGroupType}
+              error={fieldErrors.groupType}
             />
           )}
 

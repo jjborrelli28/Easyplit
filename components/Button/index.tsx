@@ -46,37 +46,43 @@ const BASE_STYLES =
 
 const COLORS: Record<Colors, Record<Variant, string>> = {
   primary: {
-    contained: "bg-primary text-background hover:bg-primary/90",
+    contained:
+      "bg-primary text-background hover:bg-primary/90 border-primary hover:border-primary/10",
     outlined:
       "border border-primary text-primary hover:bg-primary hover:text-background",
     text: "text-primary hover:text-primary/90",
   },
   secondary: {
-    contained: "bg-secondary text-background hover:bg-secondary/90",
+    contained:
+      "bg-secondary text-background hover:bg-secondary/90 border-secondary hover:border-secondary/10",
     outlined:
       "border border-secondary text-secondary hover:bg-secondary hover:text-background",
     text: "text-secondary hover:text-secondary/90",
   },
   info: {
-    contained: "bg-info text-background hover:bg-info/90",
+    contained:
+      "bg-info text-background hover:bg-info/90 border-info hover:border-info/10",
     outlined:
       "border border-info text-info hover:bg-info hover:text-background",
     text: "text-info hover:text-info/90",
   },
   success: {
-    contained: "bg-success text-background hover:bg-success/90",
+    contained:
+      "bg-success text-background hover:bg-success/90 border-success hover:border-success/10",
     outlined:
       "border border-success text-success hover:bg-success hover:text-background",
     text: "text-success hover:text-success/90",
   },
   warning: {
-    contained: "bg-warning text-background hover:bg-warning/90",
+    contained:
+      "bg-warning text-background hover:bg-warning/90 border-warning hover:border-warning/10",
     outlined:
       "border border-warning text-warning hover:bg-warning hover:text-background",
     text: "text-warning hover:text-warning/90",
   },
   danger: {
-    contained: "bg-danger text-background hover:bg-danger/90",
+    contained:
+      "bg-danger text-background hover:bg-danger/90 border-danger hover:border-danger/10",
     outlined:
       "border border-danger text-danger hover:bg-danger hover:text-background",
     text: "text-danger hover:text-danger/90",

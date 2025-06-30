@@ -44,13 +44,14 @@ export const POST: CreateGroupHandler = async (req: Request) => {
     );
   }
 
-  const { name, createdById, memberIds } = res.data;
+  const { name, type, createdById, memberIds } = res.data;
 
   try {
     // Create group
     const group = await prisma.group.create({
       data: {
         name,
+        type,
         createdById,
         members: {
           create: memberIds.map((userId: string) => ({

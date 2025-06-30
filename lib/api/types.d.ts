@@ -1,6 +1,7 @@
 import ICON_MAP from "../icons";
 import API_RESPONSE_CODE from "./API_RESPONSE_CODE";
 
+import { GROUP_TYPE } from "@/components/GroupTypeSelector";
 import type { MessageCardProps } from "@/components/MessageCard";
 
 // Success response
@@ -120,6 +121,7 @@ export interface ExpenseData {
 // Groups
 export interface CreateGroupFields {
     name: string;
+    type?: GROUP_TYPE;
     createdById: string;
     memberIds: string[];
 }
@@ -135,6 +137,7 @@ export interface GroupMember {
 export interface GroupData {
     id: string;
     name: string;
+    type: GROUP_TYPE;
     createdAt: Date;
     createdById: string;
     members: GroupMember[];

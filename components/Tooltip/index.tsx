@@ -108,7 +108,7 @@ const Tooltip = ({
         createPortal(
           <div
             className={clsx(
-              "border-h-background animate-fade-in fixed z-50 border px-3 py-1.5 text-xs font-semibold text-wrap shadow-xl transition-opacity",
+              "border-h-background animate-fade-in fixed z-50 border px-2 py-1 text-xs font-semibold text-wrap shadow-xl transition-opacity",
               COLOR_MAP[color],
               className,
             )}
