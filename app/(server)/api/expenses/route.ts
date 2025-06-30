@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import API_RESPONSE_CODE from "@/lib/api/API_RESPONSE_CODE";
 import type {
   CreateExpenseFields,
-  DeleteExpenseFields,
+  DeleteExpenseGroupFields,
   ExpenseData,
   ServerErrorResponse,
   SuccessResponse,
@@ -11,8 +11,7 @@ import type {
 import prisma from "@/lib/prisma";
 import { parseZodErrors } from "@/lib/validations/helpers";
 import {
-  createExpenseSchema,
-  deleteExpenseSchema,
+  createExpenseSchema
 } from "@/lib/validations/schemas";
 
 type CreateExpenseHandler = (
@@ -187,38 +186,29 @@ type DeleteExpenseHandler = (
   req: Request,
 ) => Promise<
   NextResponse<
-    SuccessResponse<ExpenseData> | ServerErrorResponse<DeleteExpenseFields>
+    SuccessResponse<ExpenseData> | ServerErrorResponse<DeleteExpenseGroupFields>
   >
 >;
 
 // Delete expene
 export const DELETE: DeleteExpenseHandler = async (req) => {
   try {
-    const body = await req.json();
+    const { id } = await req.json();
 
-    // Field format validation
-    const res = deleteExpenseSchema.safeParse(body);
-
-    if (!res.success) {
-      const fields = parseZodErrors(
-        res.error,
-      ) as unknown as DeleteExpenseFields;
-
+    // ID validation
+    if (!id || typeof id !== "string" || id.length <= 1) {
       return NextResponse.json(
         {
           success: false,
           error: {
             code: API_RESPONSE_CODE.INVALID_FIELD_FORMAT,
             message: ["ID de gasto inválido."],
-            fields,
             statusCode: 400,
           },
         },
         { status: 400 },
       );
     }
-
-    const { id } = res.data;
 
     // Search expense by id
     const expense = await prisma.expense.findUnique({

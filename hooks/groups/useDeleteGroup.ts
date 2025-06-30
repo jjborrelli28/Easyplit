@@ -3,20 +3,20 @@ import { useMutation } from "@tanstack/react-query";
 import type {
     DeleteExpenseGroupFields,
     ErrorResponse,
-    ExpenseData,
+    GroupData,
     SuccessResponse,
 } from "@/lib/api/types";
 import api from "@/lib/axios";
 
-const useDeleteExpense = () => {
+const useDeleteGroup = () => {
     return useMutation<
-        SuccessResponse<ExpenseData>,
+        SuccessResponse<GroupData>,
         ErrorResponse<DeleteExpenseGroupFields>,
         DeleteExpenseGroupFields
     >({
         mutationFn: async (body) => {
-            const { data } = await api.delete<SuccessResponse<ExpenseData>>(
-                "/expenses",
+            const { data } = await api.delete<SuccessResponse<GroupData>>(
+                "/groups",
                 body,
             );
 
@@ -25,4 +25,4 @@ const useDeleteExpense = () => {
     });
 };
 
-export default useDeleteExpense;
+export default useDeleteGroup;

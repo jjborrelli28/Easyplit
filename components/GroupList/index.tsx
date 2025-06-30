@@ -2,9 +2,10 @@ import { useSession } from "next-auth/react";
 
 import useGetLinkedGroups from "@/hooks/groups/useGetLinkedGroups";
 
+import clsx from "clsx";
+
 import Card, { CARD_TYPE } from "../Card";
 import Spinner from "../Spinner";
-import clsx from "clsx";
 
 interface GroupList {
   className?: string;
@@ -25,8 +26,6 @@ const GroupList = ({ className }: GroupList) => {
         </div>
       ) : status === "authenticated" ? (
         <>
-          <p className="text-xl font-semibold">Grupos:</p>
-
           {!!groups?.length ? (
             groups.map((group, i) => (
               <Card

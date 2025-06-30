@@ -72,6 +72,10 @@
     margin-top: var(--header);
     margin-bottom: var(--header);
   }
+
+  .top-header {
+    top: var(--header);
+  }
 }
 
 body {

@@ -40,7 +40,7 @@ const Header = () => {
       className={clsx(
         "fixed z-50 flex w-full justify-end backdrop-blur-md",
         menuIsOpen &&
-          "bg-h-background/75 inset-0 md:inset-auto md:bg-transparent",
+          "bg-background/75 inset-0 md:inset-auto md:bg-transparent",
       )}
     >
       {isLoading ? (

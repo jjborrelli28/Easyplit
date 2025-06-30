@@ -117,10 +117,6 @@ export interface ExpenseData {
     participants: ExpenseParticipant[];
 }
 
-export interface DeleteExpenseFields {
-    data: { id?: string };
-}
-
 // Groups
 export interface CreateGroupFields {
     name: string;
@@ -143,4 +139,8 @@ export interface GroupData {
     createdById: string;
     members: GroupMember[];
     expenses: Expense[];
+}
+
+export interface DeleteExpenseGroupFields {
+    data: { id?: string };
 }

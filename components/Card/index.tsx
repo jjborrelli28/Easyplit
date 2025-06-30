@@ -10,11 +10,13 @@ import useDeleteExpense from "@/hooks/expenses/useDeleteExpense";
 import type { ExpenseData, GroupData, ResponseMessage } from "@/lib/api/types";
 import ICON_MAP from "@/lib/icons";
 
+import useDeleteGroup from "@/hooks/groups/useDeleteGroup";
 import Badge from "../Badge";
 import Button from "../Button";
 import Collapse from "../Collapse";
 import MessageCard from "../MessageCard";
 import Modal from "../Modal";
+import Tooltip from "../Tooltip";
 
 export enum CARD_TYPE {
   EXPENSE = "EXPENSE",
@@ -30,6 +32,7 @@ interface CardProps {
 const Card = ({ type, data, loggedInUser }: CardProps) => {
   const { mutate: deleteExpense, isPending: expenseIsPending } =
     useDeleteExpense();
+  const { mutate: deleteGroup, isPending: groupIsPending } = useDeleteGroup();
 
   const [deleteModalIsOpen, setDeleteModalIsOpen] = useState(false);
   const [participantsIsOpen, setParticipantsIsOpen] = useState(false);
@@ -40,16 +43,17 @@ const Card = ({ type, data, loggedInUser }: CardProps) => {
 
   const handleToggleCard = () =>
     setParticipantsIsOpen((prevState) => !prevState);
+
   const handleDelete = (e: FormEvent) => {
     e.preventDefault();
 
-    if (type === CARD_TYPE.EXPENSE) {
-      const body = {
-        data: {
-          id: data.id,
-        },
-      };
+    const body = {
+      data: {
+        id: data.id,
+      },
+    };
 
+    if (type === CARD_TYPE.EXPENSE) {
       deleteExpense(body, {
         onSuccess: (res) => {
           res?.message && setMessage(res.message);
@@ -62,7 +66,7 @@ const Card = ({ type, data, loggedInUser }: CardProps) => {
           setMessage({
             color: "danger",
             icon: "CircleX",
-            title: `No se puedo eliminar el ${type === CARD_TYPE.EXPENSE ? "gasto" : "grupo"}`,
+            title: "No se puedo eliminar el gasto",
             content: message.map((paragraph) => ({
               text: paragraph,
             })),
@@ -70,6 +74,25 @@ const Card = ({ type, data, loggedInUser }: CardProps) => {
         },
       });
     } else {
+      deleteGroup(body, {
+        onSuccess: (res) => {
+          res?.message && setMessage(res.message);
+        },
+        onError: (res) => {
+          const {
+            error: { message },
+          } = res.response.data;
+
+          setMessage({
+            color: "danger",
+            icon: "CircleX",
+            title: "No se puedo eliminar el grupo",
+            content: message.map((paragraph) => ({
+              text: paragraph,
+            })),
+          });
+        },
+      });
     }
   };
 
@@ -86,7 +109,7 @@ const Card = ({ type, data, loggedInUser }: CardProps) => {
     type === CARD_TYPE.EXPENSE
       ? loggedInUser.id === (data as ExpenseData).paidById
       : loggedInUser.id === (data as GroupData).createdById;
-  const isDeleting = expenseIsPending;
+  const isDeleting = expenseIsPending || groupIsPending;
 
   return (
     <>
@@ -95,14 +118,26 @@ const Card = ({ type, data, loggedInUser }: CardProps) => {
 
         <div className="flex min-w-0 flex-1 flex-col gap-y-2">
           <div className="flex flex-col justify-between gap-x-4 lg:flex-row lg:items-center">
-            <p className="group-hover:text-primary w-full truncate text-lg font-semibold transition-colors duration-300">
-              {data.name}
-            </p>
+            <Tooltip
+              content={data.name}
+              color="info"
+              containerClassName="max-w-1/2 truncate"
+            >
+              <p className="group-hover:text-primary truncate text-lg font-semibold transition-colors duration-300 lg:w-fit">
+                {data.name}
+              </p>
+            </Tooltip>
 
             {type === CARD_TYPE.EXPENSE && (
-              <p className="text-primary text-lg font-semibold">
-                ${(data as ExpenseData).amount}
-              </p>
+              <Tooltip
+                content={`$${(data as ExpenseData).amount}`}
+                color="info"
+                containerClassName="max-w-1/2 truncate"
+              >
+                <p className="text-primary truncate text-lg font-semibold">
+                  ${(data as ExpenseData).amount}
+                </p>
+              </Tooltip>
             )}
           </div>
 

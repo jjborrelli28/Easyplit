@@ -2,9 +2,10 @@ import { useSession } from "next-auth/react";
 
 import useGetLinkedExpenses from "@/hooks/expenses/useGetLinkedExpenses";
 
+import clsx from "clsx";
+
 import Card, { CARD_TYPE } from "../Card";
 import Spinner from "../Spinner";
-import clsx from "clsx";
 
 interface ExpenseList {
   className?: string;
@@ -25,8 +26,6 @@ const ExpenseList = ({ className }: ExpenseList) => {
         </div>
       ) : status === "authenticated" ? (
         <>
-          <p className="text-xl font-semibold">Gastos:</p>
-
           {!!expenses?.length ? (
             expenses.map((expense, i) => (
               <Card

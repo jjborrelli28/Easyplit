@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import API_RESPONSE_CODE from "@/lib/api/API_RESPONSE_CODE";
 import type {
   CreateGroupFields,
+  DeleteExpenseGroupFields,
   GroupData,
   ServerErrorResponse,
   SuccessResponse,
@@ -138,6 +139,9 @@ export const GET: GetLinkedGroupsHandler = async (req: Request) => {
           },
         },
       },
+      orderBy: {
+        createdAt: "desc",
+      },
     });
 
     return NextResponse.json({
@@ -154,6 +158,102 @@ export const GET: GetLinkedGroupsHandler = async (req: Request) => {
         error: {
           code: API_RESPONSE_CODE.INTERNAL_SERVER_ERROR,
           message: ["Error interno del servidor."],
+          statusCode: 500,
+        },
+      },
+      { status: 500 },
+    );
+  }
+};
+
+type DeleteGroupHandler = (
+  req: Request,
+) => Promise<
+  NextResponse<
+    SuccessResponse<GroupData> | ServerErrorResponse<DeleteExpenseGroupFields>
+  >
+>;
+
+// Delete group
+export const DELETE: DeleteGroupHandler = async (req) => {
+  try {
+    const { id } = await req.json();
+
+    // ID validation
+    if (!id || typeof id !== "string" || id.length <= 1) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: API_RESPONSE_CODE.INVALID_FIELD_FORMAT,
+            message: ["ID de grupo inválido."],
+            statusCode: 400,
+          },
+        },
+        { status: 400 },
+      );
+    }
+
+    // Search group by id
+    const group = await prisma.group.findUnique({
+      where: { id },
+      include: {
+        members: {
+          include: {
+            user: true,
+          },
+        },
+      },
+    });
+
+    if (!group) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: API_RESPONSE_CODE.NOT_FOUND,
+            message: ["Grupo no encontrado."],
+            statusCode: 404,
+          },
+        },
+        { status: 404 },
+      );
+    }
+
+    // Delete group
+    await prisma.groupMember.deleteMany({
+      where: { groupId: id },
+    });
+
+    await prisma.group.delete({
+      where: { id },
+    });
+
+    return NextResponse.json({
+      success: true,
+      code: API_RESPONSE_CODE.DATA_DELETED,
+      message: {
+        color: "success",
+        icon: "Trash",
+        title: "Grupo eliminado",
+        content: [
+          {
+            text: "El grupo fue eliminado correctamente.",
+          },
+        ],
+      },
+      data: group as GroupData,
+    });
+  } catch (error) {
+    console.error(error);
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: {
+          code: API_RESPONSE_CODE.INTERNAL_SERVER_ERROR,
+          message: ["Error interno del servidor."],
+          details: error,
           statusCode: 500,
         },
       },

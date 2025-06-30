@@ -74,10 +74,6 @@ export const createExpenseSchema = z.object({
     groupId: z.string().optional(),
 });
 
-export const deleteExpenseSchema = z.object({
-    id: z.string().min(1),
-});
-
 export const createGroupSchema = z.object({
     name: z
         .string({
