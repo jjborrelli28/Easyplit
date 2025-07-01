@@ -51,7 +51,7 @@ const PanelList = ({ type, isActive, handleTogglePanel }: PanelListProps) => {
       >
         <p className="text-xl font-semibold">
           {type === CARD_TYPE.EXPENSE ? "Gastos" : "Grupos"}{" "}
-          {list?.length && <span>{`(${list.length})`}</span>}
+          {list !== undefined && <span>{`(${list.length})`}</span>}
         </p>
 
         <Button

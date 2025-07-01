@@ -97,25 +97,25 @@ export interface CreateExpenseFields {
     groupId?: string;
 }
 
-export interface ExpenseParticipant {
+export interface ExpenseParticipantData {
     id: string;
     expenseId: string;
     userId: string;
     amount: number;
-    expense: Expense;
-    user: User;
+    user: UserData;
 }
+
 
 export interface ExpenseData {
     id: string;
     name: string;
     amount: number;
     paidById: string;
-    paidBy: User;
+    paidBy: UserData;
     groupId?: string | null;
-    group?: Group | null;
+    group?: GroupData | null;
     createdAt: Date;
-    participants: ExpenseParticipant[];
+    participants: ExpenseParticipantData[];
 }
 
 // Groups
@@ -130,8 +130,7 @@ export interface GroupMember {
     id: string;
     userId: string;
     groupId: string;
-    user: CompletedUserData;
-    group: Group;
+    user: UserData;
 }
 
 export interface GroupData {
@@ -140,8 +139,9 @@ export interface GroupData {
     type: GROUP_TYPE;
     createdAt: Date;
     createdById: string;
+    createdBy: UserData;
     members: GroupMember[];
-    expenses: Expense[];
+    expenses?: ExpenseData[];
 }
 
 export interface DeleteExpenseGroupFields {

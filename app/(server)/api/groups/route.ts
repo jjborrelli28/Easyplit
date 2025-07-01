@@ -60,9 +60,24 @@ export const POST: CreateGroupHandler = async (req: Request) => {
         },
       },
       include: {
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
+          },
+        },
         members: {
           include: {
-            user: true,
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                image: true,
+              },
+            },
           },
         },
       },
@@ -134,6 +149,14 @@ export const GET: GetLinkedGroupsHandler = async (req: Request) => {
         },
       },
       include: {
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
+          },
+        },
         members: {
           include: {
             user: true,
@@ -199,6 +222,14 @@ export const DELETE: DeleteGroupHandler = async (req) => {
     const group = await prisma.group.findUnique({
       where: { id },
       include: {
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
+          },
+        },
         members: {
           include: {
             user: true,

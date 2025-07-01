@@ -22,7 +22,7 @@ const useCreateExpense = () => {
   >({
     mutationFn: async (body) => {
       const { data } = await axios.post<SuccessResponse<ExpenseData>>(
-        "/expenses",
+        "/expense",
         body,
       );
 

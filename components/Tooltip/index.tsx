@@ -40,7 +40,6 @@ const Tooltip = ({
   containerClassName,
 }: TooltipProps) => {
   const ref = useRef<HTMLDivElement | null>(null);
-
   const [visible, setVisible] = useState(false);
   const [position, setPosition] = useState<{ top: number; left: number }>({
     top: 0,
@@ -54,28 +53,31 @@ const Tooltip = ({
       if (!ref.current) return;
 
       const rect = ref.current.getBoundingClientRect();
-      const tooltipWidth = rect.width;
-      const tooltipHeight = rect.height;
+      const tooltip = document.querySelector("#tooltip");
 
-      let top = rect.top;
-      let left = rect.left;
+      if (!tooltip) return;
+
+      const tooltipRect = tooltip.getBoundingClientRect();
+
+      let top = 0;
+      let left = 0;
 
       switch (placement) {
         case "top":
-          top -= tooltipHeight + 8;
-          left += rect.width / 2 - tooltipWidth / 2;
+          top = rect.top - tooltipRect.height - 8;
+          left = rect.left + rect.width / 2 - tooltipRect.width / 2;
           break;
         case "bottom":
-          top += rect.height + 8;
-          left += rect.width / 2 - tooltipWidth / 2;
+          top = rect.bottom + 8;
+          left = rect.left + rect.width / 2 - tooltipRect.width / 2;
           break;
         case "left":
-          top += rect.height / 2 - tooltipHeight / 2;
-          left -= tooltipWidth + 8;
+          top = rect.top + rect.height / 2 - tooltipRect.height / 2;
+          left = rect.left - tooltipRect.width - 8;
           break;
         case "right":
-          top += rect.height / 2 - tooltipHeight / 2;
-          left += rect.width + 8;
+          top = rect.top + rect.height / 2 - tooltipRect.height / 2;
+          left = rect.right + 8;
           break;
       }
 
@@ -107,8 +109,9 @@ const Tooltip = ({
       {visible &&
         createPortal(
           <div
+            id="tooltip"
             className={clsx(
-              "border-h-background animate-fade-in fixed z-50 border px-2 py-1 text-xs font-semibold text-wrap shadow-xl transition-opacity",
+              "animate-fade-in border-h-background fixed z-50 border px-2 py-1 text-xs font-semibold text-wrap shadow-xl transition-opacity",
               COLOR_MAP[color],
               className,
             )}

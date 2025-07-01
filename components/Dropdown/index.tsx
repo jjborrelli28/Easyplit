@@ -69,7 +69,7 @@ const Dropdown = ({
 
       <Collapse
         isOpen={isOpen}
-        className="bg-h-background ring-background absolute right-0 z-10 mt-2 w-full min-w-44 origin-top-right shadow-xl ring-1"
+        className="bg-h-background ring-foreground/50 absolute right-0 z-10 mt-2 w-full min-w-44 origin-top-right shadow-xl ring-1"
       >
         <div className="flex flex-col">
           {items.map((item, i) => (
@@ -91,7 +91,7 @@ const Dropdown = ({
                 {item.label}
               </Button>
 
-              {items.length !== ++i && <hr className="text-background" />}
+              {items.length !== ++i && <hr className="text-foreground/50" />}
             </Fragment>
           ))}
         </div>

@@ -119,7 +119,7 @@ const MyAccountSection = ({ user }: MyAccountSectionProps) => {
         <h1 className="text-3xl font-bold">Mi cuenta</h1>
 
         <div className="grid-rows-auto grid w-full grid-cols-1 gap-8 lg:grid-cols-[auto_1fr]">
-          <div className="border-foregrund relative mx-auto aspect-square h-50 w-50 rounded-full border-2">
+          <div className="relative mx-auto aspect-square h-50 w-50 rounded-full">
             {user?.image && (
               <Image
                 alt="Avatar"

@@ -1,11 +1,17 @@
-import { type FormEvent, useState } from "react";
+"use client";
+
+import { type FormEvent, type MouseEvent, useState } from "react";
+
+import { useRouter } from "next/navigation";
 
 import { Session } from "next-auth";
 
 import clsx from "clsx";
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
 import { CircleChevronDown, Component, Receipt, Trash } from "lucide-react";
 
-import useDeleteExpense from "@/hooks/expenses/useDeleteExpense";
+import useDeleteExpense from "@/hooks/expense/useDeleteExpense";
 
 import type { ExpenseData, GroupData, ResponseMessage } from "@/lib/api/types";
 import ICON_MAP from "@/lib/icons";
@@ -31,6 +37,8 @@ interface CardProps {
 }
 
 const Card = ({ type, data, loggedInUser }: CardProps) => {
+  const router = useRouter();
+
   const { mutate: deleteExpense, isPending: expenseIsPending } =
     useDeleteExpense();
   const { mutate: deleteGroup, isPending: groupIsPending } = useDeleteGroup();
@@ -41,6 +49,15 @@ const Card = ({ type, data, loggedInUser }: CardProps) => {
   const [message, setMessage] = useState<ResponseMessage | null>(null);
 
   if (!data || !loggedInUser) return null;
+
+  const handleClickCard = (e: MouseEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement;
+    const tagId = target.id;
+    const tagName = (e.target as HTMLElement).tagName.toLowerCase();
+
+    if (tagId === "icon" || tagId === "name" || tagName === "div")
+      router.push(`/expense/${data.id}`);
+  };
 
   const handleToggleCard = () =>
     setParticipantsIsOpen((prevState) => !prevState);
@@ -114,41 +131,65 @@ const Card = ({ type, data, loggedInUser }: CardProps) => {
     type === CARD_TYPE.EXPENSE
       ? loggedInUser.id === (data as ExpenseData).paidById
       : loggedInUser.id === (data as GroupData).createdById;
+  const creatorUserName = IsUserCreator
+    ? "mi"
+    : type === CARD_TYPE.EXPENSE
+      ? (data as ExpenseData).paidBy.name
+      : (data as GroupData).createdBy.name;
   const isDeleting = expenseIsPending || groupIsPending;
 
   return (
     <>
-      <div className="border-h-background group hover:border-primary flex cursor-pointer gap-x-4 border p-4 transition-colors duration-300">
-        <Icon className="group-hover:text-primary h-14 w-14 min-w-14 transition-colors duration-300" />
+      <div
+        onClick={handleClickCard}
+        className="border-h-background group hover:border-primary flex cursor-pointer items-center gap-x-4 border p-4 transition-colors duration-300"
+      >
+        <Icon
+          id="icon"
+          className="group-hover:text-primary h-12 w-12 min-w-12 transition-colors duration-300"
+        />
 
         <div className="flex min-w-0 flex-1 flex-col gap-y-2">
-          <div className="flex flex-col justify-between gap-x-4 lg:flex-row lg:items-center">
-            <Tooltip
-              content={data.name}
-              color="info"
-              containerClassName="lg:max-w-1/2 truncate"
-            >
-              <p className="group-hover:text-primary truncate text-lg font-semibold transition-colors duration-300 lg:w-fit">
-                {data.name}
-              </p>
-            </Tooltip>
-
-            {type === CARD_TYPE.EXPENSE && (
-              <Tooltip
-                content={`$${(data as ExpenseData).amount}`}
-                color="info"
-                containerClassName="lg:max-w-1/2 truncate"
-              >
-                <p className="text-primary truncate text-lg font-semibold">
-                  ${(data as ExpenseData).amount}
+          <div className="flex flex-col gap-y-0.5">
+            <div className="grid-rows-auto grid grid-cols-1 gap-x-4 lg:grid-cols-2 lg:grid-rows-1 lg:items-center">
+              <Tooltip content={data.name} color="info">
+                <p
+                  id="name"
+                  className="group-hover:text-primary truncate text-lg font-semibold transition-colors duration-300"
+                >
+                  {data.name}
                 </p>
               </Tooltip>
-            )}
+
+              {type === CARD_TYPE.EXPENSE && (
+                <Tooltip
+                  content={`$${(data as ExpenseData).amount}`}
+                  color="info"
+                  containerClassName="lg:justify-end"
+                >
+                  <span className="text-primary flex max-w-full cursor-default items-center gap-x-0.75 font-semibold">
+                    <span className="text-sm">$</span>
+
+                    <p className="truncate text-lg">
+                      {(data as ExpenseData).amount}
+                    </p>
+                  </span>
+                </Tooltip>
+              )}
+            </div>
+
+            <div>
+              <p className="text-foreground/75 inline cursor-default text-xs">
+                {type === CARD_TYPE.EXPENSE ? "Añadido" : "Creado"} por{" "}
+                {creatorUserName} el{" "}
+                {format(new Date(data.createdAt), "dd/MM/yyyy", { locale: es })}
+              </p>
+            </div>
           </div>
 
           <div className="flex flex-col">
             <div className="flex items-center justify-between gap-x-4">
-              <p className="text-info text-xs font-semibold">
+              <p className="text-info cursor-default text-xs font-semibold">
                 Tu y{" "}
                 {participants.length === 1
                   ? type === CARD_TYPE.EXPENSE

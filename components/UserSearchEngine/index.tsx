@@ -125,12 +125,7 @@ const UserSearchEngine = ({
                   src={user.image}
                   height={40}
                   width={40}
-                  className={clsx(
-                    "h-12 w-12 rounded-full border-2 transition-colors duration-300",
-                    highlightedIndex === i
-                      ? "border-background"
-                      : "border-foreground group-hover:border-background",
-                  )}
+                  className="h-12 w-12 rounded-full transition-colors duration-300"
                 />
               )}
 

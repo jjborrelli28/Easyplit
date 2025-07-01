@@ -33,8 +33,8 @@ const DashboardPage = () => {
   return (
     <>
       <PageContainer className="border-h-background !px-0 md:border-r">
-        <div className="border-h-background flex flex-1 flex-col border-t p-4">
-          <div className="flex flex-1 flex-col gap-y-4">
+        <div className="border-h-background flex flex-1 flex-col border-t px-4 py-8 lg:px-8">
+          <div className="flex flex-1 flex-col gap-y-8">
             <h1 className="text-3xl font-bold">Panel de control</h1>
 
             <hr className="border-h-background" />

@@ -16,7 +16,7 @@ const useDeleteExpense = () => {
     >({
         mutationFn: async (body) => {
             const { data } = await api.delete<SuccessResponse<ExpenseData>>(
-                "/expenses",
+                "/expense",
                 body,
             );
 

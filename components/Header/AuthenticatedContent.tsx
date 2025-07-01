@@ -84,11 +84,11 @@ const AuthenticatedContent = ({ isOpen, user }: AuthenticatedContentProps) => {
               <>
                 {user.image && (
                   <Image
-                    alt="Avatar"
+                    alt="User avatar"
                     src={user.image}
                     height={40}
                     width={40}
-                    className="border-secondary rounded-full border-2"
+                    className="rounded-full"
                   />
                 )}
 

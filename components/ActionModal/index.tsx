@@ -2,7 +2,7 @@ import { type FormEvent, useState } from "react";
 
 import { useSession } from "next-auth/react";
 
-import useCreateExpense from "@/hooks/expenses/useCreateExpense";
+import useCreateExpense from "@/hooks/expense/useCreateExpense";
 import useCreateGroup from "@/hooks/groups/useCreateGroup";
 
 import type { ResponseMessage, UserData } from "@/lib/api/types";
