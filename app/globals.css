@@ -125,6 +125,12 @@ input:-webkit-autofill {
   scrollbar-color: var(--primary) var(--h-background);
 }
 
+.recaptcha div div div iframe {
+  height: 76px;
+  width: 302px;
+  border-radius: 3px;
+}
+
 @keyframes justify-end-to-start {
   0% {
     justify-content: flex-end;

@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 
 import Link from "next/link";
+
+import type ReCAPTCHA from "react-google-recaptcha";
 
 import useForgotPassword from "@/hooks/auth/useForgotPassword";
 
@@ -29,6 +31,8 @@ const initialFieldErrors = {
 const ForgotPasswordPage = () => {
   const { mutate: forgotPassword, isPending } = useForgotPassword();
 
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
+
   const [email, setEmail] = useState("");
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
 
@@ -38,6 +42,12 @@ const ForgotPasswordPage = () => {
   }>(initialFieldErrors);
   const [responseError, setResponseError] = useState<string[] | null>(null);
   const [message, setMessage] = useState<ResponseMessage | null>(null);
+
+  const handleResetRecaptcha = () => {
+    recaptchaRef.current?.reset();
+
+    setRecaptchaToken(null);
+  };
 
   const handleForgotPassword = async (e: FormEvent) => {
     e.preventDefault();
@@ -78,6 +88,8 @@ const ForgotPasswordPage = () => {
         } else {
           setResponseError(message);
         }
+
+        handleResetRecaptcha();
       },
     });
   };
@@ -137,6 +149,15 @@ const ForgotPasswordPage = () => {
                       recaptchaToken,
                     }));
                   }
+                }}
+                onExpired={() => {
+                  setRecaptchaToken(null);
+
+                  setFieldErrors((prevState) => ({
+                    ...prevState,
+                    recaptchaToken:
+                      "El reCAPTCHA expiró, por favor completalo nuevamente.",
+                  }));
                 }}
                 error={fieldErrors.recaptchaToken}
               />

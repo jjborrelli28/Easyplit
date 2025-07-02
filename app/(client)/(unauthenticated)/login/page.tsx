@@ -1,12 +1,14 @@
 "use client";
 
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useRef, useState } from "react";
 
 import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { signIn } from "next-auth/react";
+
+import type ReCAPTCHA from "react-google-recaptcha";
 
 import googleLogo from "@/public/assets/logos/Google.svg?url";
 
@@ -28,6 +30,8 @@ const initialFieldErrors = {
 };
 
 const LoginPage = () => {
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
@@ -40,6 +44,12 @@ const LoginPage = () => {
     recaptchaToken?: string | null;
   }>(initialFieldErrors);
   const [responseError, setResponseError] = useState<string[] | null>(null);
+
+  const handleResetRecaptcha = () => {
+    recaptchaRef.current?.reset();
+
+    setRecaptchaToken(null);
+  };
 
   const handleLoginWithCredentials = (e: FormEvent) => {
     e.preventDefault();
@@ -91,6 +101,8 @@ const LoginPage = () => {
         } else {
           setResponseError(message);
         }
+
+        handleResetRecaptcha();
       }
     });
   };
@@ -132,6 +144,7 @@ const LoginPage = () => {
               />
 
               <ReCAPTCHAv2
+                ref={recaptchaRef}
                 onChange={(recaptchaToken) => {
                   const recaptchaTokenVerification =
                     recaptchaTokenSchema.safeParse({
@@ -155,6 +168,15 @@ const LoginPage = () => {
                       recaptchaToken,
                     }));
                   }
+                }}
+                onExpired={() => {
+                  setRecaptchaToken(null);
+
+                  setFieldErrors((prevState) => ({
+                    ...prevState,
+                    recaptchaToken:
+                      "El reCAPTCHA expiró, por favor completalo nuevamente.",
+                  }));
                 }}
                 error={fieldErrors.recaptchaToken}
               />

@@ -2,9 +2,10 @@
 
 import { useEffect, useState } from "react";
 
+import { useTheme } from "next-themes";
+
 import clsx from "clsx";
 import { Moon, Sun } from "lucide-react";
-import { useTheme } from "next-themes";
 
 const ThemeToggle = () => {
   const { resolvedTheme, setTheme } = useTheme();
