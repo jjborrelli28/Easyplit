@@ -31,9 +31,9 @@ const FormErrorMessage = ({
         <div className="border-danger space-y-1 border-l px-3 py-2 text-start">
           {message &&
             message.map((paragraph, i) => (
-              <em key={i} className={clsx("text-xs", paragraphClassName)}>
+              <p key={i} className={clsx("text-xs italic", paragraphClassName)}>
                 {paragraph}
-              </em>
+              </p>
             ))}
         </div>
       </div>

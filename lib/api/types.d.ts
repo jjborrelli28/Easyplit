@@ -4,14 +4,15 @@ import API_RESPONSE_CODE from "./API_RESPONSE_CODE";
 import { GROUP_TYPE } from "@/components/GroupTypeSelector";
 import type { MessageCardProps } from "@/components/MessageCard";
 
-// Success response
+// Response message types
 export type ResponseIcon = keyof typeof ICON_MAP;
 
-export type ResponseMessage = Pick<
+export interface ResponseMessage extends Pick<
     MessageCardProps,
     "color" | "title" | "actionLabel" | "actionHref"
-> & { icon: ResponseIcon; content: MessageCardProps["children"] };
+> { icon: ResponseIcon; content: MessageCardProps["children"] };
 
+// Success response type
 export interface SuccessResponse<D = undefined> {
     success: true;
     code: API_RESPONSE_CODE;
@@ -19,8 +20,8 @@ export interface SuccessResponse<D = undefined> {
     data?: D;
 }
 
-// Error response
-export type ServerErrorResponse<F = undefined> = {
+// Error response types
+export interface ServerErrorResponse<F = undefined> {
     success: boolean;
     error: {
         code: API_RESPONSE_CODE;
@@ -31,14 +32,14 @@ export type ServerErrorResponse<F = undefined> = {
     };
 };
 
-export type ErrorResponse<F = undefined> = {
+export interface ErrorResponse<F = undefined> {
     response: {
         data: ServerErrorResponse<F>;
     };
 };
 
-// User Data
-export type UserData = {
+// User types
+export interface UserData {
     id: string;
     name: string | null;
     email: string | null;
@@ -59,15 +60,16 @@ export interface CompletedUserData {
     verifyTokenExp: Date | null;
 }
 
-// Field types
-export interface ForgotPasswordFields {
-    email: string;
+// Form fields
+export interface RegisterFields {
+    name?: string;
+    email?: string;
+    password?: string;
+    recaptchaToken?: string;
 }
 
-export interface RegisterFields {
-    name: string;
+export interface ForgotPasswordFields {
     email: string;
-    password: string;
 }
 
 export interface ResetPasswordFields {
@@ -104,7 +106,6 @@ export interface ExpenseParticipantData {
     amount: number;
     user: UserData;
 }
-
 
 export interface ExpenseData {
     id: string;

@@ -1,10 +1,11 @@
-import { redirect } from "next/navigation";
 import { useRef, useState } from "react";
+
+import { redirect } from "next/navigation";
 
 import { signIn } from "next-auth/react";
 
 import { useForm } from "@tanstack/react-form";
-import ReCAPTCHA from "react-google-recaptcha";
+import type ReCAPTCHA from "react-google-recaptcha";
 
 import { ServerErrorResponse } from "@/lib/api/types";
 import { loginSchema } from "@/lib/validations/schemas";
@@ -14,13 +15,19 @@ import FormErrorMessage from "@/components/FormErrorMessage";
 import Input from "@/components/Input";
 import ReCAPTCHAv2 from "@/components/ReCAPTCHAv2";
 
+interface LoginFields {
+  email?: string;
+  password?: string;
+  recaptchaToken?: string;
+}
+
 const LoginForm = () => {
   const recaptchaRef = useRef<ReCAPTCHA>(null);
 
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<
-    { email: string; password: string; recaptchaToken: string },
+    LoginFields,
     undefined,
     undefined,
     undefined,
@@ -50,13 +57,9 @@ const LoginForm = () => {
 
       if (res?.error) {
         const {
-          message = [],
+          message,
           fields = {},
-        }: ServerErrorResponse<{
-          email?: string;
-          password?: string;
-          recaptchaToken?: string;
-        }>["error"] = JSON.parse(res.error);
+        }: ServerErrorResponse<LoginFields>["error"] = JSON.parse(res.error);
 
         form.setErrorMap({
           onSubmit: {
@@ -73,7 +76,6 @@ const LoginForm = () => {
     <form
       onSubmit={(e) => {
         e.preventDefault();
-
         form.handleSubmit();
       }}
       className="flex flex-col gap-y-1"
