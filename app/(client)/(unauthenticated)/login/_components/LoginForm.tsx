@@ -7,7 +7,7 @@ import { signIn } from "next-auth/react";
 import { useForm } from "@tanstack/react-form";
 import type ReCAPTCHA from "react-google-recaptcha";
 
-import { ServerErrorResponse } from "@/lib/api/types";
+import type { ServerErrorResponse } from "@/lib/api/types";
 import { loginSchema } from "@/lib/validations/schemas";
 
 import Button from "@/components/Button";

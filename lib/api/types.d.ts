@@ -69,7 +69,8 @@ export interface RegisterFields {
 }
 
 export interface ForgotPasswordFields {
-    email: string;
+    email?: string;
+    recaptchaToken?: string;
 }
 
 export interface ResetPasswordFields {

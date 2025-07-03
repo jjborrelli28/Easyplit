@@ -3,31 +3,31 @@ import { type Dispatch, type SetStateAction, useRef } from "react";
 import { useForm } from "@tanstack/react-form";
 import type ReCAPTCHA from "react-google-recaptcha";
 
-import useRegister from "@/hooks/auth/useRegister";
+import useForgotPassword from "@/hooks/auth/useForgotPassword";
 
 import type {
-  RegisterFields,
+  ForgotPasswordFields,
   ResponseMessage,
   ServerErrorResponse,
 } from "@/lib/api/types";
-import { registerSchema } from "@/lib/validations/schemas";
+import { forgotPasswordSchema } from "@/lib/validations/schemas";
 
 import Button from "@/components/Button";
 import FormErrorMessage from "@/components/FormErrorMessage";
 import Input from "@/components/Input";
 import ReCAPTCHAv2 from "@/components/ReCAPTCHAv2";
 
-interface RegisterFormProps {
+interface ForgotPasswordFormProps {
   setSuccessMessage: Dispatch<SetStateAction<ResponseMessage | null>>;
 }
 
-const RegisterForm = ({ setSuccessMessage }: RegisterFormProps) => {
-  const { mutate: register, isPending } = useRegister();
+const ForgotPasswordForm = ({ setSuccessMessage }: ForgotPasswordFormProps) => {
+  const { mutateAsync: forgotPassword, isPending } = useForgotPassword();
 
   const recaptchaRef = useRef<ReCAPTCHA>(null);
 
   const form = useForm<
-    RegisterFields,
+    ForgotPasswordFields,
     undefined,
     undefined,
     undefined,
@@ -39,13 +39,11 @@ const RegisterForm = ({ setSuccessMessage }: RegisterFormProps) => {
     undefined
   >({
     defaultValues: {
-      name: "",
       email: "",
-      password: "",
       recaptchaToken: "",
     },
     onSubmit: async ({ value }) => {
-      register(value, {
+      forgotPassword(value, {
         onSuccess: (res) => {
           form.reset();
           recaptchaRef.current?.reset();
@@ -55,7 +53,7 @@ const RegisterForm = ({ setSuccessMessage }: RegisterFormProps) => {
         onError: (res) => {
           const {
             error: { message, fields = {} },
-          }: ServerErrorResponse<RegisterFields> = res.response.data;
+          }: ServerErrorResponse<ForgotPasswordFields> = res.response.data;
 
           form.setErrorMap({
             onSubmit: {
@@ -79,41 +77,12 @@ const RegisterForm = ({ setSuccessMessage }: RegisterFormProps) => {
       className="flex flex-col gap-y-1"
     >
       <form.Field
-        name="name"
-        validators={{
-          onBlur: (field) => {
-            if (!field.value) return;
-
-            return registerSchema.shape.name.safeParse(field.value).error
-              ?.errors;
-          },
-        }}
-        children={(field) => (
-          <Input
-            id="name"
-            type="text"
-            label="Nombre"
-            placeholder="Nombre"
-            value={field.state.value}
-            onChange={(e) => field.handleChange(e.target.value)}
-            onBlur={field.handleBlur}
-            autoComplete="name"
-            required
-            error={
-              field.state.meta.errors[0]?.message ||
-              field.state.meta.errorMap.onSubmit
-            }
-          />
-        )}
-      />
-
-      <form.Field
         name="email"
         validators={{
           onBlur: (field) => {
             if (!field.value) return;
 
-            return registerSchema.shape.email.safeParse(field.value).error
+            return forgotPasswordSchema.shape.email.safeParse(field.value).error
               ?.errors;
           },
         }}
@@ -122,40 +91,10 @@ const RegisterForm = ({ setSuccessMessage }: RegisterFormProps) => {
             id="email"
             type="email"
             label="Correo electrónico"
-            placeholder="Correo electrónico"
+            placeholder="ejemplo@email.com"
             value={field.state.value}
             onChange={(e) => field.handleChange(e.target.value)}
             onBlur={field.handleBlur}
-            autoComplete="email"
-            required
-            error={
-              field.state.meta.errors[0]?.message ||
-              field.state.meta.errorMap.onSubmit
-            }
-          />
-        )}
-      />
-
-      <form.Field
-        name="password"
-        validators={{
-          onBlur: (field) => {
-            if (!field.value) return;
-
-            return registerSchema.shape.password.safeParse(field.value).error
-              ?.errors;
-          },
-        }}
-        children={(field) => (
-          <Input
-            id="password"
-            type="password"
-            label="Contraseña"
-            placeholder="Contraseña"
-            value={field.state.value}
-            onChange={(e) => field.handleChange(e.target.value)}
-            onBlur={field.handleBlur}
-            autoComplete="password"
             required
             error={
               field.state.meta.errors[0]?.message ||
@@ -168,7 +107,7 @@ const RegisterForm = ({ setSuccessMessage }: RegisterFormProps) => {
       <form.Field
         name="recaptchaToken"
         validators={{
-          onChange: registerSchema.shape.recaptchaToken,
+          onChange: forgotPasswordSchema.shape.recaptchaToken,
         }}
         children={(field) => (
           <ReCAPTCHAv2
@@ -182,9 +121,8 @@ const RegisterForm = ({ setSuccessMessage }: RegisterFormProps) => {
               form.setErrorMap({
                 onSubmit: {
                   fields: {
-                    recaptchaToken: [
+                    recaptchaToken:
                       "El reCAPTCHA expiró, por favor completalo nuevamente.",
-                    ],
                   },
                 },
               });
@@ -198,7 +136,7 @@ const RegisterForm = ({ setSuccessMessage }: RegisterFormProps) => {
       />
 
       <Button type="submit" fullWidth className="mt-4" loading={isPending}>
-        Registrarse
+        Enviar correo de recuperación
       </Button>
 
       <form.Subscribe
@@ -211,4 +149,4 @@ const RegisterForm = ({ setSuccessMessage }: RegisterFormProps) => {
   );
 };
 
-export default RegisterForm;
+export default ForgotPasswordForm;
