@@ -20,19 +20,7 @@ const recaptchaToken = z
         required_error: "Demuestra que no eres un robot",
         invalid_type_error: "Demuestra que no eres un robot",
     })
-    .superRefine((value, ctx) => {
-        if (value.length === 0) {
-            ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                message: "El reCAPTCHA expiró, por favor completalo nuevamente.",
-            });
-        } else if (value.length < 3) {
-            ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                message: "El token de reCAPTCHA es invalido",
-            });
-        }
-    });
+    .min(1, "El token de reCAPTCHA es invalido");
 
 // Schemas
 export const registerSchema = z.object({
