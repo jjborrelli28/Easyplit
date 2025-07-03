@@ -21,6 +21,11 @@ const recaptchaToken = z
         invalid_type_error: "Demuestra que no eres un robot",
     })
     .min(1, "El token de reCAPTCHA es invalido");
+const token = z.string({
+    required_error: "El token es requerido",
+    invalid_type_error: "El token debe ser un string",
+})
+    .min(10, "El token es inválido");
 
 // Schemas
 export const registerSchema = z.object({
@@ -41,8 +46,9 @@ export const forgotPasswordSchema = z.object({
     recaptchaToken,
 });
 
-export const passwordSchema = z.object({
+export const resetPasswordSchema = z.object({
     password,
+    token
 });
 
 export const recaptchaTokenSchema = z.object({

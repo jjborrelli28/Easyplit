@@ -22,7 +22,7 @@ interface ForgotPasswordFormProps {
 }
 
 const ForgotPasswordForm = ({ setSuccessMessage }: ForgotPasswordFormProps) => {
-  const { mutateAsync: forgotPassword, isPending } = useForgotPassword();
+  const { mutate: forgotPassword, isPending } = useForgotPassword();
 
   const recaptchaRef = useRef<ReCAPTCHA>(null);
 
@@ -95,6 +95,7 @@ const ForgotPasswordForm = ({ setSuccessMessage }: ForgotPasswordFormProps) => {
             value={field.state.value}
             onChange={(e) => field.handleChange(e.target.value)}
             onBlur={field.handleBlur}
+            autoComplete="email"
             required
             error={
               field.state.meta.errors[0]?.message ||

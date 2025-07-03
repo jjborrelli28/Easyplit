@@ -13,7 +13,7 @@ import clsx from "clsx";
 import { Eye, EyeOff, Pencil, PencilOff } from "lucide-react";
 
 import Button from "../Button";
-import Collapse from "../Collapse";
+import InputErrorMessage from "../InputErrorMessage";
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
@@ -218,11 +218,7 @@ const Input = ({
         )}
       </div>
 
-      <Collapse isOpen={!!error}>
-        <p className="text-danger mt-1 ml-1 text-start text-xs italic">
-          {error}
-        </p>
-      </Collapse>
+      <InputErrorMessage message={error} />
     </fieldset>
   );
 };

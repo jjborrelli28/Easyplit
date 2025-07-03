@@ -74,7 +74,8 @@ export interface ForgotPasswordFields {
 }
 
 export interface ResetPasswordFields {
-    password: string;
+    password?: string;
+    token?: string;
 }
 
 export interface UpdateUserFields {
