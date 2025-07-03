@@ -91,11 +91,10 @@ const RegisterForm = ({ setSuccessMessage }: RegisterFormProps) => {
         children={(field) => (
           <Input
             id="name"
-            type="text"
             label="Nombre"
             placeholder="Nombre"
             value={field.state.value}
-            onChange={(e) => field.handleChange(e.target.value)}
+            onChange={(e) => field.handleChange(e.target.value.trim())}
             onBlur={field.handleBlur}
             autoComplete="name"
             required
@@ -124,7 +123,7 @@ const RegisterForm = ({ setSuccessMessage }: RegisterFormProps) => {
             label="Correo electrónico"
             placeholder="Correo electrónico"
             value={field.state.value}
-            onChange={(e) => field.handleChange(e.target.value)}
+            onChange={(e) => field.handleChange(e.target.value.trim())}
             onBlur={field.handleBlur}
             autoComplete="email"
             required
@@ -153,7 +152,7 @@ const RegisterForm = ({ setSuccessMessage }: RegisterFormProps) => {
             label="Contraseña"
             placeholder="Contraseña"
             value={field.state.value}
-            onChange={(e) => field.handleChange(e.target.value)}
+            onChange={(e) => field.handleChange(e.target.value.trim())}
             onBlur={field.handleBlur}
             autoComplete="password"
             required

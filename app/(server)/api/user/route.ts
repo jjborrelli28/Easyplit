@@ -13,7 +13,7 @@ import type {
 import { hashPassword } from "@/lib/auth/helpers";
 import prisma from "@/lib/prisma";
 import { parseZodErrors } from "@/lib/validations/helpers";
-import { nameSchema, passwordSchema } from "@/lib/validations/schemas";
+import { deleteUserSchema, updateUserSchema } from "@/lib/validations/schemas";
 
 type UpdateUserHandler = (
     req: Request,
@@ -26,7 +26,29 @@ type UpdateUserHandler = (
 // Update user
 export const POST: UpdateUserHandler = async (req: Request) => {
     try {
-        const { id, name, password, currentPassword } = await req.json();
+        const body = await req.json();
+        console.log(body)
+        // Field format validation
+        const res = updateUserSchema.safeParse(body);
+
+        if (!res.success) {
+            const fields = parseZodErrors(res.error) as unknown as UpdateUserFields;
+
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: {
+                        code: API_RESPONSE_CODE.INVALID_FIELD_FORMAT,
+                        message: ["Revisá los datos ingresados."],
+                        fields,
+                        statusCode: 400,
+                    },
+                },
+                { status: 400 },
+            );
+        }
+
+        const { id, name, password, currentPassword } = res.data;
 
         // Search user by id
         let user = await prisma.user.findFirst({
@@ -50,8 +72,8 @@ export const POST: UpdateUserHandler = async (req: Request) => {
             );
         }
 
-        const nameIsModified = name && name !== user.name;
-        const passwordModified = password && password !== user.password;
+        const nameIsModified = name !== '' && name !== user.name;
+        const passwordModified = password !== '' && password !== user.password;
 
         // Check if no changes have been made
         if (!nameIsModified && !passwordModified) {
@@ -67,28 +89,6 @@ export const POST: UpdateUserHandler = async (req: Request) => {
 
         // If the name is modified
         if (nameIsModified) {
-            // Name format validation
-            const res = nameSchema.safeParse({
-                name,
-            });
-
-            if (!res.success) {
-                const fields = parseZodErrors(res.error) as unknown as UpdateUserFields;
-
-                return NextResponse.json(
-                    {
-                        success: false,
-                        error: {
-                            code: API_RESPONSE_CODE.INVALID_FIELD_FORMAT,
-                            message: ["Formato de nombre incorrecto."],
-                            fields,
-                            statusCode: 400,
-                        },
-                    },
-                    { status: 400 },
-                );
-            }
-
             // Update user name
             user = await prisma.user.update({
                 where: { id },
@@ -99,7 +99,7 @@ export const POST: UpdateUserHandler = async (req: Request) => {
         }
 
         // If the password is modified
-        if (passwordModified) {
+        if (passwordModified && currentPassword) {
             // Check if the user has a password
             if (!user?.password) {
                 return NextResponse.json(
@@ -108,54 +108,6 @@ export const POST: UpdateUserHandler = async (req: Request) => {
                         error: {
                             code: API_RESPONSE_CODE.TOKEN_INVALID,
                             message: ["El usuario no tiene contraseña."],
-                            statusCode: 400,
-                        },
-                    },
-                    { status: 400 },
-                );
-            }
-
-            // Password format validation
-            const passwordValidation = passwordSchema.safeParse({
-                password,
-            });
-
-            if (!passwordValidation.success) {
-                const fields = parseZodErrors(
-                    passwordValidation.error,
-                ) as unknown as UpdateUserFields;
-
-                return NextResponse.json(
-                    {
-                        success: false,
-                        error: {
-                            code: API_RESPONSE_CODE.INVALID_FIELD_FORMAT,
-                            message: ["Formato de contraseña incorrecto."],
-                            fields,
-                            statusCode: 400,
-                        },
-                    },
-                    { status: 400 },
-                );
-            }
-
-            // Current password format validation
-            const currentPassworValidation = passwordSchema.safeParse({
-                password: currentPassword,
-            });
-
-            if (!currentPassworValidation.success) {
-                const fields = parseZodErrors(
-                    currentPassworValidation.error,
-                ) as unknown as UpdateUserFields;
-
-                return NextResponse.json(
-                    {
-                        success: false,
-                        error: {
-                            code: API_RESPONSE_CODE.INVALID_FIELD_FORMAT,
-                            message: ["Formato de contraseña incorrecto."],
-                            fields,
                             statusCode: 400,
                         },
                     },
@@ -246,7 +198,29 @@ type DeleteUserHandler = (
 
 export const DELETE: DeleteUserHandler = async (req) => {
     try {
-        const { id, password } = await req.json();
+        const body = await req.json();
+
+        // Field format validation
+        const res = deleteUserSchema.safeParse(body);
+
+        if (!res.success) {
+            const fields = parseZodErrors(res.error) as unknown as DeleteUserFields;
+
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: {
+                        code: API_RESPONSE_CODE.INVALID_FIELD_FORMAT,
+                        message: ["Revisá los datos ingresados."],
+                        fields,
+                        statusCode: 400,
+                    },
+                },
+                { status: 400 },
+            );
+        }
+
+        const { id, password } = res.data;
 
         // Search user by id
         const user = await prisma.user.findFirst({ where: { id } });
@@ -268,30 +242,6 @@ export const DELETE: DeleteUserHandler = async (req) => {
 
         // Check if the user has a password
         if (user?.password) {
-            // Password format validation
-            const passwordValidation = passwordSchema.safeParse({
-                password,
-            });
-
-            if (!passwordValidation.success) {
-                const fields = parseZodErrors(
-                    passwordValidation.error,
-                ) as unknown as DeleteUserFields;
-
-                return NextResponse.json(
-                    {
-                        success: false,
-                        error: {
-                            code: API_RESPONSE_CODE.INVALID_FIELD_FORMAT,
-                            message: ["Formato de contraseña incorrecto."],
-                            fields,
-                            statusCode: 400,
-                        },
-                    },
-                    { status: 400 },
-                );
-            }
-
             // Credential verification
             const validUser = await compare(password, user.password);
 
@@ -308,6 +258,48 @@ export const DELETE: DeleteUserHandler = async (req) => {
                     { status: 400 },
                 );
             }
+        }
+
+        // Check if the user has created groups
+        const groupsCount = await prisma.group.count({
+            where: {
+                createdById: id,
+            },
+        });
+
+        if (groupsCount > 0) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: {
+                        code: API_RESPONSE_CODE.NO_CHANGES_PROVIDED,
+                        message: ["No se puede eliminar el usuario porque tiene grupos creados."],
+                        statusCode: 400,
+                    },
+                },
+                { status: 400 },
+            );
+        }
+
+        // Check if the user has created expenses
+        const expensesCount = await prisma.expense.count({
+            where: {
+                paidById: id,
+            },
+        });
+
+        if (expensesCount > 0) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: {
+                        code: API_RESPONSE_CODE.NO_CHANGES_PROVIDED,
+                        message: ["No se puede eliminar el usuario porque tiene gastos creados."],
+                        statusCode: 400,
+                    },
+                },
+                { status: 400 },
+            );
         }
 
         // Remove user

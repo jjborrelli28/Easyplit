@@ -98,7 +98,7 @@ const ResetPasswordForm = ({
             label="Nueva contraseña"
             placeholder="Nueva contraseña"
             value={field.state.value}
-            onChange={(e) => field.handleChange(e.target.value)}
+            onChange={(e) => field.handleChange(e.target.value.trim())}
             onBlur={field.handleBlur}
             autoComplete="password"
             required

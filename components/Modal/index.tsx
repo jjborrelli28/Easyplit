@@ -51,7 +51,7 @@ const Modal = ({
         role="dialog"
         aria-modal="true"
         className={clsx(
-          "bg-background border-h-background flex w-full max-w-md flex-col gap-y-8 border p-4 shadow-xl lg:p-8",
+          "bg-background border-h-background flex w-full max-w-md flex-col gap-y-8 border px-4 py-8 shadow-xl lg:px-8",
           className,
         )}
       >

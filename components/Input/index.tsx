@@ -57,10 +57,20 @@ const Input = ({
   }, [isEditing]);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const sanitizedValue = e.target.value.replace(/^\s+/, "");
+
     if (isEditing) {
-      setInternalValue(e.target.value);
+      setInternalValue(sanitizedValue);
     } else {
-      onChange?.(e);
+      const syntheticEvent = {
+        ...e,
+        target: {
+          ...e.target,
+          value: sanitizedValue,
+        },
+      };
+
+      onChange?.(syntheticEvent as ChangeEvent<HTMLInputElement>);
     }
   };
 
@@ -188,19 +198,20 @@ const Input = ({
           {...props}
         />
 
-        {type === "password" && (
-          <Button
-            ref={showPasswordRef}
-            onClick={handleShowPasswordToggle}
-            unstyled
-            className={clsx(
-              "text-foreground hover:text-primary absolute top-1/2 right-3 flex h-12 flex-1 -translate-y-1/2 transform cursor-pointer items-center transition-colors duration-300",
-              editableToggle && "right-15",
-            )}
-          >
-            {showPassword ? <EyeOff /> : <Eye />}
-          </Button>
-        )}
+        {(type === "password" && !editableToggle) ||
+          (type === "password" && editableToggle && isEditing && (
+            <Button
+              ref={showPasswordRef}
+              onClick={handleShowPasswordToggle}
+              unstyled
+              className={clsx(
+                "text-foreground hover:text-primary absolute top-1/2 right-3 flex h-12 flex-1 -translate-y-1/2 transform cursor-pointer items-center transition-colors duration-300",
+                editableToggle && "right-15",
+              )}
+            >
+              {showPassword ? <EyeOff /> : <Eye />}
+            </Button>
+          ))}
 
         {editableToggle && (
           <Button

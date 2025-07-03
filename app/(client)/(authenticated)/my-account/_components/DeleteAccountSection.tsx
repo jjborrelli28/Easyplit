@@ -1,24 +1,25 @@
-import { type FormEvent, useState } from "react";
+import { useState } from "react";
 
 import type { Session } from "next-auth";
 import { signOut } from "next-auth/react";
 
+import { useForm } from "@tanstack/react-form";
+
 import useDeleteUser from "@/hooks/user/useDeleteUser";
 
-import type { ResponseMessage } from "@/lib/api/types";
+import type {
+  DeleteUserFields,
+  ResponseMessage,
+  ServerErrorResponse,
+} from "@/lib/api/types";
 import ICON_MAP from "@/lib/icons";
-import { parseZodErrors } from "@/lib/validations/helpers";
-import { passwordSchema } from "@/lib/validations/schemas";
+import { deleteUserSchema } from "@/lib/validations/schemas";
 
 import Button from "@/components/Button";
 import FormErrorMessage from "@/components/FormErrorMessage";
 import Input from "@/components/Input";
 import MessageCard from "@/components/MessageCard";
 import Modal from "@/components/Modal";
-
-const initialFieldErrors = {
-  password: null,
-};
 
 interface DeleteAccountSectionProps {
   user: Session["user"];
@@ -27,68 +28,51 @@ interface DeleteAccountSectionProps {
 const DeleteAccountSection = ({ user }: DeleteAccountSectionProps) => {
   const { mutate: deleteUser, isPending } = useDeleteUser();
 
-  const [password, setPassword] = useState("");
-
-  const [fieldErrors, setFieldErrors] = useState<{
-    password?: string | null;
-  }>(initialFieldErrors);
-  const [responseError, setResponseError] = useState<string[] | null>(null);
-
   const [modalIsOpen, setModalIsOpen] = useState(false);
-
   const [message, setMessage] = useState<ResponseMessage | null>(null);
 
-  const handleDeleteUser = async (e: FormEvent) => {
-    e.preventDefault();
+  const form = useForm<
+    DeleteUserFields,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    undefined,
+    () => string[],
+    undefined
+  >({
+    defaultValues: {
+      id: user.id!,
+      password: "",
+    },
+    onSubmit: async ({ value }) => {
+      deleteUser(value, {
+        onSuccess: (res) => {
+          form.reset();
 
-    if (!user.id) return;
+          res?.message && setMessage(res.message);
+        },
+        onError: (res) => {
+          const {
+            error: { message, fields = {} },
+          }: ServerErrorResponse<DeleteUserFields> = res.response.data;
 
-    if (user.hasPassword) {
-      const res = passwordSchema.safeParse({
-        password,
-      });
-
-      if (!res.success) {
-        const fields = parseZodErrors(res.error);
-
-        setFieldErrors({
-          ...initialFieldErrors,
-          ...fields,
-        });
-
-        return;
-      } else {
-        setFieldErrors(initialFieldErrors);
-      }
-    }
-
-    const body = {
-      data: {
-        id: user.id,
-        ...(user.hasPassword && { password }),
-      },
-    };
-
-    deleteUser(body, {
-      onSuccess: (res) => {
-        setResponseError(null);
-        res?.message && setMessage(res.message);
-      },
-      onError: (res) => {
-        const {
-          error: { message, fields },
-        } = res.response.data;
-
-        if (fields) {
-          setFieldErrors({
-            ...initialFieldErrors,
-            ...fields,
+          form.setErrorMap({
+            onSubmit: {
+              fields,
+            },
+            onServer: message,
           });
-        } else {
-          setResponseError(message);
-        }
-      },
-    });
+        },
+      });
+    },
+  });
+
+  const handleCloseModal = () => {
+    setModalIsOpen(false);
+    form.reset();
   };
 
   return (
@@ -138,64 +122,94 @@ const DeleteAccountSection = ({ user }: DeleteAccountSectionProps) => {
           </MessageCard>
         ) : (
           <>
-            <div className="flex flex-col gap-y-8">
-              <div className="flex flex-col gap-y-4">
-                <div className="flex flex-col gap-y-2">
-                  <p className="text-sm">
-                    Esta acción eliminará tu cuenta permanentemente, incluyendo
-                    todos tus datos y registros.
-                  </p>
+            <div className="flex flex-col gap-y-4">
+              <div className="flex flex-col gap-y-2">
+                <p className="text-sm">
+                  Esta acción eliminará tu cuenta permanentemente, incluyendo
+                  todos tus datos y registros.
+                </p>
 
-                  <p className="text-sm">
-                    No podrás volver a acceder con este correo electrónico.
-                  </p>
-                </div>
-
-                <p>
-                  {user.hasPassword
-                    ? "Para confirmar la eliminación de tu cuenta, ingresá tu contraseña actual:"
-                    : "¿Estás seguro de que querés continuar?"}
+                <p className="text-sm">
+                  No podrás volver a acceder con este correo electrónico.
                 </p>
               </div>
 
+              <p>
+                {user.hasPassword
+                  ? "Para confirmar la eliminación de tu cuenta, ingresá tu contraseña actual:"
+                  : "¿Estás seguro de que querés continuar?"}
+              </p>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                form.handleSubmit();
+              }}
+              className="flex flex-col gap-y-8"
+            >
               {user.hasPassword && (
-                <div>
-                  <Input
-                    id="password"
-                    type="password"
-                    label="Contraseña"
-                    placeholder="Contraseña"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    autoComplete="current-password"
-                    required
-                    error={fieldErrors.password}
-                    containerClassName="!pt-4"
-                  />
-
-                  <FormErrorMessage message={responseError} />
-                </div>
+                <form.Field
+                  name="password"
+                  validators={{
+                    onBlur: deleteUserSchema.shape.password,
+                  }}
+                  children={(field) => (
+                    <Input
+                      id="password"
+                      type="password"
+                      label="Contraseña"
+                      placeholder="Contraseña"
+                      value={field.state.value}
+                      onChange={(e) =>
+                        field.handleChange(e.target.value.trim())
+                      }
+                      onBlur={field.handleBlur}
+                      autoComplete="password"
+                      required
+                      error={
+                        field.state.meta.isTouched
+                          ? field.state.meta.errors[0]?.message ||
+                            field.state.meta.errorMap.onSubmit
+                          : null
+                      }
+                      containerClassName="!pt-4"
+                    />
+                  )}
+                />
               )}
-            </div>
 
-            <div className="flex justify-end gap-x-4">
-              <Button
-                onClick={() => setModalIsOpen(false)}
-                variant="outlined"
-                color="secondary"
-              >
-                Cancelar
-              </Button>
+              <div className="flex flex-col">
+                <div className="flex flex-col gap-y-4">
+                  <Button
+                    type="submit"
+                    color="danger"
+                    loading={isPending}
+                    fullWidth
+                  >
+                    Eliminar cuenta
+                  </Button>
 
-              <Button
-                onClick={handleDeleteUser}
-                color="danger"
-                loading={isPending}
-                className="min-w-40"
-              >
-                Eliminar cuenta
-              </Button>
-            </div>
+                  <Button
+                    onClick={handleCloseModal}
+                    color="secondary"
+                    fullWidth
+                  >
+                    Cancelar
+                  </Button>
+                </div>
+
+                <form.Subscribe
+                  selector={(state) => [state.errorMap]}
+                  children={([errorMap]) => (
+                    <FormErrorMessage
+                      message={errorMap.onServer}
+                      containerClassName="!mt-4 !mb-0"
+                    />
+                  )}
+                />
+              </div>
+            </form>
           </>
         )}
       </Modal>

@@ -81,7 +81,7 @@ model Group {
   type        GroupType     @default(OTHER)
   createdAt   DateTime      @default(now())
   createdById String        @map("created_by")
-  createdBy   User          @relation("UserCreatedGroups", fields: [createdById], references: [id])
+  createdBy   User          @relation("UserCreatedGroups", fields: [createdById], references: [id], onDelete: Cascade)
   members     GroupMember[]
   expenses    Expense[]
 }
@@ -90,7 +90,7 @@ model GroupMember {
   id      String @id @default(cuid())
   userId  String
   groupId String
-  user    User   @relation(fields: [userId], references: [id])
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   group   Group  @relation(fields: [groupId], references: [id])
 
   @@unique([userId, groupId])
@@ -115,7 +115,7 @@ model ExpenseParticipant {
   amount    Float
 
   expense Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
-  user    User    @relation(fields: [userId], references: [id])
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([expenseId, userId])
 }

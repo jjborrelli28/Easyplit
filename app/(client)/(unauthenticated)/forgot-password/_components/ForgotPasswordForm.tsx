@@ -93,7 +93,7 @@ const ForgotPasswordForm = ({ setSuccessMessage }: ForgotPasswordFormProps) => {
             label="Correo electrónico"
             placeholder="ejemplo@email.com"
             value={field.state.value}
-            onChange={(e) => field.handleChange(e.target.value)}
+            onChange={(e) => field.handleChange(e.target.value.trim())}
             onBlur={field.handleBlur}
             autoComplete="email"
             required

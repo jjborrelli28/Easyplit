@@ -17,7 +17,7 @@ const useDeleteUser = () => {
         mutationFn: async (body) => {
             const { data } = await api.delete<SuccessResponse<UserData>>(
                 "/user",
-                body,
+                { data: body }
             );
 
             return data;

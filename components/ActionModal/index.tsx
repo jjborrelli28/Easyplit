@@ -187,7 +187,6 @@ const ActionModal = ({ type, onClose, ...restProps }: ActionModalProps) => {
         <form onSubmit={handleSubmitAction} className="flex flex-col gap-y-8">
           <Input
             id="name"
-            type="text"
             label={
               type === ACTION_TYPE.CREATE_EXPENSE
                 ? "Nombre del gasto"

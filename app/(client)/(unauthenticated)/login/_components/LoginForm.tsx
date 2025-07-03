@@ -96,7 +96,7 @@ const LoginForm = () => {
             label="Correo electrónico"
             placeholder="Correo electrónico"
             value={field.state.value}
-            onChange={(e) => field.handleChange(e.target.value)}
+            onChange={(e) => field.handleChange(e.target.value.trim())}
             onBlur={field.handleBlur}
             autoComplete="email"
             required
@@ -125,7 +125,7 @@ const LoginForm = () => {
             label="Contraseña"
             placeholder="Contraseña"
             value={field.state.value}
-            onChange={(e) => field.handleChange(e.target.value)}
+            onChange={(e) => field.handleChange(e.target.value.trim())}
             onBlur={field.handleBlur}
             autoComplete="password"
             required

@@ -2,7 +2,7 @@ import { z } from "zod";
 
 import { GROUP_TYPE } from "@/components/GroupTypeSelector";
 
-// Rules
+/* Rules */
 const name = z
     .string()
     .min(3, "El nombre debe tener al menos 3 caracteres")
@@ -21,13 +21,16 @@ const recaptchaToken = z
         invalid_type_error: "Demuestra que no eres un robot",
     })
     .min(1, "El token de reCAPTCHA es invalido");
-const token = z.string({
-    required_error: "El token es requerido",
-    invalid_type_error: "El token debe ser un string",
-})
+const token = z
+    .string({
+        required_error: "El token es requerido",
+        invalid_type_error: "El token debe ser un string",
+    })
     .min(10, "El token es inválido");
+const id = z.string();
+/* End of rules */
 
-// Schemas
+/* Form schemes without authentication */
 export const registerSchema = z.object({
     name,
     email,
@@ -48,16 +51,35 @@ export const forgotPasswordSchema = z.object({
 
 export const resetPasswordSchema = z.object({
     password,
-    token
+    token,
 });
+/* End of form schemes without authentication */
 
-export const recaptchaTokenSchema = z.object({
-    recaptchaToken,
-});
-
-export const nameSchema = z.object({
+/* Form schemes for user updating */
+export const updateUserSchema = z.object({
+    id,
     name,
+    password: z.union([
+        z.literal(""),
+        z
+            .string()
+            .min(6, "La contraseña debe tener al menos 6 caracteres")
+            .regex(/[A-Za-z]/, "La contraseña debe contener al menos una letra")
+            .regex(/[0-9]/, "La contraseña debe contener al menos un número"),
+    ]),
+    currentPassword: z
+        .string()
+        .min(6, "La contraseña debe tener al menos 6 caracteres")
+        .regex(/[A-Za-z]/, "La contraseña debe contener al menos una letra")
+        .regex(/[0-9]/, "La contraseña debe contener al menos un número")
+        .optional(),
 });
+
+export const deleteUserSchema = z.object({
+    id,
+    password,
+});
+/* End of form schemes for user updating  */
 
 export const createExpenseSchema = z.object({
     name: z
@@ -99,5 +121,4 @@ export const createGroupSchema = z.object({
             required_error: "Debes agregar al menos 2 miembros al grupo.",
         })
         .min(2, "El grupo debe tener al menos 2 miembros."),
-
 });

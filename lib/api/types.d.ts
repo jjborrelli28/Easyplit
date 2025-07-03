@@ -4,7 +4,7 @@ import API_RESPONSE_CODE from "./API_RESPONSE_CODE";
 import { GROUP_TYPE } from "@/components/GroupTypeSelector";
 import type { MessageCardProps } from "@/components/MessageCard";
 
-// Response message types
+/* Response message types */
 export type ResponseIcon = keyof typeof ICON_MAP;
 
 export interface ResponseMessage extends Pick<
@@ -12,7 +12,7 @@ export interface ResponseMessage extends Pick<
     "color" | "title" | "actionLabel" | "actionHref"
 > { icon: ResponseIcon; content: MessageCardProps["children"] };
 
-// Success response type
+/* Success response type */
 export interface SuccessResponse<D = undefined> {
     success: true;
     code: API_RESPONSE_CODE;
@@ -20,7 +20,7 @@ export interface SuccessResponse<D = undefined> {
     data?: D;
 }
 
-// Error response types
+/* Error response types */
 export interface ServerErrorResponse<F = undefined> {
     success: boolean;
     error: {
@@ -60,7 +60,7 @@ export interface CompletedUserData {
     verifyTokenExp: Date | null;
 }
 
-// Form fields
+/* Authentication form fields */
 export interface RegisterFields {
     name?: string;
     email?: string;
@@ -77,20 +77,21 @@ export interface ResetPasswordFields {
     password?: string;
     token?: string;
 }
+/* End of authentication form fields */
 
+/* Update user form fields */
 export interface UpdateUserFields {
-    id: string;
+    id?: string;
     name?: string;
     password?: string;
     currentPassword?: string;
 }
 
 export interface DeleteUserFields {
-    data: {
-        id: string;
-        password?: string;
-    };
+    id?: string;
+    password?: string;
 }
+/* End update user form fields */
 
 // Expenses
 export interface CreateExpenseFields {
