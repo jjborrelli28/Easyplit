@@ -91,7 +91,8 @@ const ResetPasswordForm = ({
               .error?.errors;
           },
         }}
-        children={(field) => (
+      >
+        {(field) => (
           <Input
             id="password"
             type="password"
@@ -108,7 +109,7 @@ const ResetPasswordForm = ({
             }
           />
         )}
-      />
+      </form.Field>
 
       <Button type="submit" fullWidth className="mt-7" loading={isPending}>
         Restablecer contraseña
@@ -127,17 +128,17 @@ const ResetPasswordForm = ({
               : result.error.issues.map((e) => e.message);
           },
         }}
-        children={(field) => (
+      >
+        {(field) => (
           <InputErrorMessage message={field.state.meta.errorMap.onSubmit} />
         )}
-      />
+      </form.Field>
 
-      <form.Subscribe
-        selector={(state) => [state.errorMap]}
-        children={([errorMap]) => (
+      <form.Subscribe selector={(state) => [state.errorMap]}>
+        {([errorMap]) => (
           <FormErrorMessage message={errorMap.onServer || errorMap.onSubmit} />
         )}
-      />
+      </form.Subscribe>
     </form>
   );
 };

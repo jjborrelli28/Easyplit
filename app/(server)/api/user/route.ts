@@ -8,7 +8,7 @@ import type {
     ServerErrorResponse,
     SuccessResponse,
     UpdateUserFields,
-    UserData,
+    User,
 } from "@/lib/api/types";
 import { hashPassword } from "@/lib/auth/helpers";
 import prisma from "@/lib/prisma";
@@ -19,7 +19,7 @@ type UpdateUserHandler = (
     req: Request,
 ) => Promise<
     NextResponse<
-        SuccessResponse<UserData> | ServerErrorResponse<UpdateUserFields>
+        SuccessResponse<User> | ServerErrorResponse<UpdateUserFields>
     >
 >;
 
@@ -27,7 +27,7 @@ type UpdateUserHandler = (
 export const POST: UpdateUserHandler = async (req: Request) => {
     try {
         const body = await req.json();
-        console.log(body)
+
         // Field format validation
         const res = updateUserSchema.safeParse(body);
 
@@ -192,7 +192,7 @@ type DeleteUserHandler = (
     req: Request,
 ) => Promise<
     NextResponse<
-        SuccessResponse<UserData> | ServerErrorResponse<DeleteUserFields>
+        SuccessResponse<User> | ServerErrorResponse<DeleteUserFields>
     >
 >;
 

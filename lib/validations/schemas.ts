@@ -55,7 +55,11 @@ export const resetPasswordSchema = z.object({
 });
 /* End of form schemes without authentication */
 
-/* Form schemes for user updating */
+/* User form schemas */
+export const getUserSchema = z.object({
+    id,
+});
+
 export const updateUserSchema = z.object({
     id,
     name,
@@ -79,15 +83,22 @@ export const deleteUserSchema = z.object({
     id,
     password,
 });
-/* End of form schemes for user updating  */
+/* End of user form schemas  */
 
+
+/* Form schemes for expenses */
 export const createExpenseSchema = z.object({
     name: z
         .string({
             required_error: "El nombre del gasto es obligatorio.",
         })
         .min(3, "El nombre del gasto debe tener al menos 3 caracteres."),
-    createdById: z.string(),
+    paidById: z.string(),
+    participantIds: z
+        .array(z.string(), {
+            required_error: "Debes agregar al menos 2 participantes al gasto.",
+        })
+        .min(2, "El gasto debe tener al menos 2 participantes."),
     amount: z
         .number({
             required_error: "El monto es obligatorio.",
@@ -95,11 +106,6 @@ export const createExpenseSchema = z.object({
         .refine((val) => val !== 0, {
             message: "El monto no puede ser $0.",
         }),
-    participantIds: z
-        .array(z.string(), {
-            required_error: "Debes agregar al menos 2 participantes al gasto.",
-        })
-        .min(2, "El gasto debe tener al menos 2 participantes."),
     groupId: z.string().optional(),
 });
 

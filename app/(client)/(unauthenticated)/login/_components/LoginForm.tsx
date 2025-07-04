@@ -89,7 +89,8 @@ const LoginForm = () => {
             return loginSchema.shape.email.safeParse(field.value).error?.errors;
           },
         }}
-        children={(field) => (
+      >
+        {(field) => (
           <Input
             id="email"
             type="email"
@@ -106,7 +107,7 @@ const LoginForm = () => {
             }
           />
         )}
-      />
+      </form.Field>
 
       <form.Field
         name="password"
@@ -118,7 +119,8 @@ const LoginForm = () => {
               ?.errors;
           },
         }}
-        children={(field) => (
+      >
+        {(field) => (
           <Input
             id="password"
             type="password"
@@ -135,14 +137,15 @@ const LoginForm = () => {
             }
           />
         )}
-      />
+      </form.Field>
 
       <form.Field
         name="recaptchaToken"
         validators={{
           onChange: loginSchema.shape.recaptchaToken,
         }}
-        children={(field) => {
+      >
+        {(field) => {
           return (
             <ReCAPTCHAv2
               ref={recaptchaRef}
@@ -169,18 +172,17 @@ const LoginForm = () => {
             />
           );
         }}
-      />
+      </form.Field>
 
       <Button type="submit" fullWidth className="mt-4" loading={isLoading}>
         Iniciar sesión
       </Button>
 
-      <form.Subscribe
-        selector={(state) => [state.errorMap]}
-        children={([errorMap]) => {
+      <form.Subscribe selector={(state) => [state.errorMap]}>
+        {([errorMap]) => {
           return <FormErrorMessage message={errorMap.onServer} />;
         }}
-      />
+      </form.Subscribe>
     </form>
   );
 };

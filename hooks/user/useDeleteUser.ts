@@ -4,18 +4,18 @@ import type {
     DeleteUserFields,
     ErrorResponse,
     SuccessResponse,
-    UserData,
+    User,
 } from "@/lib/api/types";
 import api from "@/lib/axios";
 
 const useDeleteUser = () => {
     return useMutation<
-        SuccessResponse<UserData>,
+        SuccessResponse<User>,
         ErrorResponse<DeleteUserFields>,
         DeleteUserFields
     >({
         mutationFn: async (body) => {
-            const { data } = await api.delete<SuccessResponse<UserData>>(
+            const { data } = await api.delete<SuccessResponse<User>>(
                 "/user",
                 { data: body }
             );

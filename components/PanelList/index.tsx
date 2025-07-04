@@ -3,8 +3,7 @@ import { useSession } from "next-auth/react";
 import clsx from "clsx";
 import { CircleChevronDown } from "lucide-react";
 
-import useGetLinkedExpenses from "@/hooks/expenses/useGetLinkedExpenses";
-import useGetLinkedGroups from "@/hooks/groups/useGetLinkedGroups";
+import type { Expense, Group } from "@/lib/api/types";
 
 import Button from "../Button";
 import Card, { CARD_TYPE } from "../Card";
@@ -13,30 +12,31 @@ import Spinner from "../Spinner";
 
 const PANEL_TYPE_STYLES = {
   header: {
-    [CARD_TYPE.EXPENSE]: "top-header lg:col-start-1",
-    [CARD_TYPE.GROUP]: "top-[132px] lg:col-start-3",
+    [CARD_TYPE.GROUP]: "top-header lg:col-start-1",
+    [CARD_TYPE.EXPENSE]: "top-[132px] lg:col-start-3",
   },
   list: {
-    [CARD_TYPE.EXPENSE]: "lg:col-start-1",
-    [CARD_TYPE.GROUP]: "lg:col-start-3",
+    [CARD_TYPE.GROUP]: "lg:col-start-1",
+    [CARD_TYPE.EXPENSE]: "lg:col-start-3",
   },
 };
 
 interface PanelListProps {
   type: CARD_TYPE;
+  list?: Expense[] | Group[];
   isActive: boolean;
   handleTogglePanel?: VoidFunction;
 }
 
-const PanelList = ({ type, isActive, handleTogglePanel }: PanelListProps) => {
+const PanelList = ({
+  type,
+  list,
+  isActive,
+  handleTogglePanel,
+}: PanelListProps) => {
   const { status, data } = useSession();
 
   const user = data?.user;
-
-  const getList =
-    type === CARD_TYPE.EXPENSE ? useGetLinkedExpenses : useGetLinkedGroups;
-
-  const { data: list } = getList(user?.id);
 
   return (
     <>

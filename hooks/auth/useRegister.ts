@@ -4,18 +4,18 @@ import type {
     ErrorResponse,
     RegisterFields,
     SuccessResponse,
-    UserData,
+    User,
 } from "@/lib/api/types";
 import api from "@/lib/axios";
 
 const useRegister = () => {
     return useMutation<
-        SuccessResponse<UserData>,
+        SuccessResponse<User>,
         ErrorResponse<RegisterFields>,
         RegisterFields
     >({
         mutationFn: async (body) => {
-            const { data } = await api.post<SuccessResponse<UserData>>(
+            const { data } = await api.post<SuccessResponse<User>>(
                 "/auth/register",
                 body,
             );

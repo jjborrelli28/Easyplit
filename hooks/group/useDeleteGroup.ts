@@ -3,19 +3,19 @@ import { useMutation } from "@tanstack/react-query";
 import type {
     DeleteExpenseGroupFields,
     ErrorResponse,
-    GroupData,
+    Group,
     SuccessResponse,
 } from "@/lib/api/types";
 import api from "@/lib/axios";
 
 const useDeleteGroup = () => {
     return useMutation<
-        SuccessResponse<GroupData>,
+        SuccessResponse<Group>,
         ErrorResponse<DeleteExpenseGroupFields>,
         DeleteExpenseGroupFields
     >({
         mutationFn: async (body) => {
-            const { data } = await api.delete<SuccessResponse<GroupData>>(
+            const { data } = await api.delete<SuccessResponse<Group>>(
                 "/groups",
                 body,
             );

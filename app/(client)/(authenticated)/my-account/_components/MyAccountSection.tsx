@@ -95,11 +95,12 @@ const MyAccountSection = ({ user }: MyAccountSectionProps) => {
           <div className="relative mx-auto aspect-square h-50 w-50 rounded-full">
             {user?.image && (
               <Image
-                alt="Avatar"
+                alt="User avatar"
                 src={user.image}
                 fill
                 sizes="196px"
                 className="rounded-full"
+                priority
               />
             )}
           </div>
@@ -112,7 +113,8 @@ const MyAccountSection = ({ user }: MyAccountSectionProps) => {
               validators={{
                 onChange: updateUserSchema.shape.name,
               }}
-              children={(field) => (
+            >
+              {(field) => (
                 <Input
                   form="fake-form"
                   id="name"
@@ -131,7 +133,7 @@ const MyAccountSection = ({ user }: MyAccountSectionProps) => {
                   containerClassName="order-1"
                 />
               )}
-            />
+            </form.Field>
 
             {user.hasPassword && (
               <form.Field
@@ -139,31 +141,28 @@ const MyAccountSection = ({ user }: MyAccountSectionProps) => {
                 validators={{
                   onChange: updateUserSchema.shape.password,
                 }}
-                children={(field) => (
-                  <>
-                    <Input
-                      form="fake-form"
-                      id="password"
-                      type="password"
-                      label="Nueva contraseña"
-                      placeholder="Nueva contraseña"
-                      value={field.state.value}
-                      onChange={(e) =>
-                        field.handleChange(e.target.value.trim())
-                      }
-                      autoComplete="password"
-                      required
-                      editableToggle
-                      disabled={true}
-                      error={
-                        field.state.meta.errors[0]?.message ||
-                        field.state.meta.errorMap.onSubmit
-                      }
-                      containerClassName="order-2 xl:order-3"
-                    />
-                  </>
+              >
+                {(field) => (
+                  <Input
+                    form="fake-form"
+                    id="password"
+                    type="password"
+                    label="Nueva contraseña"
+                    placeholder="Nueva contraseña"
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value.trim())}
+                    autoComplete="password"
+                    required
+                    editableToggle
+                    disabled={true}
+                    error={
+                      field.state.meta.errors[0]?.message ||
+                      field.state.meta.errorMap.onSubmit
+                    }
+                    containerClassName="order-2 xl:order-3"
+                  />
                 )}
-              />
+              </form.Field>
             )}
 
             {/* Not editable */}
@@ -182,9 +181,8 @@ const MyAccountSection = ({ user }: MyAccountSectionProps) => {
             />
           </div>
 
-          <form.Subscribe
-            selector={(state) => state}
-            children={({ values, fieldMeta }) => {
+          <form.Subscribe selector={(state) => state}>
+            {({ values, fieldMeta }) => {
               const nameUpdated = values.name !== currentUser.name;
               const passwordUpdated = values.password !== "";
               const isSendable =
@@ -205,7 +203,7 @@ const MyAccountSection = ({ user }: MyAccountSectionProps) => {
                 </Button>
               );
             }}
-          />
+          </form.Subscribe>
         </div>
       </section>
 
@@ -259,7 +257,8 @@ const MyAccountSection = ({ user }: MyAccountSectionProps) => {
                   validators={{
                     onBlur: updateUserSchema.shape.currentPassword,
                   }}
-                  children={(field) => (
+                >
+                  {(field) => (
                     <>
                       <Input
                         id="currentPassword"
@@ -281,7 +280,7 @@ const MyAccountSection = ({ user }: MyAccountSectionProps) => {
                       />
                     </>
                   )}
-                />
+                </form.Field>
               )}
 
               <div className="flex flex-col">

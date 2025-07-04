@@ -4,7 +4,7 @@ import API_RESPONSE_CODE from "@/lib/api/API_RESPONSE_CODE";
 import type {
   CreateExpenseFields,
   DeleteExpenseGroupFields,
-  ExpenseData,
+  Expense,
   ServerErrorResponse,
   SuccessResponse,
 } from "@/lib/api/types";
@@ -16,7 +16,7 @@ type CreateExpenseHandler = (
   req: Request,
 ) => Promise<
   NextResponse<
-    SuccessResponse<ExpenseData> | ServerErrorResponse<CreateExpenseFields>
+    SuccessResponse<Expense> | ServerErrorResponse<CreateExpenseFields>
   >
 >;
 
@@ -92,7 +92,7 @@ export const POST: CreateExpenseHandler = async (req: Request) => {
           },
         ],
       },
-      data: expense as ExpenseData,
+      data: expense as Expense,
     });
   } catch (error) {
     console.error(error);
@@ -116,7 +116,7 @@ type DeleteExpenseHandler = (
   req: Request,
 ) => Promise<
   NextResponse<
-    SuccessResponse<ExpenseData> | ServerErrorResponse<DeleteExpenseGroupFields>
+    SuccessResponse<Expense> | ServerErrorResponse<DeleteExpenseGroupFields>
   >
 >;
 
@@ -186,7 +186,7 @@ export const DELETE: DeleteExpenseHandler = async (req) => {
           },
         ],
       },
-      data: expense as ExpenseData,
+      data: expense as Expense,
     });
   } catch (error) {
     console.error(error);
@@ -209,7 +209,7 @@ export const DELETE: DeleteExpenseHandler = async (req) => {
 type GetExpenseByIdHandler = (
   req: Request,
 ) => Promise<
-  NextResponse<SuccessResponse<ExpenseData> | ServerErrorResponse<ExpenseData>>
+  NextResponse<SuccessResponse<Expense> | ServerErrorResponse<Expense>>
 >;
 
 // Get expense
@@ -274,7 +274,7 @@ export const GET: GetExpenseByIdHandler = async (req) => {
           },
         ],
       },
-      data: expense as ExpenseData,
+      data: expense as Expense,
     });
   } catch (error) {
     console.error(error);

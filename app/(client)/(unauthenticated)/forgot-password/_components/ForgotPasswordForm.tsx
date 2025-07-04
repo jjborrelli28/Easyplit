@@ -86,7 +86,8 @@ const ForgotPasswordForm = ({ setSuccessMessage }: ForgotPasswordFormProps) => {
               ?.errors;
           },
         }}
-        children={(field) => (
+      >
+        {(field) => (
           <Input
             id="email"
             type="email"
@@ -103,14 +104,15 @@ const ForgotPasswordForm = ({ setSuccessMessage }: ForgotPasswordFormProps) => {
             }
           />
         )}
-      />
+      </form.Field>
 
       <form.Field
         name="recaptchaToken"
         validators={{
           onChange: forgotPasswordSchema.shape.recaptchaToken,
         }}
-        children={(field) => (
+      >
+        {(field) => (
           <ReCAPTCHAv2
             ref={recaptchaRef}
             onChange={(token) => {
@@ -134,18 +136,15 @@ const ForgotPasswordForm = ({ setSuccessMessage }: ForgotPasswordFormProps) => {
             }
           />
         )}
-      />
+      </form.Field>
 
       <Button type="submit" fullWidth className="mt-4" loading={isPending}>
         Enviar correo de recuperación
       </Button>
 
-      <form.Subscribe
-        selector={(state) => [state.errorMap]}
-        children={([errorMap]) => (
-          <FormErrorMessage message={errorMap.onServer} />
-        )}
-      />
+      <form.Subscribe selector={(state) => [state.errorMap]}>
+        {([errorMap]) => <FormErrorMessage message={errorMap.onServer} />}
+      </form.Subscribe>
     </form>
   );
 };

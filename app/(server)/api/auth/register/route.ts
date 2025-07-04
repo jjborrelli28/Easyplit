@@ -7,7 +7,7 @@ import type {
     RegisterFields,
     ServerErrorResponse,
     SuccessResponse,
-    UserData,
+    User,
 } from "@/lib/api/types";
 import {
     getRandomColorPair,
@@ -23,7 +23,7 @@ import { registerSchema } from "@/lib/validations/schemas";
 type RegisterHandler = (
     req: Request,
 ) => Promise<
-    NextResponse<SuccessResponse<UserData> | ServerErrorResponse<RegisterFields>>
+    NextResponse<SuccessResponse<User> | ServerErrorResponse<RegisterFields>>
 >;
 
 export const POST: RegisterHandler = async (req: Request) => {

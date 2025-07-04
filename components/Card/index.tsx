@@ -13,10 +13,10 @@ import { CircleChevronDown, Component, Receipt, Trash } from "lucide-react";
 
 import useDeleteExpense from "@/hooks/expense/useDeleteExpense";
 
-import type { ExpenseData, GroupData, ResponseMessage } from "@/lib/api/types";
+import type { Expense, Group, ResponseMessage } from "@/lib/api/types";
 import ICON_MAP from "@/lib/icons";
 
-import useDeleteGroup from "@/hooks/groups/useDeleteGroup";
+import useDeleteGroup from "@/hooks/group/useDeleteGroup";
 import Badge from "../Badge";
 import Button from "../Button";
 import Collapse from "../Collapse";
@@ -32,7 +32,7 @@ export enum CARD_TYPE {
 
 interface CardProps {
   type: CARD_TYPE;
-  data: ExpenseData | GroupData;
+  data: Expense | Group;
   loggedInUser?: Session["user"];
 }
 
@@ -117,25 +117,25 @@ const Card = ({ type, data, loggedInUser }: CardProps) => {
   const Icon =
     type === CARD_TYPE.EXPENSE
       ? Receipt
-      : (options.find((option) => option.type === (data as GroupData).type)
-          ?.icon ?? Component);
+      : (options.find((option) => option.type === (data as Group).type)?.icon ??
+        Component);
   const participants =
     type === CARD_TYPE.EXPENSE
-      ? (data as ExpenseData).participants.filter(
+      ? (data as Expense).participants.filter(
           (participant) => participant.userId !== loggedInUser.id,
         )
-      : (data as GroupData).members.filter(
+      : (data as Group).members.filter(
           (member) => member.userId !== loggedInUser.id,
         );
   const IsUserCreator =
     type === CARD_TYPE.EXPENSE
-      ? loggedInUser.id === (data as ExpenseData).paidById
-      : loggedInUser.id === (data as GroupData).createdById;
+      ? loggedInUser.id === (data as Expense).paidById
+      : loggedInUser.id === (data as Group).createdById;
   const creatorUserName = IsUserCreator
     ? "mi"
     : type === CARD_TYPE.EXPENSE
-      ? (data as ExpenseData).paidBy.name
-      : (data as GroupData).createdBy.name;
+      ? (data as Expense).paidBy.name
+      : (data as Group).createdBy.name;
   const isDeleting = expenseIsPending || groupIsPending;
 
   return (
@@ -163,7 +163,7 @@ const Card = ({ type, data, loggedInUser }: CardProps) => {
 
               {type === CARD_TYPE.EXPENSE && (
                 <Tooltip
-                  content={`$${(data as ExpenseData).amount}`}
+                  content={`$${(data as Expense).amount}`}
                   color="info"
                   containerClassName="lg:justify-end"
                 >
@@ -171,7 +171,7 @@ const Card = ({ type, data, loggedInUser }: CardProps) => {
                     <span className="text-sm">$</span>
 
                     <p className="truncate text-lg">
-                      {(data as ExpenseData).amount}
+                      {(data as Expense).amount}
                     </p>
                   </span>
                 </Tooltip>

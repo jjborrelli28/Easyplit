@@ -88,7 +88,8 @@ const RegisterForm = ({ setSuccessMessage }: RegisterFormProps) => {
               ?.errors;
           },
         }}
-        children={(field) => (
+      >
+        {(field) => (
           <Input
             id="name"
             label="Nombre"
@@ -104,7 +105,7 @@ const RegisterForm = ({ setSuccessMessage }: RegisterFormProps) => {
             }
           />
         )}
-      />
+      </form.Field>
 
       <form.Field
         name="email"
@@ -116,7 +117,8 @@ const RegisterForm = ({ setSuccessMessage }: RegisterFormProps) => {
               ?.errors;
           },
         }}
-        children={(field) => (
+      >
+        {(field) => (
           <Input
             id="email"
             type="email"
@@ -133,7 +135,7 @@ const RegisterForm = ({ setSuccessMessage }: RegisterFormProps) => {
             }
           />
         )}
-      />
+      </form.Field>
 
       <form.Field
         name="password"
@@ -145,7 +147,8 @@ const RegisterForm = ({ setSuccessMessage }: RegisterFormProps) => {
               ?.errors;
           },
         }}
-        children={(field) => (
+      >
+        {(field) => (
           <Input
             id="password"
             type="password"
@@ -162,14 +165,15 @@ const RegisterForm = ({ setSuccessMessage }: RegisterFormProps) => {
             }
           />
         )}
-      />
+      </form.Field>
 
       <form.Field
         name="recaptchaToken"
         validators={{
           onChange: registerSchema.shape.recaptchaToken,
         }}
-        children={(field) => (
+      >
+        {(field) => (
           <ReCAPTCHAv2
             ref={recaptchaRef}
             onChange={(token) => {
@@ -194,18 +198,15 @@ const RegisterForm = ({ setSuccessMessage }: RegisterFormProps) => {
             }
           />
         )}
-      />
+      </form.Field>
 
       <Button type="submit" fullWidth className="mt-4" loading={isPending}>
         Registrarse
       </Button>
 
-      <form.Subscribe
-        selector={(state) => [state.errorMap]}
-        children={([errorMap]) => (
-          <FormErrorMessage message={errorMap.onServer} />
-        )}
-      />
+      <form.Subscribe selector={(state) => [state.errorMap]}>
+        {([errorMap]) => <FormErrorMessage message={errorMap.onServer} />}
+      </form.Subscribe>
     </form>
   );
 };

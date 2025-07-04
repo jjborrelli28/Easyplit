@@ -3,7 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import type {
   CreateGroupFields,
   ErrorResponse,
-  GroupData,
+  Group,
   SuccessResponse,
 } from "@/lib/api/types";
 import axios from "@/lib/axios";
@@ -14,12 +14,12 @@ interface FieldErrorsCreateGroup extends Omit<CreateGroupFields, "memberIds"> {
 
 const useCreateGroup = () => {
   return useMutation<
-    SuccessResponse<GroupData>,
+    SuccessResponse<Group>,
     ErrorResponse<FieldErrorsCreateGroup>,
     CreateGroupFields
   >({
     mutationFn: async (body) => {
-      const { data } = await axios.post<SuccessResponse<GroupData>>(
+      const { data } = await axios.post<SuccessResponse<Group>>(
         "/groups",
         body,
       );

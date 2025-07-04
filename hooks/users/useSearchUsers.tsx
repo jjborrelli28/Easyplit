@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 
-import type { SuccessResponse, UserData } from "@/lib/api/types";
+import type { SuccessResponse, User } from "@/lib/api/types";
 import api from "@/lib/axios";
 
 const searchUsers = async (q: string, excludeUserIds?: string[]) => {
-  const { data } = await api.get<SuccessResponse<UserData[]>>("/users/search", {
+  const { data } = await api.get<SuccessResponse<User[]>>("/users/search", {
     params: {
       q,
       ...(excludeUserIds && excludeUserIds.length > 0

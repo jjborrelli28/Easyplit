@@ -1,16 +1,21 @@
+import type { GroupType } from "@prisma/client";
+
 import ICON_MAP from "../icons";
 import API_RESPONSE_CODE from "./API_RESPONSE_CODE";
 
-import { GROUP_TYPE } from "@/components/GroupTypeSelector";
 import type { MessageCardProps } from "@/components/MessageCard";
 
 /* Response message types */
 export type ResponseIcon = keyof typeof ICON_MAP;
 
-export interface ResponseMessage extends Pick<
-    MessageCardProps,
-    "color" | "title" | "actionLabel" | "actionHref"
-> { icon: ResponseIcon; content: MessageCardProps["children"] };
+export interface ResponseMessage
+    extends Pick<
+        MessageCardProps,
+        "color" | "title" | "actionLabel" | "actionHref"
+    > {
+    icon: ResponseIcon;
+    content: MessageCardProps["children"];
+}
 
 /* Success response type */
 export interface SuccessResponse<D = undefined> {
@@ -30,34 +35,12 @@ export interface ServerErrorResponse<F = undefined> {
         details?: unknown;
         statusCode: number;
     };
-};
+}
 
 export interface ErrorResponse<F = undefined> {
     response: {
         data: ServerErrorResponse<F>;
     };
-};
-
-// User types
-export interface UserData {
-    id: string;
-    name: string | null;
-    email: string | null;
-    image: string | null;
-};
-
-export interface CompletedUserData {
-    id: string;
-    name: string;
-    email: string;
-    image: string;
-    password: string | null;
-    emailVerified: Date | null;
-    createdAt: Date;
-    resetToken: string | null;
-    resetTokenExp: Date | null;
-    verifyToken: string | null;
-    verifyTokenExp: Date | null;
 }
 
 /* Authentication form fields */
@@ -79,7 +62,18 @@ export interface ResetPasswordFields {
 }
 /* End of authentication form fields */
 
-/* Update user form fields */
+/* User types */
+export interface User {
+    id: string;
+    name: string | null;
+    email: string | null;
+    image: string | null;
+}
+
+export interface GetUserField {
+    id: string;
+}
+
 export interface UpdateUserFields {
     id?: string;
     name?: string;
@@ -91,7 +85,7 @@ export interface DeleteUserFields {
     id?: string;
     password?: string;
 }
-/* End update user form fields */
+/* End user types */
 
 // Expenses
 export interface CreateExpenseFields {
@@ -102,30 +96,30 @@ export interface CreateExpenseFields {
     groupId?: string;
 }
 
-export interface ExpenseParticipantData {
+export interface ExpenseParticipant {
     id: string;
     expenseId: string;
     userId: string;
     amount: number;
-    user: UserData;
+    user: User;
 }
 
-export interface ExpenseData {
+export interface Expense {
     id: string;
     name: string;
     amount: number;
     paidById: string;
-    paidBy: UserData;
+    paidBy: User;
     groupId?: string | null;
-    group?: GroupData | null;
+    group?: Group | null;
     createdAt: Date;
-    participants: ExpenseParticipantData[];
+    participants: ExpenseParticipant[];
 }
 
 // Groups
 export interface CreateGroupFields {
     name: string;
-    type?: GROUP_TYPE;
+    type?: GroupType;
     createdById: string;
     memberIds: string[];
 }
@@ -134,18 +128,18 @@ export interface GroupMember {
     id: string;
     userId: string;
     groupId: string;
-    user: UserData;
+    user: User;
 }
 
-export interface GroupData {
+export interface Group {
     id: string;
     name: string;
-    type: GROUP_TYPE;
+    type: GroupType;
     createdAt: Date;
     createdById: string;
-    createdBy: UserData;
+    createdBy: User;
     members: GroupMember[];
-    expenses?: ExpenseData[];
+    expenses?: Expense[];
 }
 
 export interface DeleteExpenseGroupFields {

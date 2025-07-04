@@ -154,7 +154,8 @@ const DeleteAccountSection = ({ user }: DeleteAccountSectionProps) => {
                   validators={{
                     onBlur: deleteUserSchema.shape.password,
                   }}
-                  children={(field) => (
+                >
+                  {(field) => (
                     <Input
                       id="password"
                       type="password"
@@ -176,7 +177,7 @@ const DeleteAccountSection = ({ user }: DeleteAccountSectionProps) => {
                       containerClassName="!pt-4"
                     />
                   )}
-                />
+                </form.Field>
               )}
 
               <div className="flex flex-col">
@@ -199,15 +200,14 @@ const DeleteAccountSection = ({ user }: DeleteAccountSectionProps) => {
                   </Button>
                 </div>
 
-                <form.Subscribe
-                  selector={(state) => [state.errorMap]}
-                  children={([errorMap]) => (
+                <form.Subscribe selector={(state) => [state.errorMap]}>
+                  {([errorMap]) => (
                     <FormErrorMessage
                       message={errorMap.onServer}
                       containerClassName="!mt-4 !mb-0"
                     />
                   )}
-                />
+                </form.Subscribe>
               </div>
             </form>
           </>

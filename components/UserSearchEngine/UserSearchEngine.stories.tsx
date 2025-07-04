@@ -2,7 +2,7 @@ import { useState } from "react";
 
 import type { Meta, StoryObj } from "@storybook/react";
 
-import type { UserData } from "@/lib/api/types";
+import type { User } from "@/lib/api/types";
 
 import NextAuthProvider from "@/providers/NextAuthProvider";
 import QueryClientProvider from "@/providers/QueryClientProvider";
@@ -25,7 +25,7 @@ type Story = StoryObj<typeof UserSearchEngine>;
 // TODO: Add mockup data
 export const Example: Story = {
   render: (args) => {
-    const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
+    const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
     return (
       <QueryClientProvider {...args}>

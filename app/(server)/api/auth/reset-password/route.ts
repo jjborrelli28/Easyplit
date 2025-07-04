@@ -5,7 +5,7 @@ import type {
     ResetPasswordFields,
     ServerErrorResponse,
     SuccessResponse,
-    UserData,
+    User,
 } from "@/lib/api/types";
 import { hashPassword } from "@/lib/auth/helpers";
 import prisma from "@/lib/prisma";
@@ -16,7 +16,7 @@ type ResetPasswordHandler = (
     req: Request,
 ) => Promise<
     NextResponse<
-        SuccessResponse<UserData> | ServerErrorResponse<ResetPasswordFields>
+        SuccessResponse<User> | ServerErrorResponse<ResetPasswordFields>
     >
 >;
 

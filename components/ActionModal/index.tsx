@@ -3,9 +3,9 @@ import { type FormEvent, useState } from "react";
 import { useSession } from "next-auth/react";
 
 import useCreateExpense from "@/hooks/expense/useCreateExpense";
-import useCreateGroup from "@/hooks/groups/useCreateGroup";
+import useCreateGroup from "@/hooks/group/useCreateGroup";
 
-import type { ResponseMessage, UserData } from "@/lib/api/types";
+import type { ResponseMessage, User } from "@/lib/api/types";
 import ICON_MAP from "@/lib/icons";
 
 import AmountInput, { initialAmoutValue } from "../AmountInput";
@@ -43,7 +43,7 @@ const ActionModal = ({ type, onClose, ...restProps }: ActionModalProps) => {
   const { mutate: createGroup, isPending: groupIsPending } = useCreateGroup();
 
   const [actionName, setActionName] = useState("");
-  const [participants, setParticipants] = useState<UserData[]>([]);
+  const [participants, setParticipants] = useState<User[]>([]);
   const [amount, setAmount] = useState(initialAmoutValue);
   const [groupType, setGroupType] = useState<GROUP_TYPE | undefined>();
 
@@ -141,7 +141,7 @@ const ActionModal = ({ type, onClose, ...restProps }: ActionModalProps) => {
     }
   };
 
-  const handleSelect = (user: UserData) => {
+  const handleSelect = (user: User) => {
     setParticipants((prevState) => [...prevState, user]);
   };
 

@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import API_RESPONSE_CODE from "@/lib/api/API_RESPONSE_CODE";
 import type {
     CreateExpenseFields,
-    ExpenseData,
+    Expense,
     ServerErrorResponse,
     SuccessResponse,
 } from "@/lib/api/types";
@@ -13,7 +13,7 @@ type GetLinkedExpensesHandler = (
     req: Request,
 ) => Promise<
     NextResponse<
-        SuccessResponse<ExpenseData[]> | ServerErrorResponse<CreateExpenseFields>
+        SuccessResponse<Expense[]> | ServerErrorResponse<CreateExpenseFields>
     >
 >;
 
@@ -65,7 +65,7 @@ export const GET: GetLinkedExpensesHandler = async (req: Request) => {
         return NextResponse.json({
             success: true,
             code: API_RESPONSE_CODE.DATA_FETCHED,
-            data: expenses as ExpenseData[],
+            data: expenses as Expense[],
         });
     } catch (error) {
         console.error(error);

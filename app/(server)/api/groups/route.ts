@@ -4,7 +4,7 @@ import API_RESPONSE_CODE from "@/lib/api/API_RESPONSE_CODE";
 import type {
   CreateGroupFields,
   DeleteExpenseGroupFields,
-  GroupData,
+  Group,
   ServerErrorResponse,
   SuccessResponse,
 } from "@/lib/api/types";
@@ -16,7 +16,7 @@ type CreateGroupHandler = (
   req: Request,
 ) => Promise<
   NextResponse<
-    SuccessResponse<GroupData> | ServerErrorResponse<CreateGroupFields>
+    SuccessResponse<Group> | ServerErrorResponse<CreateGroupFields>
   >
 >;
 
@@ -96,7 +96,7 @@ export const POST: CreateGroupHandler = async (req: Request) => {
           },
         ],
       },
-      data: group as GroupData,
+      data: group as Group,
     });
   } catch (error) {
     console.error(error);
@@ -120,7 +120,7 @@ type GetLinkedGroupsHandler = (
   req: Request,
 ) => Promise<
   NextResponse<
-    SuccessResponse<GroupData[]> | ServerErrorResponse<CreateGroupFields>
+    SuccessResponse<Group[]> | ServerErrorResponse<CreateGroupFields>
   >
 >;
 
@@ -171,7 +171,7 @@ export const GET: GetLinkedGroupsHandler = async (req: Request) => {
     return NextResponse.json({
       success: true,
       code: API_RESPONSE_CODE.DATA_FETCHED,
-      data: groups as GroupData[],
+      data: groups as Group[],
     });
   } catch (error) {
     console.error(error);
@@ -194,7 +194,7 @@ type DeleteGroupHandler = (
   req: Request,
 ) => Promise<
   NextResponse<
-    SuccessResponse<GroupData> | ServerErrorResponse<DeleteExpenseGroupFields>
+    SuccessResponse<Group> | ServerErrorResponse<DeleteExpenseGroupFields>
   >
 >;
 
@@ -274,7 +274,7 @@ export const DELETE: DeleteGroupHandler = async (req) => {
           },
         ],
       },
-      data: group as GroupData,
+      data: group as Group,
     });
   } catch (error) {
     console.error(error);

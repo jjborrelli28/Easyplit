@@ -4,23 +4,23 @@ import prisma from "@/lib/prisma";
 import API_RESPONSE_CODE from "@/lib/api/API_RESPONSE_CODE";
 
 export async function GET(req: Request) {
-    const { searchParams } = new URL(req.url);
-    const q = searchParams.get("q");
-    const excludeUserIdsParam = searchParams.get("excludeUserIds");
-
-    if (!q || q.length < 2) {
-        return NextResponse.json({
-            success: true,
-            code: API_RESPONSE_CODE.USERS_FOUND,
-            data: [],
-        });
-    }
-
-    const excludeUserIds = excludeUserIdsParam
-        ? excludeUserIdsParam.split(",").map((id) => id.trim())
-        : [];
-
     try {
+        const { searchParams } = new URL(req.url);
+        const q = searchParams.get("q");
+        const excludeUserIdsParam = searchParams.get("excludeUserIds");
+
+        if (!q || q.length < 2) {
+            return NextResponse.json({
+                success: true,
+                code: API_RESPONSE_CODE.USERS_FOUND,
+                data: [],
+            });
+        }
+
+        const excludeUserIds = excludeUserIdsParam
+            ? excludeUserIdsParam.split(",").map((id) => id.trim())
+            : [];
+
         const users = await prisma.user.findMany({
             where: {
                 AND: [

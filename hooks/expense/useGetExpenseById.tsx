@@ -1,10 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 
-import type { ExpenseData, SuccessResponse } from "@/lib/api/types";
+import type { Expense, SuccessResponse } from "@/lib/api/types";
 import api from "@/lib/axios";
 
 const getLinkedExpenses = async (id?: string | null) => {
-  const { data } = await api.get<SuccessResponse<ExpenseData>>("/expense", {
+  const { data } = await api.get<SuccessResponse<Expense>>("/expense", {
     params: { id },
   });
 

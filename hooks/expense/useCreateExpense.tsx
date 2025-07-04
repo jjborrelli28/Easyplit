@@ -3,7 +3,7 @@ import { useMutation } from "@tanstack/react-query";
 import type {
   CreateExpenseFields,
   ErrorResponse,
-  ExpenseData,
+  Expense,
   SuccessResponse,
 } from "@/lib/api/types";
 import axios from "@/lib/axios";
@@ -16,12 +16,12 @@ interface FieldErrorsCreateExpense
 
 const useCreateExpense = () => {
   return useMutation<
-    SuccessResponse<ExpenseData>,
+    SuccessResponse<Expense>,
     ErrorResponse<FieldErrorsCreateExpense>,
     CreateExpenseFields
   >({
     mutationFn: async (body) => {
-      const { data } = await axios.post<SuccessResponse<ExpenseData>>(
+      const { data } = await axios.post<SuccessResponse<Expense>>(
         "/expense",
         body,
       );

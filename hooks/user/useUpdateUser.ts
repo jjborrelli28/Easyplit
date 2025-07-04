@@ -4,18 +4,18 @@ import type {
     ErrorResponse,
     SuccessResponse,
     UpdateUserFields,
-    UserData,
+    User,
 } from "@/lib/api/types";
 import api from "@/lib/axios";
 
 const useUpdateUser = () => {
     return useMutation<
-        SuccessResponse<UserData>,
+        SuccessResponse<User>,
         ErrorResponse<UpdateUserFields>,
         UpdateUserFields
     >({
         mutationFn: async (body) => {
-            const { data } = await api.post<SuccessResponse<UserData>>("/user", body);
+            const { data } = await api.post<SuccessResponse<User>>("/user", body);
 
             return data;
         },

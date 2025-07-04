@@ -8,7 +8,7 @@ import type {
     ForgotPasswordFields,
     ServerErrorResponse,
     SuccessResponse,
-    UserData,
+    User,
 } from "@/lib/api/types";
 import { sendMail } from "@/lib/mailer";
 import prisma from "@/lib/prisma";
@@ -20,7 +20,7 @@ type ForgotPasswordHandler = (
     req: Request,
 ) => Promise<
     NextResponse<
-        SuccessResponse<UserData> | ServerErrorResponse<ForgotPasswordFields>
+        SuccessResponse<User> | ServerErrorResponse<ForgotPasswordFields>
     >
 >;
 

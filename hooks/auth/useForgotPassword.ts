@@ -4,18 +4,18 @@ import type {
     ErrorResponse,
     ForgotPasswordFields,
     SuccessResponse,
-    UserData,
+    User,
 } from "@/lib/api/types";
 import api from "@/lib/axios";
 
 const useForgotPassword = () => {
     return useMutation<
-        SuccessResponse<UserData>,
+        SuccessResponse<User>,
         ErrorResponse<ForgotPasswordFields>,
         ForgotPasswordFields
     >({
         mutationFn: async (body) => {
-            const { data } = await api.post<SuccessResponse<UserData>>(
+            const { data } = await api.post<SuccessResponse<User>>(
                 "/auth/forgot-password",
                 body,
             );

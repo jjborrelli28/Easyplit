@@ -12,13 +12,13 @@ import { Search } from "lucide-react";
 
 import useSearchUsers from "@/hooks/users/useSearchUsers";
 
-import type { UserData } from "@/lib/api/types";
+import type { User } from "@/lib/api/types";
 
 import Input from "../Input";
 import Collapse from "../Collapse";
 
 interface UserSearchEngineProps {
-  onSelect: (user: UserData) => void;
+  onSelect: (user: User) => void;
   placeholder?: string;
   excludeUserIds?: string[];
   error?: string | null;
@@ -61,7 +61,7 @@ const UserSearchEngine = ({
     debouncedUpdate(e.target.value);
   };
 
-  const handleSelect = (user: UserData) => {
+  const handleSelect = (user: User) => {
     onSelect(user);
     setQuery("");
     setDebouncedQuery("");

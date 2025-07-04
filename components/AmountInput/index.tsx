@@ -3,18 +3,22 @@
 import { type CSSProperties, useEffect, useRef, useState } from "react";
 
 import clsx from "clsx";
+
 import Collapse from "../Collapse";
 
 export const initialAmoutValue = "0.00";
 
 const formatRawToAmount = (raw: string): string => {
-  const digits = raw.replace(/\D/g, "").padStart(3, "0");
+  const digits = raw.replace(/\D/g, "");
+
+  if (digits.length <= 2) {
+    const padded = digits.padStart(3, "0");
+
+    return `${padded.slice(0, -2)}.${padded.slice(-2)}`;
+  }
+
   const intPart = digits.slice(0, -2);
   const decimalPart = digits.slice(-2);
-
-  if (decimalPart === "00" && intPart.replace(/^0+/, "") !== "") {
-    return intPart.replace(/^0+/, "") || "0";
-  }
 
   return `${intPart}.${decimalPart}`;
 };
