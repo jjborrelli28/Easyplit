@@ -4,23 +4,24 @@ import { type FormEvent, type MouseEvent, useState } from "react";
 
 import { useRouter } from "next/navigation";
 
-import { Session } from "next-auth";
+import type { Session } from "next-auth";
 
 import clsx from "clsx";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { CircleChevronDown, Component, Receipt, Trash } from "lucide-react";
+import { CircleChevronDown, Trash } from "lucide-react";
 
 import useDeleteExpense from "@/hooks/expense/useDeleteExpense";
+import useDeleteGroup from "@/hooks/group/useDeleteGroup";
 
 import type { Expense, Group, ResponseMessage } from "@/lib/api/types";
 import ICON_MAP from "@/lib/icons";
 
-import useDeleteGroup from "@/hooks/group/useDeleteGroup";
 import Badge from "../Badge";
 import Button from "../Button";
 import Collapse from "../Collapse";
-import { options } from "../GroupTypeSelector";
+import { EXPENSE_TYPE, EXPENSE_TYPES } from "../ExpenseTypeSelect/constants";
+import { GROUP_TYPE, GROUP_TYPES } from "../GroupTypeSelect/constants";
 import MessageCard from "../MessageCard";
 import Modal from "../Modal";
 import Tooltip from "../Tooltip";
@@ -116,9 +117,9 @@ const Card = ({ type, data, loggedInUser }: CardProps) => {
 
   const Icon =
     type === CARD_TYPE.EXPENSE
-      ? Receipt
-      : (options.find((option) => option.type === (data as Group).type)?.icon ??
-        Component);
+      ? EXPENSE_TYPES[(data as Expense)?.type ?? EXPENSE_TYPE.UNCATEGORIZED]
+          .icon
+      : GROUP_TYPES[(data as Group)?.type ?? GROUP_TYPE.OTHER].icon;
   const participants =
     type === CARD_TYPE.EXPENSE
       ? (data as Expense).participants.filter(
@@ -144,10 +145,18 @@ const Card = ({ type, data, loggedInUser }: CardProps) => {
         onClick={handleClickCard}
         className="border-h-background group hover:border-primary flex cursor-pointer items-center gap-x-4 border p-4 transition-colors duration-300"
       >
-        <Icon
-          id="icon"
-          className="group-hover:text-primary h-12 w-12 min-w-12 transition-colors duration-300"
-        />
+        <div
+          className={clsx(
+            "flex h-14 w-14 items-center justify-center rounded-full",
+            type === CARD_TYPE.EXPENSE
+              ? EXPENSE_TYPES[
+                  (data as Expense).type ?? EXPENSE_TYPE.UNCATEGORIZED
+                ].color
+              : GROUP_TYPES[(data as Group).type ?? GROUP_TYPE.OTHER].color,
+          )}
+        >
+          <Icon id="icon" className="text-background h-8 w-8" />
+        </div>
 
         <div className="flex min-w-0 flex-1 flex-col gap-y-2">
           <div className="flex flex-col gap-y-0.5">
@@ -247,6 +256,7 @@ const Card = ({ type, data, loggedInUser }: CardProps) => {
         showHeader={!message}
         title={`¿Estás seguro de que quieres eliminar este
                   ${type === CARD_TYPE.EXPENSE ? "gasto" : "grupo"}?`}
+        unstyled={!!message}
       >
         {message ? (
           <MessageCard
@@ -260,6 +270,7 @@ const Card = ({ type, data, loggedInUser }: CardProps) => {
                 setMessage(null);
               },
             }}
+            className="w-md"
           >
             {message.content}
           </MessageCard>
@@ -279,22 +290,23 @@ const Card = ({ type, data, loggedInUser }: CardProps) => {
               </div>
             </div>
 
-            <div className="flex justify-end gap-x-4">
-              <Button
-                onClick={() => setDeleteModalIsOpen(false)}
-                variant="outlined"
-                color="secondary"
-              >
-                Cancelar
-              </Button>
-
+            <div className="flex flex-col gap-y-4">
               <Button
                 onClick={handleDelete}
                 color="danger"
                 loading={isDeleting}
-                className="min-w-40"
+                fullWidth
               >
                 Eliminar {type === CARD_TYPE.EXPENSE ? "gasto" : "grupo"}
+              </Button>
+
+              <Button
+                onClick={() => setDeleteModalIsOpen(false)}
+                variant="outlined"
+                color="secondary"
+                fullWidth
+              >
+                Cancelar
               </Button>
             </div>
           </>

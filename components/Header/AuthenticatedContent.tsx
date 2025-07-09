@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { redirect, usePathname } from "next/navigation";
 
-import { Session } from "next-auth";
+import type { Session } from "next-auth";
 import { signOut } from "next-auth/react";
 
 import { CTA } from ".";
@@ -103,8 +103,8 @@ const AuthenticatedContent = ({ isOpen, user }: AuthenticatedContentProps) => {
               { label: "Cerrar sesión", onClick: handleLogout },
             ]}
             variant="text"
-            color="secondary"
-            className="!py-0 !pr-0 hover:!bg-transparent"
+            color="primary"
+            className="!text-foreground !py-0 !pr-0 hover:!bg-transparent"
             containerClassName="!hidden md:!inline-block"
           />
 

@@ -12,6 +12,7 @@ export interface ModalProps {
   showHeader?: boolean;
   title?: string;
   children: ReactNode;
+  unstyled?: boolean;
   className?: string;
   headerClassName?: string;
   contentClassName?: string;
@@ -23,6 +24,7 @@ const Modal = ({
   showHeader = true,
   title,
   children,
+  unstyled,
   className,
   headerClassName,
   contentClassName,
@@ -51,7 +53,8 @@ const Modal = ({
         role="dialog"
         aria-modal="true"
         className={clsx(
-          "bg-background border-h-background flex w-full max-w-md flex-col gap-y-8 border px-4 py-8 shadow-xl lg:px-8",
+          !unstyled &&
+            "bg-background border-foreground/50 flex max-h-screen w-md max-w-md flex-col gap-y-8 border px-4 py-8 shadow-xl lg:px-8",
           className,
         )}
       >
@@ -75,7 +78,12 @@ const Modal = ({
           </div>
         )}
 
-        <div className={clsx("flex flex-col gap-y-8", contentClassName)}>
+        <div
+          className={clsx(
+            !unstyled && "flex flex-col gap-y-8",
+            contentClassName,
+          )}
+        >
           {children}
         </div>
       </div>

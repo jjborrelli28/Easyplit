@@ -4,13 +4,14 @@ import API_RESPONSE_CODE from "@/lib/api/API_RESPONSE_CODE";
 import type {
   CreateGroupFields,
   DeleteExpenseGroupFields,
-  Group,
+
   ServerErrorResponse,
   SuccessResponse,
 } from "@/lib/api/types";
 import prisma from "@/lib/prisma";
 import { parseZodErrors } from "@/lib/validations/helpers";
 import { createGroupSchema } from "@/lib/validations/schemas";
+import { Group } from "@prisma/client";
 
 type CreateGroupHandler = (
   req: Request,

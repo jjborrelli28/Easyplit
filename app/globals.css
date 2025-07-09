@@ -13,12 +13,18 @@
     --s-foreground: #1b5e20;
     --d-foreground: #b71c1c;
     --primary: #5a7b00;
+    --h-primary: #a5cc00;
     --secondary: #191919;
     --info: #1363bf;
     --success: #19944a;
     --warning: #d4a900;
-
     --danger: #c13232;
+    --yellow: #b38600;
+    --green: #059669;
+    --purple: #7e22ce;
+    --red: #dc2626;
+    --blue: #0077b6;
+    --orange: #ea580c;
 
     --header: 72px;
   }
@@ -32,11 +38,18 @@
     --s-foreground: #d4edda;
     --d-foreground: #f8d7da;
     --primary: #caff33;
+    --h-primary: #f0ff8c;
     --secondary: #fefffa;
     --info: #a4cfff;
     --success: #22c55e;
     --warning: #facc15;
     --danger: #ef4444;
+    --yellow: #ffcc33;
+    --green: #6ee7b7;
+    --purple: #c084fc;
+    --red: #f87171;
+    --blue: #4cc9f0;
+    --orange: #fb923c;
   }
 }
 
@@ -49,12 +62,19 @@
   --color-d-foreground: var(--d-foreground);
   --color-black: var(--black);
   --color-white: var(--white);
+  --color-h-primary: var(--h-primary);
   --color-primary: var(--primary);
   --color-secondary: var(--secondary);
   --color-info: var(--info);
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
+  --color-yellow: var(--yellow);
+  --color-green: var(--green);
+  --color-purple: var(--purple);
+  --color-red: var(--red);
+  --color-blue: var(--blue);
+  --color-orange: var(--orange);
 }
 
 @layer utilities {
@@ -251,4 +271,18 @@ input:-webkit-autofill {
 
 .animate-cursor {
   animation: cursor 900ms ease-in-out infinite;
+}
+
+@keyframes bg-color-pulse {
+  0%,
+  100% {
+    background-color: var(--primary);
+  }
+  50% {
+    background-color: var(--h-primary);
+  }
+}
+
+.animate-bg-color-pulse {
+  animation: bg-color-pulse 1.5s ease-in-out infinite;
 }

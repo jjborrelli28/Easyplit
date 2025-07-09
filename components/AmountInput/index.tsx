@@ -1,49 +1,15 @@
 "use client";
 
 import { type CSSProperties, useEffect, useRef, useState } from "react";
-
 import clsx from "clsx";
-
-import Collapse from "../Collapse";
-
-export const initialAmoutValue = "0.00";
-
-const formatRawToAmount = (raw: string): string => {
-  const digits = raw.replace(/\D/g, "");
-
-  if (digits.length <= 2) {
-    const padded = digits.padStart(3, "0");
-
-    return `${padded.slice(0, -2)}.${padded.slice(-2)}`;
-  }
-
-  const intPart = digits.slice(0, -2);
-  const decimalPart = digits.slice(-2);
-
-  return `${intPart}.${decimalPart}`;
-};
-
-const splitAmount = (formatted: string) => {
-  const [int, dec] = formatted.split(".");
-  return {
-    integerPart: int || "0",
-    decimalPart: dec?.padEnd(2, "0").slice(0, 2) || "00",
-  };
-};
-
-const parseOnlyNumbers = (value: string): string => {
-  if (value === initialAmoutValue) return "";
-
-  const onlyNumbers = value.replace(/\D/g, "");
-  const noLeadingZeros = onlyNumbers.replace(/^0+/, "");
-
-  return noLeadingZeros === "" ? "0" : noLeadingZeros;
-};
+import InputErrorMessage from "../InputErrorMessage";
 
 interface AmountInputProps {
   label?: string;
-  value: string; // e.g. "12.34"
-  onChange: (formattedValue: string) => void;
+  value: number; // Ahora es un number
+  onChange: (formattedValue: number) => void;
+  onFocus?: VoidFunction;
+  onBlur?: VoidFunction;
   currencySymbol?: string;
   id?: string;
   name?: string;
@@ -57,6 +23,8 @@ const AmountInput = ({
   label,
   value,
   onChange,
+  onFocus,
+  onBlur,
   currencySymbol = "$",
   id,
   name,
@@ -68,61 +36,65 @@ const AmountInput = ({
   const hasMounted = useRef(false);
 
   const [isFocused, setIsFocused] = useState(false);
-
   const [inputWidth, setInputWidth] = useState(0);
   const [numberWidth, setNumberWidth] = useState(0);
   const [fontScale, setFontScale] = useState(1);
 
+  const formattedValue = value.toFixed(2);
+  const [integerPart, decimalPart] = formattedValue.split(".");
+
   useEffect(() => {
     if (!hasMounted.current) {
       hasMounted.current = true;
-
       return;
     }
 
     if (numberWidth >= inputWidth && fontScale >= 0.5) {
-      setFontScale((prevState) => prevState * 0.9);
+      setFontScale((prev) => prev * 0.9);
     } else if (
       numberWidth < inputWidth &&
       inputWidth - numberWidth > 50 &&
       fontScale <= 1
     ) {
-      setFontScale((prevState) => prevState * 1.1);
+      setFontScale((prev) => prev * 1.1);
     }
   }, [inputWidth, numberWidth, fontScale]);
 
   const forceCursorToEnd = (e: React.SyntheticEvent<HTMLInputElement>) => {
     const input = e.currentTarget;
     const length = input.value.length;
-
     input.setSelectionRange(length, length);
   };
 
   const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
     setIsFocused(true);
-
     forceCursorToEnd(e);
+    onFocus?.();
+  };
+
+  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    setIsFocused(false);
+    onBlur?.();
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value;
-    const digitsOnly = raw.replace(/\D/g, "");
-    const formatted = formatRawToAmount(digitsOnly);
+    const raw = e.target.value.replace(/\D/g, "");
+    const padded = raw.padStart(3, "0");
+    const intPart = padded.slice(0, -2);
+    const decimalPart = padded.slice(-2);
+    const formattedString = `${intPart}.${decimalPart}`;
+    const formattedNumber = +formattedString;
 
-    onChange(formatted);
+    onChange(formattedNumber);
   };
 
-  const { integerPart, decimalPart } = splitAmount(value);
-
   return (
-    <fieldset className="flex w-full flex-col">
+    <fieldset className="relative flex w-full flex-col pt-7">
       {label && (
         <label
           className={clsx(
-            "text-foreground text-sm font-semibold transition-colors duration-300",
-            value !== initialAmoutValue || isFocused
-              ? "text-primary"
-              : "text-foreground",
+            "absolute left-0 translate-x-1 -translate-y-6 transform text-sm font-semibold transition-all duration-300",
+            (value !== 0 || isFocused) && "text-primary",
           )}
         >
           {label}
@@ -145,10 +117,10 @@ const AmountInput = ({
           inputMode="numeric"
           pattern="[0-9]*"
           disabled={disabled}
-          value={parseOnlyNumbers(value)}
+          value={parseInt(`${integerPart}${decimalPart}`).toString()}
           onChange={handleChange}
           onFocus={handleFocus}
-          onBlur={() => setIsFocused(false)}
+          onBlur={handleBlur}
           onClick={forceCursorToEnd}
           onKeyUp={forceCursorToEnd}
           className="absolute top-0 left-0 h-full w-full opacity-0"
@@ -160,7 +132,7 @@ const AmountInput = ({
           }}
           className={clsx(
             "text-foreground pointer-events-none relative flex w-fit items-center transition-colors duration-300",
-            value === initialAmoutValue && "text-foreground/50",
+            value === 0 && "text-foreground/50",
             className,
           )}
           style={{ maxWidth: inputWidth }}
@@ -168,7 +140,7 @@ const AmountInput = ({
           <span
             className={clsx(
               "px-2 font-semibold transition-colors duration-300",
-              value === initialAmoutValue && "text-foreground/50",
+              value === 0 && "text-foreground/50",
             )}
             style={{ fontSize: `calc(2.5rem * ${fontScale})` }}
           >
@@ -202,9 +174,7 @@ const AmountInput = ({
         </div>
       </div>
 
-      <Collapse isOpen={!!error}>
-        <p className="text-danger mt-1 ml-1 text-start text-xs">{error}</p>
-      </Collapse>
+      <InputErrorMessage message={error} />
     </fieldset>
   );
 };

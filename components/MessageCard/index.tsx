@@ -15,7 +15,7 @@ export interface MessageCardProps {
   actionLabel?: string;
   onAction?: VoidFunction;
   actionHref?: string;
-  containerClassName?: string;
+  className?: string;
   iconClassName?: string;
   titleClassNAme?: string;
   contentClassName?: string;
@@ -41,7 +41,7 @@ const MessageCard = ({
   actionLabel,
   actionHref,
   onAction,
-  containerClassName,
+  className,
   iconClassName,
   titleClassNAme,
   contentClassName,
@@ -54,9 +54,9 @@ const MessageCard = ({
   return (
     <div
       className={clsx(
-        "w-full max-w-md space-y-8 border p-8 text-center shadow-xl",
+        "bg-background w-full max-w-md space-y-8 border p-8 text-center shadow-xl",
         COLORS[color].borderColor,
-        containerClassName,
+        className,
       )}
     >
       <div className="flex flex-col items-center gap-y-4">

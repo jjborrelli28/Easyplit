@@ -15,22 +15,17 @@ import { resetPasswordSchema } from "@/lib/validations/schemas";
 type ResetPasswordHandler = (
     req: Request,
 ) => Promise<
-    NextResponse<
-        SuccessResponse<User> | ServerErrorResponse<ResetPasswordFields>
-    >
+    NextResponse<SuccessResponse<User> | ServerErrorResponse<ResetPasswordFields>>
 >;
 
 export const POST: ResetPasswordHandler = async (req: Request) => {
     try {
         const body = await req.json();
 
-        // Password format validation
         const res = resetPasswordSchema.safeParse(body);
 
         if (!res.success) {
-            const fields = parseZodErrors(
-                res.error,
-            ) as unknown as ResetPasswordFields;
+            const fields = parseZodErrors(res.error) as ResetPasswordFields;
 
             return NextResponse.json(
                 {
@@ -46,9 +41,8 @@ export const POST: ResetPasswordHandler = async (req: Request) => {
             );
         }
 
-        const { password, token: resetToken, } = res.data
+        const { password, token: resetToken } = res.data;
 
-        // Search user by reset token
         const user = await prisma.user.findFirst({
             where: {
                 resetToken,
@@ -58,7 +52,6 @@ export const POST: ResetPasswordHandler = async (req: Request) => {
             },
         });
 
-        // User not found
         if (!user) {
             return NextResponse.json(
                 {
@@ -75,7 +68,6 @@ export const POST: ResetPasswordHandler = async (req: Request) => {
 
         const hashedPassword = await hashPassword(password);
 
-        // Update user password
         await prisma.user.update({
             where: { id: user.id },
             data: {

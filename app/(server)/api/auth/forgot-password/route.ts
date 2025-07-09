@@ -28,13 +28,10 @@ export const POST: ForgotPasswordHandler = async (req: Request) => {
     try {
         const body = await req.json();
 
-        // Field format validation
         const res = forgotPasswordSchema.safeParse(body);
 
         if (!res.success) {
-            const fields = parseZodErrors(
-                res.error,
-            ) as unknown as ForgotPasswordFields;
+            const fields = parseZodErrors(res.error) as ForgotPasswordFields;
 
             return NextResponse.json(
                 {
@@ -52,7 +49,6 @@ export const POST: ForgotPasswordHandler = async (req: Request) => {
 
         const { email, recaptchaToken } = res.data;
 
-        // ReCAPTCHA verification
         try {
             await verifyRecaptcha(recaptchaToken);
         } catch (error) {
@@ -70,10 +66,8 @@ export const POST: ForgotPasswordHandler = async (req: Request) => {
             );
         }
 
-        // Search user by email
         const user = await prisma.user.findUnique({ where: { email } });
 
-        // User not found
         if (!user) {
             return NextResponse.json(
                 {
@@ -88,9 +82,7 @@ export const POST: ForgotPasswordHandler = async (req: Request) => {
             );
         }
 
-        // Check if the user has a reset token
         if (user?.resetToken) {
-            // Check if the user has a valid reset token
             if (user.resetTokenExp && user.resetTokenExp > new Date()) {
                 return NextResponse.json(
                     {
@@ -107,7 +99,6 @@ export const POST: ForgotPasswordHandler = async (req: Request) => {
                     { status: 409 },
                 );
             } else {
-                // Reset token is expired
                 await prisma.user.update({
                     where: { email },
                     data: {
@@ -118,7 +109,6 @@ export const POST: ForgotPasswordHandler = async (req: Request) => {
             }
         }
 
-        // Generate a reset token and send verification email
         const resetToken = randomBytes(32).toString("hex");
         const resetTokenExp = addHours(new Date(), 1); // valid for 60 mins
 

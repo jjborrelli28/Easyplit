@@ -4,34 +4,41 @@ import { useMemo, useState } from "react";
 
 import Image from "next/image";
 
-import { useSession } from "next-auth/react";
+import type { Session } from "next-auth";
 
 import clsx from "clsx";
 import debounce from "lodash.debounce";
-import { Search } from "lucide-react";
+import { UserRoundSearch } from "lucide-react";
 
 import useSearchUsers from "@/hooks/users/useSearchUsers";
 
 import type { User } from "@/lib/api/types";
 
-import Input from "../Input";
-import Collapse from "../Collapse";
+import Input, { type InputProps } from "../Input";
+import InputErrorMessage from "../InputErrorMessage";
 
-interface UserSearchEngineProps {
+export interface UserSearchEngineProps
+  extends Omit<InputProps, "value" | "onSelect"> {
+  user?: Session["user"];
   onSelect: (user: User) => void;
-  placeholder?: string;
+  onChange?: VoidFunction;
+  onFocus?: VoidFunction;
+  onBlur?: VoidFunction;
   excludeUserIds?: string[];
-  error?: string | null;
 }
 
 const UserSearchEngine = ({
-  placeholder = "Buscar por nombre o email",
+  user,
   onSelect,
+  onChange,
+  onFocus,
+  onBlur,
+  label,
+  placeholder = "Buscar por nombre o email",
   excludeUserIds = [],
   error,
+  ...restProps
 }: UserSearchEngineProps) => {
-  const { data } = useSession();
-
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
@@ -40,10 +47,10 @@ const UserSearchEngine = ({
   const effectiveExcludedIds = useMemo(() => {
     const ids = new Set<string>(excludeUserIds);
 
-    if (data?.user.id) ids.add(data.user.id);
+    if (user?.id) ids.add(user.id);
 
     return Array.from(ids);
-  }, [excludeUserIds, data?.user.id]);
+  }, [excludeUserIds, user?.id]);
 
   const { data: users = [] } = useSearchUsers(
     debouncedQuery,
@@ -59,6 +66,7 @@ const UserSearchEngine = ({
     setQuery(e.target.value);
     setHighlightedIndex(-1);
     debouncedUpdate(e.target.value);
+    onChange?.();
   };
 
   const handleSelect = (user: User) => {
@@ -86,32 +94,46 @@ const UserSearchEngine = ({
     }
   };
 
+  const handleFocus = () => {
+    setIsFocused(true);
+    onFocus?.();
+  };
+
+  const handleBlur = () => {
+    setIsFocused(false);
+    onBlur?.();
+  };
+
   return (
     <div className="relative w-full max-w-md">
       <Input
+        label={label}
         value={query}
         onChange={handleChange}
         placeholder={placeholder}
-        onFocus={() => setIsFocused(true)}
-        onBlur={() => setIsFocused(false)}
+        onFocus={handleFocus}
+        onBlur={handleBlur}
         onKeyDown={handleKeyDown}
+        {...restProps}
       />
 
-      <Search
-        className={clsx(
-          "text-foreground/50 pointer-events-none absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 transition-colors duration-300",
-          isFocused && "text-primary",
-        )}
-      />
+      <div className="bg-background pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 pl-3">
+        <UserRoundSearch
+          className={clsx(
+            "text-foreground h-5.5 w-5.5 transition-colors duration-300",
+            isFocused && "text-primary",
+          )}
+        />
+      </div>
 
       {users.length > 0 && (
-        <ul className="bg-h-background border-background absolute top-full right-0 left-0 z-10 max-h-60 overflow-y-auto border !border-t-0 shadow-xl">
+        <ul className="bg-h-background border-primary absolute top-full right-0 left-0 z-20 max-h-60 overflow-y-auto border !border-t-0 shadow-xl">
           {users.map((user, i) => (
             <li
               key={user.id}
               onMouseDown={() => handleSelect(user)}
               className={clsx(
-                "group flex cursor-pointer gap-x-4 p-4 transition-colors duration-300",
+                "hover:bg-primary hover:text-background group flex cursor-pointer gap-x-4 p-4 transition-colors duration-300",
                 highlightedIndex === i
                   ? "bg-primary text-background"
                   : i % 2 === 0
@@ -131,10 +153,8 @@ const UserSearchEngine = ({
 
               <div
                 className={clsx(
-                  "h-12 w-[1px] transition-colors duration-300",
-                  highlightedIndex === i
-                    ? "bg-background"
-                    : "bg-foreground group-hover:bg-background",
+                  "group-hover:bg-background h-12 w-[1px] transition-colors duration-300",
+                  highlightedIndex === i ? "bg-background" : "bg-foreground",
                 )}
               />
 
@@ -148,9 +168,7 @@ const UserSearchEngine = ({
         </ul>
       )}
 
-      <Collapse isOpen={!!error}>
-        <p className="text-danger mt-1 ml-1 text-start text-xs">{error}</p>
-      </Collapse>
+      <InputErrorMessage message={error} />
     </div>
   );
 };

@@ -1,9 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 
-import type { Expense, Group, SuccessResponse } from "@/lib/api/types";
+import type { Expense, Group } from "@prisma/client";
+
+import type { SuccessResponse } from "@/lib/api/types";
 import api from "@/lib/axios";
 
-const getMyGroupsAndExpenses = async (userId?: string | null) => {
+const getMyExpensesAndGroups = async (userId?: string | null) => {
   const { data } = await api.get<
     SuccessResponse<{ groups: Group[]; expenses: Expense[] }>
   >("/user/groups-n-expenses", {
@@ -13,14 +15,14 @@ const getMyGroupsAndExpenses = async (userId?: string | null) => {
   return data.data;
 };
 
-const useGetMyGroupsAndExpenses = (userId?: string | null) => {
+const useGetMyExpensesAndGroups = (userId?: string | null) => {
   return useQuery({
     queryKey: ["my-groups-and-expenses", userId],
-    queryFn: () => getMyGroupsAndExpenses(userId),
+    queryFn: () => getMyExpensesAndGroups(userId),
     enabled: !!userId,
     staleTime: 1000 * 10,
-    refetchInterval: 3000,
+    refetchInterval: 10000,
   });
 };
 
-export default useGetMyGroupsAndExpenses;
+export default useGetMyExpensesAndGroups;

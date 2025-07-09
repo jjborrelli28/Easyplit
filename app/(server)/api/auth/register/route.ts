@@ -30,11 +30,10 @@ export const POST: RegisterHandler = async (req: Request) => {
     try {
         const body = await req.json();
 
-        // Field format validation
         const res = registerSchema.safeParse(body);
 
         if (!res.success) {
-            const fields = parseZodErrors(res.error) as unknown as RegisterFields;
+            const fields = parseZodErrors(res.error) as RegisterFields;
 
             return NextResponse.json(
                 {
@@ -52,7 +51,6 @@ export const POST: RegisterHandler = async (req: Request) => {
 
         const { name, email, password, recaptchaToken } = res.data;
 
-        // ReCAPTCHA verification
         try {
             await verifyRecaptcha(recaptchaToken);
         } catch (error) {
@@ -70,12 +68,9 @@ export const POST: RegisterHandler = async (req: Request) => {
             );
         }
 
-        // Search user by email
         const existingUser = await prisma.user.findUnique({ where: { email } });
 
-        // Check if the existing user is verified with credentials
         if (existingUser?.password) {
-            // Check if the existing is verified
             if (existingUser?.emailVerified) {
                 return NextResponse.json(
                     {
@@ -92,7 +87,6 @@ export const POST: RegisterHandler = async (req: Request) => {
                 );
             }
 
-            // User is not verified
             if (
                 existingUser?.verifyTokenExp &&
                 existingUser.verifyTokenExp >= new Date()
@@ -124,7 +118,6 @@ export const POST: RegisterHandler = async (req: Request) => {
                     },
                 });
             } else {
-                // Existing user, unverified and with expired token
                 const verifyToken = uuidv4();
                 const verifyTokenExp = new Date(Date.now() + 30 * 60 * 1000); // valid for 30 mins
 
@@ -154,9 +147,7 @@ export const POST: RegisterHandler = async (req: Request) => {
                     { status: 409 },
                 );
             }
-        }
-        // Check if the existing user is verified without credentials (e.g., created by Google)
-        else if (existingUser) {
+        } else if (existingUser) {
             const hashedPassword = await hashPassword(password);
 
             const user = await prisma.user.update({
@@ -189,10 +180,7 @@ export const POST: RegisterHandler = async (req: Request) => {
                     image: user.image,
                 },
             });
-        }
-
-        // Register new user with credentials
-        else {
+        } else {
             const hashedPassword = await hashPassword(password);
             const verifyToken = uuidv4();
             const verifyTokenExp = new Date(Date.now() + 30 * 60 * 1000); // valid for 30 mins

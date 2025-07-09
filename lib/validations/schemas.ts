@@ -1,11 +1,14 @@
 import { z } from "zod";
 
-import { GROUP_TYPE } from "@/components/GroupTypeSelector";
+import { ExpenseType } from "@prisma/client";
+
+import { EXPENSE_TYPE } from "@/components/ExpenseTypeSelect/constants";
 
 /* Rules */
 const name = z
     .string()
     .min(3, "El nombre debe tener al menos 3 caracteres")
+    .max(50, "El nombre no puede superar los 50 caracteres.")
     .refine((value) => !/\d/.test(value), {
         message: "El nombre de usuario no puede tener números.",
     });
@@ -83,8 +86,14 @@ export const deleteUserSchema = z.object({
     id,
     password,
 });
-/* End of user form schemas  */
 
+export const userSchema = z.object({
+    id: z.string(),
+    name: z.string().nullable(),
+    email: z.string().nullable(),
+    image: z.string().nullable(),
+});
+/* End of user form schemas  */
 
 /* Form schemes for expenses */
 export const createExpenseSchema = z.object({
@@ -92,21 +101,26 @@ export const createExpenseSchema = z.object({
         .string({
             required_error: "El nombre del gasto es obligatorio.",
         })
-        .min(3, "El nombre del gasto debe tener al menos 3 caracteres."),
-    paidById: z.string(),
+        .min(3, "El nombre del gasto debe tener al menos 3 caracteres.")
+        .max(50, "El nombre del gasto no puede superar los 50 caracteres."),
+    paidById: id,
     participantIds: z
         .array(z.string(), {
             required_error: "Debes agregar al menos 2 participantes al gasto.",
         })
-        .min(2, "El gasto debe tener al menos 2 participantes."),
+        .min(2, "El gasto debe tener al menos 2 participantes.").max(20),
     amount: z
         .number({
             required_error: "El monto es obligatorio.",
         })
+        .max(1_000_000_000, {
+            message: "El monto no puede ser mayor a $1.000.000.000",
+        })
         .refine((val) => val !== 0, {
             message: "El monto no puede ser $0.",
         }),
-    groupId: z.string().optional(),
+    type: z.nativeEnum(EXPENSE_TYPE).optional(),
+    groupId: z.string().nullable().optional(),
 });
 
 export const createGroupSchema = z.object({
@@ -115,7 +129,7 @@ export const createGroupSchema = z.object({
             required_error: "El nombre del grupo es obligatorio.",
         })
         .min(3, "El nombre del grupo debe tener al menos 3 caracteres."),
-    type: z.nativeEnum(GROUP_TYPE, {
+    type: z.nativeEnum(ExpenseType, {
         required_error: "El tipo de grupo es obligatorio.",
         invalid_type_error: "El tipo de grupo no es válido.",
     }),

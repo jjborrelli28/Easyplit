@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 
+import type { Expense, Group } from "@prisma/client";
+
 import API_RESPONSE_CODE from "@/lib/api/API_RESPONSE_CODE";
 import type {
-    Expense,
     GetUserField,
-    Group,
     ServerErrorResponse,
     SuccessResponse,
 } from "@/lib/api/types";
@@ -12,7 +12,7 @@ import prisma from "@/lib/prisma";
 import { parseZodErrors } from "@/lib/validations/helpers";
 import { getUserSchema } from "@/lib/validations/schemas";
 
-type GetMyGroupsAndExpensesHandler = (
+type GetMyExpensesAndGroupsHandler = (
     req: Request,
 ) => Promise<
     NextResponse<
@@ -21,17 +21,16 @@ type GetMyGroupsAndExpensesHandler = (
     >
 >;
 
-// Get linked groups
-export const GET: GetMyGroupsAndExpensesHandler = async (req: Request) => {
+// Get expenses and groups by user id
+export const GET: GetMyExpensesAndGroupsHandler = async (req: Request) => {
     try {
         const { searchParams } = new URL(req.url);
         const id = searchParams.get("userId");
 
-        // Field format validation
         const res = getUserSchema.safeParse({ id });
 
         if (!res.success) {
-            const fields = parseZodErrors(res.error) as unknown as GetUserField;
+            const fields = parseZodErrors(res.error) as GetUserField;
 
             return NextResponse.json(
                 {
@@ -49,10 +48,8 @@ export const GET: GetMyGroupsAndExpensesHandler = async (req: Request) => {
 
         const { id: userId } = res.data;
 
-        // Search user by id
         const user = await prisma.user.findFirst({ where: { id: userId } });
 
-        // User not found
         if (!user) {
             return NextResponse.json(
                 {
@@ -67,7 +64,6 @@ export const GET: GetMyGroupsAndExpensesHandler = async (req: Request) => {
             );
         }
 
-        // Search all expenses where the user is a participant
         const expenses: Expense[] = await prisma.expense.findMany({
             where: {
                 participants: {
@@ -127,7 +123,6 @@ export const GET: GetMyGroupsAndExpensesHandler = async (req: Request) => {
             },
         });
 
-        // Search all groups where the user is a member
         const groups: Group[] = await prisma.group.findMany({
             where: {
                 members: {

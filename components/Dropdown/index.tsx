@@ -8,6 +8,17 @@ import { ChevronDown } from "lucide-react";
 import Button, { type ButtonProps } from "../Button";
 import Collapse from "../Collapse";
 
+const COLORS = {
+  item: {
+    primary: "hover:bg-primary hover:!text-background",
+    secondary: "hover:bg-secondary hover:!text-background",
+    info: "hover:bg-info hover:!text-background",
+    success: "hover:bg-success hover:!text-background",
+    warning: "hover:bg-warning hover:!text-background",
+    danger: "hover:bg-danger hover:!text-background",
+  },
+};
+
 type DropdownProps = ButtonProps & {
   label: ReactNode;
   items: { label: string; onClick: () => void }[];
@@ -15,15 +26,6 @@ type DropdownProps = ButtonProps & {
   itemVariant?: ButtonProps["variant"];
   itemColor?: ButtonProps["color"];
   itemClassName?: string;
-};
-
-const hoveredItemColors = {
-  primary: "hover:bg-primary hover:!text-background",
-  secondary: "hover:bg-secondary hover:!text-background",
-  info: "hover:bg-info hover:!text-background",
-  success: "hover:bg-success hover:!text-background",
-  warning: "hover:bg-warning hover:!text-background",
-  danger: "hover:bg-danger hover:!text-background",
 };
 
 const Dropdown = ({
@@ -55,8 +57,8 @@ const Dropdown = ({
 
   return (
     <div
-      className={clsx("relative inline-block text-left", containerClassName)}
       ref={ref}
+      className={clsx("relative inline-block text-left", containerClassName)}
     >
       <Button
         onClick={() => setIsOpen((prevState) => !prevState)}
@@ -64,12 +66,17 @@ const Dropdown = ({
       >
         {label}
 
-        <ChevronDown className="h-4 w-4" />
+        <ChevronDown
+          className={clsx(
+            "h-4 w-4 transition-transform duration-300",
+            isOpen && "-rotate-180",
+          )}
+        />
       </Button>
 
       <Collapse
         isOpen={isOpen}
-        className="bg-h-background ring-foreground/50 absolute right-0 z-10 mt-2 w-full min-w-44 origin-top-right shadow-xl ring-1"
+        className="bg-h-background ring-foreground/50 absolute right-0 z-30 mt-2 w-full min-w-44 origin-top-right shadow-xl ring-1"
       >
         <div className="flex flex-col">
           {items.map((item, i) => (
@@ -84,7 +91,7 @@ const Dropdown = ({
                 fullWidth
                 className={clsx(
                   "hover:bg-background justify-start !text-sm !font-medium",
-                  hoveredItemColors[variant],
+                  COLORS.item[variant],
                   itemClassName,
                 )}
               >

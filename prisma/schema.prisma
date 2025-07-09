@@ -66,39 +66,64 @@ model VerificationToken {
   @@map("verification_tokens")
 }
 
-enum GroupType {
-  HOUSEHOLD
-  TRIP
-  FRIENDS
-  COUPLE
-  FAMILY
-  OTHER
-}
+enum ExpenseType {
+  HOUSE_ELECTRONICS
+  HOUSE_FORNITURE
+  HOUSE_MAINTENANCE
+  HOUSE_MORTGAGE
+  HOUSE_OTHER
+  HOUSE_PETS
+  HOUSE_RENT
+  HOUSE_SERVICES
+  HOUSE_SUPPLIES
 
-model Group {
-  id          String        @id @default(cuid())
-  name        String
-  type        GroupType     @default(OTHER)
-  createdAt   DateTime      @default(now())
-  createdById String        @map("created_by")
-  createdBy   User          @relation("UserCreatedGroups", fields: [createdById], references: [id], onDelete: Cascade)
-  members     GroupMember[]
-  expenses    Expense[]
-}
+  FOOD_DRINKS
+  FOOD_FOOD
+  FOOD_OTHER
+  FOOD_UTENSILS
 
-model GroupMember {
-  id      String @id @default(cuid())
-  userId  String
-  groupId String
-  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  group   Group  @relation(fields: [groupId], references: [id])
+  ENTERTAINMENT_GAMES
+  ENTERTAINMENT_MOVIES
+  ENTERTAINMENT_MUSIC
+  ENTERTAINMENT_OTHER
+  ENTERTAINMENT_SPORTS
 
-  @@unique([userId, groupId])
+  UNCATEGORIZED
+
+  TRANSPORT_BUS
+  TRANSPORT_CAR
+  TRANSPORT_FUEL
+  TRANSPORT_HOTEL
+  TRANSPORT_OTHER
+  TRANSPORT_PARKING
+  TRANSPORT_PLANE
+  TRANSPORT_TAXI
+  TRANSPORT_TRAIN
+
+  UTILITIES_CLEANING
+  UTILITIES_HEATING
+  UTILITIES_LIGHT
+  UTILITIES_OTHER
+  UTILITIES_PHONE
+  UTILITIES_TRASH
+  UTILITIES_TV
+  UTILITIES_WATTER
+  UTILITIES_WIFI
+
+  LIFE_CLOTHES
+  LIFE_DOCTORS
+  LIFE_GIFTS
+  LIFE_INSURANCES
+  LIFE_NURSERY
+  LIFE_OTHER
+  LIFE_TAXES
+  LIFE_UNIVERSITY
 }
 
 model Expense {
   id           String               @id @default(cuid())
   name         String
+  type         ExpenseType?
   amount       Float
   paidById     String               @map("paid_by")
   paidBy       User                 @relation(fields: [paidById], references: [id])
@@ -118,4 +143,34 @@ model ExpenseParticipant {
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([expenseId, userId])
+}
+
+enum GroupType {
+  HOUSEHOLD
+  TRIP
+  FRIENDS
+  COUPLE
+  FAMILY
+  OTHER
+}
+
+model Group {
+  id          String        @id @default(cuid())
+  name        String
+  type        GroupType?    @default(OTHER)
+  createdAt   DateTime      @default(now())
+  createdById String        @map("created_by")
+  createdBy   User          @relation("UserCreatedGroups", fields: [createdById], references: [id], onDelete: Cascade)
+  members     GroupMember[]
+  expenses    Expense[]
+}
+
+model GroupMember {
+  id      String @id @default(cuid())
+  userId  String
+  groupId String
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group   Group  @relation(fields: [groupId], references: [id])
+
+  @@unique([userId, groupId])
 }

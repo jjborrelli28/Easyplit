@@ -1,4 +1,7 @@
-import type { GroupType } from "@prisma/client";
+import type {
+    ExpenseType,
+    GroupType
+} from "@prisma/client";
 
 import ICON_MAP from "../icons";
 import API_RESPONSE_CODE from "./API_RESPONSE_CODE";
@@ -71,7 +74,7 @@ export interface User {
 }
 
 export interface GetUserField {
-    id: string;
+    id?: string;
 }
 
 export interface UpdateUserFields {
@@ -87,15 +90,7 @@ export interface DeleteUserFields {
 }
 /* End user types */
 
-// Expenses
-export interface CreateExpenseFields {
-    name: string;
-    createdById: string;
-    amount: number;
-    participantIds: string[];
-    groupId?: string;
-}
-
+/* Expense types */
 export interface ExpenseParticipant {
     id: string;
     expenseId: string;
@@ -107,6 +102,7 @@ export interface ExpenseParticipant {
 export interface Expense {
     id: string;
     name: string;
+    type?: ExpenseType | null;
     amount: number;
     paidById: string;
     paidBy: User;
@@ -116,14 +112,31 @@ export interface Expense {
     participants: ExpenseParticipant[];
 }
 
-// Groups
-export interface CreateGroupFields {
+export interface CreateExpenseFields {
     name: string;
-    type?: GroupType;
-    createdById: string;
-    memberIds: string[];
+    type?: ExpenseType;
+    amount: number;
+    participantIds: string[];
+    participants: Session["user"][];
+    paidById: string;
+    groupId?: string;
 }
 
+export interface ExpenseCreationFieldErrors {
+    name?: string;
+    type?: string;
+    amount?: string;
+    participantIds?: string;
+    paidById?: string;
+    groupId?: string;
+}
+
+export interface DeleteExpenseGroupFields {
+    data: { id?: string };
+}
+/* End expense types */
+
+/* Group types */
 export interface GroupMember {
     id: string;
     userId: string;
@@ -142,6 +155,21 @@ export interface Group {
     expenses?: Expense[];
 }
 
-export interface DeleteExpenseGroupFields {
-    data: { id?: string };
+export interface CreateGroupFields {
+    name: string;
+    type?: GroupType;
+    createdById: string;
+    memberIds: string[];
+    expenses?: Expense[];
 }
+
+export interface GroupCreationFieldErrors {
+    name?: string;
+    type?: string;
+    createdById?: string;
+    memberIds?: string;
+    expenses?: string;
+}
+/* End group types */
+
+

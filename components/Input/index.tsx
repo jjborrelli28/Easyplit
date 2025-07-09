@@ -15,7 +15,7 @@ import { Eye, EyeOff, Pencil, PencilOff } from "lucide-react";
 import Button from "../Button";
 import InputErrorMessage from "../InputErrorMessage";
 
-interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
+export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: null | string;
   fullWidth?: boolean;

@@ -28,11 +28,10 @@ export const POST: UpdateUserHandler = async (req: Request) => {
     try {
         const body = await req.json();
 
-        // Field format validation
         const res = updateUserSchema.safeParse(body);
 
         if (!res.success) {
-            const fields = parseZodErrors(res.error) as unknown as UpdateUserFields;
+            const fields = parseZodErrors(res.error) as UpdateUserFields;
 
             return NextResponse.json(
                 {
@@ -50,14 +49,12 @@ export const POST: UpdateUserHandler = async (req: Request) => {
 
         const { id, name, password, currentPassword } = res.data;
 
-        // Search user by id
         let user = await prisma.user.findFirst({
             where: {
                 id,
             },
         });
 
-        // User not found
         if (!user) {
             return NextResponse.json(
                 {
@@ -75,7 +72,6 @@ export const POST: UpdateUserHandler = async (req: Request) => {
         const nameIsModified = name !== '' && name !== user.name;
         const passwordModified = password !== '' && password !== user.password;
 
-        // Check if no changes have been made
         if (!nameIsModified && !passwordModified) {
             return NextResponse.json({
                 success: false,
@@ -87,9 +83,7 @@ export const POST: UpdateUserHandler = async (req: Request) => {
             });
         }
 
-        // If the name is modified
         if (nameIsModified) {
-            // Update user name
             user = await prisma.user.update({
                 where: { id },
                 data: {
@@ -98,9 +92,7 @@ export const POST: UpdateUserHandler = async (req: Request) => {
             });
         }
 
-        // If the password is modified
         if (passwordModified && currentPassword) {
-            // Check if the user has a password
             if (!user?.password) {
                 return NextResponse.json(
                     {
@@ -115,7 +107,6 @@ export const POST: UpdateUserHandler = async (req: Request) => {
                 );
             }
 
-            // Credential verification
             const validUser = await compare(currentPassword, user.password);
 
             if (!validUser) {
@@ -134,7 +125,6 @@ export const POST: UpdateUserHandler = async (req: Request) => {
 
             const hashedNewtPassword = await hashPassword(password);
 
-            // Update user password
             user = await prisma.user.update({
                 where: { id },
                 data: {
@@ -196,11 +186,11 @@ type DeleteUserHandler = (
     >
 >;
 
+// Delete user
 export const DELETE: DeleteUserHandler = async (req) => {
     try {
         const body = await req.json();
 
-        // Field format validation
         const res = deleteUserSchema.safeParse(body);
 
         if (!res.success) {
@@ -222,10 +212,8 @@ export const DELETE: DeleteUserHandler = async (req) => {
 
         const { id, password } = res.data;
 
-        // Search user by id
         const user = await prisma.user.findFirst({ where: { id } });
 
-        // User not found
         if (!user) {
             return NextResponse.json(
                 {
@@ -240,9 +228,7 @@ export const DELETE: DeleteUserHandler = async (req) => {
             );
         }
 
-        // Check if the user has a password
         if (user?.password) {
-            // Credential verification
             const validUser = await compare(password, user.password);
 
             if (!validUser) {
@@ -260,7 +246,6 @@ export const DELETE: DeleteUserHandler = async (req) => {
             }
         }
 
-        // Check if the user has created groups
         const groupsCount = await prisma.group.count({
             where: {
                 createdById: id,
@@ -281,7 +266,6 @@ export const DELETE: DeleteUserHandler = async (req) => {
             );
         }
 
-        // Check if the user has created expenses
         const expensesCount = await prisma.expense.count({
             where: {
                 paidById: id,
@@ -302,7 +286,6 @@ export const DELETE: DeleteUserHandler = async (req) => {
             );
         }
 
-        // Remove user
         await prisma.user.delete({
             where: { id },
         });

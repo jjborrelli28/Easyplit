@@ -3,7 +3,7 @@ import { useSession } from "next-auth/react";
 import clsx from "clsx";
 import { CircleChevronDown } from "lucide-react";
 
-import type { Expense, Group } from "@/lib/api/types";
+import type { Expense, Group } from "@prisma/client";
 
 import Button from "../Button";
 import Card, { CARD_TYPE } from "../Card";
@@ -12,12 +12,12 @@ import Spinner from "../Spinner";
 
 const PANEL_TYPE_STYLES = {
   header: {
-    [CARD_TYPE.GROUP]: "top-header lg:col-start-1",
-    [CARD_TYPE.EXPENSE]: "top-[132px] lg:col-start-3",
+    [CARD_TYPE.GROUP]: "top-[132px] lg:col-start-3",
+    [CARD_TYPE.EXPENSE]: "top-header lg:col-start-1",
   },
   list: {
-    [CARD_TYPE.GROUP]: "lg:col-start-1",
-    [CARD_TYPE.EXPENSE]: "lg:col-start-3",
+    [CARD_TYPE.GROUP]: "lg:col-start-3",
+    [CARD_TYPE.EXPENSE]: "lg:col-start-1",
   },
 };
 
@@ -61,7 +61,6 @@ const PanelList = ({
           className="hover:text-foreground/90 inline-block h-6 w-6 cursor-pointer align-middle transition-colors duration-300 lg:hidden"
         >
           <CircleChevronDown
-            strokeWidth={2.5}
             className={clsx(
               "h-6 w-6 transition-transform duration-300",
               isActive && "-rotate-180",

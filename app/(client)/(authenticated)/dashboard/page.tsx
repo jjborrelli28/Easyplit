@@ -57,6 +57,7 @@ const DashboardPage = () => {
 
       <ActionModal
         type={action.type}
+        user={user}
         isOpen={action.modalIsOpen}
         onClose={() => setAction({ type: null, modalIsOpen: false })}
       />

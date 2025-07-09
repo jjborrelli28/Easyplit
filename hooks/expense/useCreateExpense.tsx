@@ -1,23 +1,19 @@
 import { useMutation } from "@tanstack/react-query";
 
+import type { Expense } from "@prisma/client";
+
 import type {
   CreateExpenseFields,
   ErrorResponse,
-  Expense,
+  ExpenseCreationFieldErrors,
   SuccessResponse,
 } from "@/lib/api/types";
 import axios from "@/lib/axios";
 
-interface FieldErrorsCreateExpense
-  extends Omit<CreateExpenseFields, "amount" | "participantIds"> {
-  amount: string;
-  participantIds: string;
-}
-
 const useCreateExpense = () => {
   return useMutation<
     SuccessResponse<Expense>,
-    ErrorResponse<FieldErrorsCreateExpense>,
+    ErrorResponse<ExpenseCreationFieldErrors>,
     CreateExpenseFields
   >({
     mutationFn: async (body) => {

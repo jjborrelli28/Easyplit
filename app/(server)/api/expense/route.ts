@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 
+import type { Expense } from "@prisma/client";
+
+import { EXPENSE_TYPE } from "@/components/ExpenseTypeSelect/constants";
 import API_RESPONSE_CODE from "@/lib/api/API_RESPONSE_CODE";
 import type {
-  CreateExpenseFields,
   DeleteExpenseGroupFields,
-  Expense,
+  ExpenseCreationFieldErrors,
   ServerErrorResponse,
   SuccessResponse,
 } from "@/lib/api/types";
@@ -16,66 +18,53 @@ type CreateExpenseHandler = (
   req: Request,
 ) => Promise<
   NextResponse<
-    SuccessResponse<Expense> | ServerErrorResponse<CreateExpenseFields>
+    SuccessResponse<Expense> | ServerErrorResponse<ExpenseCreationFieldErrors>
   >
 >;
 
 // Create expense
 export const POST: CreateExpenseHandler = async (req: Request) => {
-  const body = await req.json();
-
-  // Format validation
-  const res = createExpenseSchema.safeParse(body);
-
-  if (!res.success) {
-    const fields = parseZodErrors(res.error) as unknown as CreateExpenseFields;
-
-    return NextResponse.json(
-      {
-        success: false,
-        error: {
-          code: API_RESPONSE_CODE.INVALID_FIELD_FORMAT,
-          message: ["Revisá los datos ingresados."],
-          fields,
-          statusCode: 400,
-        },
-      },
-      { status: 400 },
-    );
-  }
-
-  const { name, createdById, amount, participantIds, groupId } = res.data;
-
   try {
-    // Create expense
+    const body = await req.json();
+
+    const res = createExpenseSchema.safeParse(body);
+
+    if (!res.success) {
+      const fields = parseZodErrors(res.error) as ExpenseCreationFieldErrors;
+
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: API_RESPONSE_CODE.INVALID_FIELD_FORMAT,
+            message: ["Revisá los datos ingresados."],
+            fields,
+            statusCode: 400,
+          },
+        },
+        { status: 400 },
+      );
+    }
+
+    const { name, type, amount, paidById, participantIds, groupId } = res.data;
+
     const expense = await prisma.expense.create({
       data: {
         name,
+        type: type ?? EXPENSE_TYPE.UNCATEGORIZED,
         amount,
-        paidById: createdById,
-        groupId: groupId || null,
+        paidBy: {
+          connect: { id: paidById },
+        },
         participants: {
-          create: participantIds.map((userId: string) => ({
-            userId,
-            amount: createdById === userId ? amount : 0,
+          create: participantIds.map((participantId: string) => ({
+            userId: participantId,
+            amount: participantId === paidById ? amount : 0,
           })),
         },
-      },
-      include: {
-        participants: {
-          include: {
-            user: true,
-          },
-        },
-        paidBy: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            image: true
-          },
-        },
-        group: true,
+        ...(groupId && {
+          group: { connect: { id: groupId } },
+        }),
       },
     });
 
@@ -92,7 +81,7 @@ export const POST: CreateExpenseHandler = async (req: Request) => {
           },
         ],
       },
-      data: expense as Expense,
+      data: expense,
     });
   } catch (error) {
     console.error(error);
@@ -125,7 +114,6 @@ export const DELETE: DeleteExpenseHandler = async (req) => {
   try {
     const { id } = await req.json();
 
-    // ID validation
     if (!id || typeof id !== "string" || id.length <= 1) {
       return NextResponse.json(
         {
@@ -140,17 +128,65 @@ export const DELETE: DeleteExpenseHandler = async (req) => {
       );
     }
 
-    // Search expense by id
     const expense = await prisma.expense.findUnique({
       where: { id },
       include: {
-        participants: {
-          include: {
-            user: true,
+        paidBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
           },
         },
-        paidBy: true,
-        group: true,
+        participants: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                image: true,
+              },
+            },
+          },
+        },
+        group: {
+          include: {
+            createdBy: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                image: true,
+              },
+            },
+            expenses: {
+              include: {
+                paidBy: {
+                  select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    image: true,
+                  },
+                },
+                participants: {
+                  include: {
+                    user: {
+                      select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        image: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
       },
     });
 
@@ -168,7 +204,6 @@ export const DELETE: DeleteExpenseHandler = async (req) => {
       );
     }
 
-    // Delete expense
     await prisma.expense.delete({
       where: { id },
     });
@@ -186,7 +221,7 @@ export const DELETE: DeleteExpenseHandler = async (req) => {
           },
         ],
       },
-      data: expense as Expense,
+      data: expense,
     });
   } catch (error) {
     console.error(error);
@@ -217,7 +252,6 @@ export const GET: GetExpenseByIdHandler = async (req) => {
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id");
 
-  // ID validation
   if (!id || typeof id !== "string" || id.length <= 1) {
     return NextResponse.json(
       {
@@ -233,7 +267,6 @@ export const GET: GetExpenseByIdHandler = async (req) => {
   }
 
   try {
-    // Search expense by id
     const expense = await prisma.expense.findUnique({
       where: { id },
       include: {

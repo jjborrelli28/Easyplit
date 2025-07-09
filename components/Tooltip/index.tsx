@@ -24,7 +24,7 @@ const COLOR_MAP: Record<Colors, string> = {
 
 interface TooltipProps {
   children: ReactNode;
-  content: string;
+  content?: string | null;
   color?: Colors;
   placement?: "top" | "bottom" | "left" | "right";
   className?: string;
@@ -40,6 +40,7 @@ const Tooltip = ({
   containerClassName,
 }: TooltipProps) => {
   const ref = useRef<HTMLDivElement | null>(null);
+
   const [visible, setVisible] = useState(false);
   const [position, setPosition] = useState<{ top: number; left: number }>({
     top: 0,
@@ -95,6 +96,8 @@ const Tooltip = ({
     };
   }, [visible, placement]);
 
+  if (!content) return null;
+
   return (
     <>
       <div
@@ -111,7 +114,7 @@ const Tooltip = ({
           <div
             id="tooltip"
             className={clsx(
-              "animate-fade-in border-h-background fixed z-50 border px-2 py-1 text-xs font-semibold text-wrap shadow-xl transition-opacity",
+              "animate-fade-in border-foreground/50 fixed z-50 border px-2 py-1 text-xs font-semibold text-wrap shadow-xl transition-opacity",
               COLOR_MAP[color],
               className,
             )}
