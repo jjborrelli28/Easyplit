@@ -207,8 +207,8 @@ const Card = ({ type, data, loggedInUser }: CardProps) => {
                   : `${participants.length} ${type === CARD_TYPE.EXPENSE ? "participantes" : "miembros"}`}{" "}
                 más{" "}
                 <Button
+                  aria-label="Toggle show participants"
                   onClick={handleToggleCard}
-                  aria-label="Show or hide participants"
                   unstyled
                   className="text-info hover:text-info/90 inline-block h-4 w-4 cursor-pointer align-middle transition-colors duration-300"
                 >
@@ -223,8 +223,8 @@ const Card = ({ type, data, loggedInUser }: CardProps) => {
 
               {IsUserCreator && (
                 <Button
-                  onClick={() => setDeleteModalIsOpen(true)}
                   aria-label="Remove card"
+                  onClick={() => setDeleteModalIsOpen(true)}
                   unstyled
                   className="text-danger hover:text-danger/90 cursor-pointer transition-colors duration-300"
                 >
@@ -235,7 +235,7 @@ const Card = ({ type, data, loggedInUser }: CardProps) => {
 
             <Collapse
               isOpen={participantsIsOpen}
-              containerClassName={clsx(
+              contentClassName={clsx(
                 "flex flex-wrap gap-2 transition=[margin] duration-300",
                 participantsIsOpen && "mt-2",
               )}

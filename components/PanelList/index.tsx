@@ -3,7 +3,7 @@ import { useSession } from "next-auth/react";
 import clsx from "clsx";
 import { CircleChevronDown } from "lucide-react";
 
-import type { Expense, Group } from "@prisma/client";
+import type { Expense, Group } from "@/lib/api/types";
 
 import Button from "../Button";
 import Card, { CARD_TYPE } from "../Card";
@@ -55,8 +55,8 @@ const PanelList = ({
         </p>
 
         <Button
+          aria-label="Toggle show panel list"
           onClick={handleTogglePanel}
-          aria-label="Show or hide panel list"
           unstyled
           className="hover:text-foreground/90 inline-block h-6 w-6 cursor-pointer align-middle transition-colors duration-300 lg:hidden"
         >
@@ -72,11 +72,11 @@ const PanelList = ({
       {/* List */}
       <Collapse
         isOpen={isActive}
-        containerClassName={clsx("flex flex-1 flex-col gap-y-4")}
         className={clsx(
           "lg:row-start-2 lg:grid-rows-[1fr] lg:opacity-100",
           PANEL_TYPE_STYLES.list[type],
         )}
+        contentClassName={clsx("flex flex-1 flex-col gap-y-4")}
       >
         <div
           className={clsx(

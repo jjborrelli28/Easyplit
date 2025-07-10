@@ -10,6 +10,7 @@ type GetSearchGroupsByUserIdHandler = (
     req: Request,
 ) => Promise<NextResponse<SuccessResponse<Group[]> | ServerErrorResponse>>;
 
+// Search groups by user id
 export const GET: GetSearchGroupsByUserIdHandler = async (req: Request) => {
     try {
         const { searchParams } = new URL(req.url);

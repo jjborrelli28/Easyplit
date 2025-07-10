@@ -1,13 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 
-import type { Expense, Group } from "@prisma/client";
-
-import type { SuccessResponse } from "@/lib/api/types";
+import type { Expense, Group, SuccessResponse } from "@/lib/api/types";
 import api from "@/lib/axios";
 
 const getMyExpensesAndGroups = async (userId?: string | null) => {
   const { data } = await api.get<
-    SuccessResponse<{ groups: Group[]; expenses: Expense[] }>
+    SuccessResponse<{ expenses: Expense[]; groups: Group[] }>
   >("/user/groups-n-expenses", {
     params: { userId },
   });

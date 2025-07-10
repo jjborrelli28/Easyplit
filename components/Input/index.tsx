@@ -23,6 +23,7 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   containerClassName?: string;
   labelClassName?: string;
   className?: string;
+  errorClassName?: string;
 }
 
 const Input = ({
@@ -39,6 +40,7 @@ const Input = ({
   containerClassName,
   labelClassName,
   className,
+  errorClassName,
   ...props
 }: InputProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -202,6 +204,7 @@ const Input = ({
           (type === "password" && editableToggle && isEditing && (
             <Button
               ref={showPasswordRef}
+              aria-label="Toggle show password"
               onClick={handleShowPasswordToggle}
               unstyled
               className={clsx(
@@ -216,6 +219,7 @@ const Input = ({
         {editableToggle && (
           <Button
             ref={editableToggleRef}
+            aria-label="Toggle edit input"
             onClick={handleEditableToggle}
             unstyled
             className="mx-3 cursor-pointer"
@@ -229,7 +233,7 @@ const Input = ({
         )}
       </div>
 
-      <InputErrorMessage message={error} />
+      <InputErrorMessage message={error} className={errorClassName} />
     </fieldset>
   );
 };

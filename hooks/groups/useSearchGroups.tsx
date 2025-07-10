@@ -1,24 +1,25 @@
 import { useQuery } from "@tanstack/react-query";
 
 import type { Expense, Group as PrismaGroup } from "@prisma/client";
+import type { AxiosError } from "axios";
 
-import type { SuccessResponse } from "@/lib/api/types";
+import type { ServerErrorResponse, SuccessResponse } from "@/lib/api/types";
 import api from "@/lib/axios";
 
 export interface Group extends PrismaGroup {
   expenses: Expense[];
 }
 
-const searchGroups = async (q: string, userId: string) => {
+const searchGroups = async (q: string, userId: string | null) => {
   const { data } = await api.get<SuccessResponse<Group[]>>("/groups/search", {
     params: { q, userId },
   });
 
-  return data.data;
+  return data.data ?? [];
 };
 
-const useSearchGroups = (q: string, userId?: string) => {
-  return useQuery({
+const useSearchGroups = (q: string, userId?: string | null) => {
+  return useQuery<Group[], AxiosError<ServerErrorResponse>>({
     queryKey: ["search-groups", q, userId],
     queryFn: () => searchGroups(q, userId!),
     enabled: !!userId && q.length >= 2,

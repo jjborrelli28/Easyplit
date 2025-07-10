@@ -57,7 +57,7 @@ const AuthenticatedContent = ({ isOpen, user }: AuthenticatedContentProps) => {
       <Collapse
         isOpen={isOpen}
         className="md:!grid-rows-[1fr] md:!opacity-100"
-        containerClassName="md:overflow-visible"
+        contentClassName="md:overflow-visible"
       >
         <div className="border-foreground box-sizing mt-4 flex flex-col gap-6 border-t py-6 md:mt-0 md:flex-row md:items-center md:border-t-0 md:py-0">
           <nav className="flex flex-col gap-6 md:hidden md:flex-row md:items-center">

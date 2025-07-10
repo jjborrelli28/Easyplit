@@ -2,7 +2,7 @@ import { useState } from "react";
 
 import type { Meta, StoryObj } from "@storybook/react";
 
-import AmountInput, { initialAmoutValue } from ".";
+import AmountInput from ".";
 
 const meta = {
   title: "Components/AmountInput",
@@ -21,7 +21,7 @@ type Story = StoryObj<typeof AmountInput>;
 
 export const Example: Story = {
   render: (args) => {
-    const [value, setValue] = useState(initialAmoutValue);
+    const [value, setValue] = useState(0);
 
     return (
       <div className="border-h-background w-md border p-4">

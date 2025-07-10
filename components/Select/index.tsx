@@ -1,4 +1,4 @@
-import { type ReactNode, useState } from "react";
+import { type ReactNode, useEffect, useState } from "react";
 
 import clsx from "clsx";
 import { ChevronDown } from "lucide-react";
@@ -73,6 +73,14 @@ const Select = ({
 }: SelectProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
+  useEffect(() => {
+    const stillExists = rawOptions.some((opt) => opt.value === value);
+
+    if (!stillExists && value) {
+      onChange("");
+    }
+  }, [rawOptions, value, onChange]);
+
   const selectedOption = rawOptions.find((option) => option.value === value);
   const options = rawOptions.filter(
     (option) => option.value !== selectedOption?.value,
@@ -86,18 +94,15 @@ const Select = ({
 
   return (
     <div className={clsx("relative flex flex-col pt-7", containerClassName)}>
-      {label && (
-        <label
-          className={clsx(
-            "absolute left-0 transform font-semibold transition-all duration-300",
-            !!value
-              ? "text-primary translate-x-1 -translate-y-6 text-sm"
-              : "text-md translate-x-3 translate-y-2.5 text-lg",
-          )}
-        >
-          {label}
-        </label>
-      )}
+      <label
+        className={clsx(
+          "absolute left-0 translate-x-1 -translate-y-6 transform text-sm font-semibold transition-all duration-300",
+          !!value && "text-primary",
+          labelClassName,
+        )}
+      >
+        {label}
+      </label>
 
       <div className="relative inline-block w-full">
         <div
@@ -112,6 +117,7 @@ const Select = ({
           {!noOptions && (
             <Button
               type="button"
+              aria-label="Toggle show options"
               onClick={() => setIsOpen((prev) => !prev)}
               disabled={disabled || noOptions}
               unstyled
@@ -137,7 +143,7 @@ const Select = ({
             "bg-h-background absolute z-10 mt-0 w-full border !border-t-0 shadow-xl",
             COLORS.border[color],
           )}
-          containerClassName="max-h-30 overflow-y-scroll"
+          contentClassName="max-h-30 overflow-y-scroll"
         >
           {options.map((option, i) => (
             <Button

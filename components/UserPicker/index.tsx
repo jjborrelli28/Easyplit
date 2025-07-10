@@ -3,10 +3,10 @@ import { useMemo, useState } from "react";
 import Image from "next/image";
 
 import { Check, Plus, X } from "lucide-react";
+import clsx from "clsx";
 
 import type { User } from "@/lib/api/types";
 
-import clsx from "clsx";
 import Badge from "../Badge";
 import Button from "../Button";
 import InputErrorMessage from "../InputErrorMessage";
@@ -17,7 +17,7 @@ import UserSearchEngine, {
 } from "../UserSearchEngine";
 
 interface UserPickerProps
-  extends Omit<UserSearchEngineProps, "onSelect" | "onChange"> {
+  extends Omit<UserSearchEngineProps, "onChange" | "onSelect"> {
   value: string[];
   onChange: (userIds: string[]) => void;
   onUserListChange?: (users: User[]) => void;
@@ -31,12 +31,12 @@ const UserPicker = ({
   user,
   value,
   onChange,
+  onBlur,
   onUserListChange,
   excludeUserIds = [],
   modalTitle = "Buscar usuario",
   modalListTitle = "Usuarios",
   error,
-  ...restProps
 }: UserPickerProps) => {
   const [users, setUsers] = useState<User[]>([user as User]);
   const [isOpen, setIsOpen] = useState(false);
@@ -108,11 +108,13 @@ const UserPicker = ({
                 rightItem={
                   value.length > 1 && (
                     <Button
+                      type="button"
+                      aria-label="Remove selected user"
                       onClick={() => handleRemove(u.id)}
                       unstyled
-                      className="border-background group-hover:border-background/90 cursor-pointer rounded-full transition-colors duration-300"
+                      className="hover:text-background/90 text-background cursor-pointer rounded-full transition-colors duration-300"
                     >
-                      <X className="text-background group-hover:text-background/90 -mr-1 h-3.5 w-3.5 stroke-3 transition-colors duration-300" />
+                      <X className="-mr-1 h-3.5 w-3.5 stroke-3" />
                     </Button>
                   )
                 }
@@ -125,11 +127,17 @@ const UserPicker = ({
           <Tooltip content="Agregar participante">
             <Button
               type="button"
+              aria-label="Add user"
               onClick={() => setIsOpen(true)}
               unstyled
-              className="bg-info hover:bg-info/90 flex h-6 w-6 cursor-pointer items-center justify-center rounded-full transition-colors duration-300"
+              className={clsx(
+                "text-background hover:bg-background box-border flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border transition-colors duration-300",
+                value.length > 1
+                  ? "border-info bg-info hover:text-info"
+                  : "border-primary bg-primary hover:text-primary",
+              )}
             >
-              <Plus className="text-background h-3.5 w-3.5 stroke-3" />
+              <Plus className="h-3.5 w-3.5 stroke-3" />
             </Button>
           </Tooltip>
         </div>
@@ -142,7 +150,7 @@ const UserPicker = ({
           user={user}
           onSelect={handleSelect}
           excludeUserIds={[...excludeUserIds, ...value]}
-          {...restProps}
+          onBlur={onBlur}
         />
 
         <div className="relative pt-7">
@@ -177,11 +185,13 @@ const UserPicker = ({
                   rightItem={
                     value.length > 1 && (
                       <Button
+                        aria-label="Remove selected user"
+                        type="button"
                         onClick={() => handleRemove(u.id)}
                         unstyled
-                        className="border-background group-hover:border-background/90 cursor-pointer rounded-full transition-colors duration-300"
+                        className="hover:text-background/90 text-background cursor-pointer rounded-full transition-colors duration-300"
                       >
-                        <X className="text-background group-hover:text-background/90 -mr-1 h-3.5 w-3.5 stroke-3 transition-colors duration-300" />
+                        <X className="-mr-1 h-3.5 w-3.5 stroke-3" />
                       </Button>
                     )
                   }
@@ -193,7 +203,12 @@ const UserPicker = ({
           </div>
         </div>
 
-        <Button onClick={handleCloseModal} variant="outlined" fullWidth>
+        <Button
+          type="button"
+          onClick={handleCloseModal}
+          variant="outlined"
+          fullWidth
+        >
           Listo <Check />
         </Button>
       </Modal>

@@ -1,12 +1,14 @@
 "use client";
 
 import { type CSSProperties, useEffect, useRef, useState } from "react";
+
 import clsx from "clsx";
+
 import InputErrorMessage from "../InputErrorMessage";
 
 interface AmountInputProps {
   label?: string;
-  value: number; // Ahora es un number
+  value: number;
   onChange: (formattedValue: number) => void;
   onFocus?: VoidFunction;
   onBlur?: VoidFunction;
@@ -72,7 +74,7 @@ const AmountInput = ({
     onFocus?.();
   };
 
-  const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+  const handleBlur = () => {
     setIsFocused(false);
     onBlur?.();
   };
@@ -85,7 +87,9 @@ const AmountInput = ({
     const formattedString = `${intPart}.${decimalPart}`;
     const formattedNumber = +formattedString;
 
-    onChange(formattedNumber);
+    if (formattedNumber <= 1_000_000_000_000_000) {
+      onChange(formattedNumber);
+    }
   };
 
   return (

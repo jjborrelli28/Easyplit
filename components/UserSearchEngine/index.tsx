@@ -36,8 +36,6 @@ const UserSearchEngine = ({
   label,
   placeholder = "Buscar por nombre o email",
   excludeUserIds = [],
-  error,
-  ...restProps
 }: UserSearchEngineProps) => {
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
@@ -52,10 +50,11 @@ const UserSearchEngine = ({
     return Array.from(ids);
   }, [excludeUserIds, user?.id]);
 
-  const { data: users = [] } = useSearchUsers(
-    debouncedQuery,
-    effectiveExcludedIds,
-  );
+  const {
+    data: users = [],
+    error,
+    isFetched,
+  } = useSearchUsers(debouncedQuery, effectiveExcludedIds);
 
   const debouncedUpdate = useMemo(
     () => debounce((val: string) => setDebouncedQuery(val), 300),
@@ -114,7 +113,12 @@ const UserSearchEngine = ({
         onFocus={handleFocus}
         onBlur={handleBlur}
         onKeyDown={handleKeyDown}
-        {...restProps}
+        error={
+          isFetched && users.length === 0 && !error
+            ? "No se encontraron resultados para su busqueda"
+            : null
+        }
+        errorClassName="text-warning"
       />
 
       <div className="bg-background pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 pl-3">
@@ -168,7 +172,7 @@ const UserSearchEngine = ({
         </ul>
       )}
 
-      <InputErrorMessage message={error} />
+      <InputErrorMessage message={error?.response?.data.error.message} />
     </div>
   );
 };

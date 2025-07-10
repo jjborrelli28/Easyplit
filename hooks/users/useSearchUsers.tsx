@@ -1,6 +1,12 @@
 import { useQuery } from "@tanstack/react-query";
 
-import type { SuccessResponse, User } from "@/lib/api/types";
+import type { AxiosError } from "axios";
+
+import {
+  ServerErrorResponse,
+  type SuccessResponse,
+  type User,
+} from "@/lib/api/types";
 import api from "@/lib/axios";
 
 const searchUsers = async (q: string, excludeUserIds?: string[]) => {
@@ -13,11 +19,11 @@ const searchUsers = async (q: string, excludeUserIds?: string[]) => {
     },
   });
 
-  return data.data;
+  return data.data ?? [];
 };
 
 const useSearchUsers = (q: string, excludeUserIds?: string[]) => {
-  return useQuery({
+  return useQuery<User[], AxiosError<ServerErrorResponse>>({
     queryKey: ["search-users", q, ...(excludeUserIds ?? [])],
     queryFn: () => searchUsers(q, excludeUserIds),
     enabled: q.length >= 2,

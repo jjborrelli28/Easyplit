@@ -204,7 +204,7 @@ const DeleteAccountSection = ({ user }: DeleteAccountSectionProps) => {
                   {([errorMap]) => (
                     <FormErrorMessage
                       message={errorMap.onServer}
-                      containerClassName="!mt-4 !mb-0"
+                      contentClassName="!mt-4 !mb-0"
                     />
                   )}
                 </form.Subscribe>

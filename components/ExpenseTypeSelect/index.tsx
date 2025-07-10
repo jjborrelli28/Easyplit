@@ -64,6 +64,7 @@ const ExpenseTypeSelect = ({
 
           <Button
             type="button"
+            aria-label="Show expense categories"
             onClick={() => setIsisOpen(true)}
             unstyled
             className={clsx(
@@ -96,6 +97,12 @@ const ExpenseTypeSelect = ({
                   return (
                     <Tooltip key={type} content={label}>
                       <Button
+                        type="button"
+                        aria-label="Select expense type"
+                        onClick={() => {
+                          onChange(type);
+                          setIsisOpen(false);
+                        }}
                         unstyled
                         className={clsx(
                           "text-background flex h-10 w-10 cursor-pointer items-center justify-center rounded-full shadow-xl",
@@ -103,10 +110,6 @@ const ExpenseTypeSelect = ({
                             ? "animate-bg-color-pulse"
                             : EXPENSE_TYPES[type].color,
                         )}
-                        onClick={() => {
-                          onChange(type);
-                          setIsisOpen(false);
-                        }}
                       >
                         <Icon className="h-5.5 w-5.5" />
                       </Button>

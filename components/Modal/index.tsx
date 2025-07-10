@@ -68,7 +68,7 @@ const Modal = ({
             {title && <h2 className="text-2xl font-semibold">{title}</h2>}
 
             <Button
-              aria-label="Cerrar"
+              aria-label="Close modal"
               onClick={onClose}
               unstyled
               className="hover:text-foreground/90 cursor-pointer transition-colors duration-300"

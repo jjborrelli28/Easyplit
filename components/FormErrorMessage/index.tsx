@@ -6,14 +6,14 @@ import Collapse from "../Collapse";
 interface FormErrorMessageProps {
   message?: string[] | null;
   className?: string;
-  containerClassName?: string;
+  contentClassName?: string;
   paragraphClassName?: string;
 }
 
 const FormErrorMessage = ({
   message,
   className,
-  containerClassName,
+  contentClassName,
   paragraphClassName,
 }: FormErrorMessageProps) => {
   return (
@@ -21,7 +21,7 @@ const FormErrorMessage = ({
       <div
         className={clsx(
           "border-danger text-danger mt-2 mb-3 flex items-center border",
-          containerClassName,
+          contentClassName,
         )}
       >
         <div className="flex h-full items-center px-3 py-2">

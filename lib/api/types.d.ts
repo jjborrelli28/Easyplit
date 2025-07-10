@@ -114,7 +114,7 @@ export interface Expense {
 
 export interface CreateExpenseFields {
     name: string;
-    type?: ExpenseType;
+    type?: ExpenseType | null;
     amount: number;
     participantIds: string[];
     participants: Session["user"][];

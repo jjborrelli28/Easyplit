@@ -303,15 +303,14 @@ const MyAccountSection = ({ user }: MyAccountSectionProps) => {
                   </Button>
                 </div>
 
-                <form.Subscribe
-                  selector={(state) => [state.errorMap]}
-                  children={([errorMap]) => (
+                <form.Subscribe selector={(state) => [state.errorMap]}>
+                  {([errorMap]) => (
                     <FormErrorMessage
                       message={errorMap.onServer}
-                      containerClassName="!mt-4 !mb-0"
+                      contentClassName="!mt-4 !mb-0"
                     />
                   )}
-                />
+                </form.Subscribe>
               </div>
             </form>
           </>

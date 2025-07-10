@@ -73,7 +73,7 @@ const ExpensePage = () => {
             <>
               <section className="grid-rows-auto grid grid-cols-1 items-center justify-center gap-y-4 lg:grid-cols-2 lg:grid-rows-1 lg:gap-x-8">
                 <div className="flex items-center gap-x-2">
-                  <Receipt className="h-9 w-9 min-w-9" />
+                  <Receipt className="h-9 w-9" />
 
                   <h1 className="truncate text-3xl font-bold">
                     {expense.name}
@@ -101,7 +101,7 @@ const ExpensePage = () => {
 
               <section className="border-h-background flex flex-col gap-y-4 border p-4">
                 <div className="text-info flex items-center gap-x-2">
-                  <Info strokeWidth={2.25} className="h-7 w-8 min-w-7" />
+                  <Info className="h-7 w-8" />
 
                   <h2 className="text-xl font-semibold">
                     Información del gasto
@@ -113,7 +113,7 @@ const ExpensePage = () => {
                 <div className="flex flex-col gap-y-4">
                   <div className="flex flex-col items-start gap-x-4 gap-y-2 lg:flex-row lg:items-center">
                     <div className="text-info flex items-center gap-x-2">
-                      <UserRound className="h-6 w-6 min-w-6" />
+                      <UserRound className="h-6 w-6" />
 
                       <p className="text-lg font-medium">Pagado por:</p>
                     </div>
@@ -126,7 +126,7 @@ const ExpensePage = () => {
                   </div>
 
                   <div className="text-foreground/75 flex items-center gap-x-2">
-                    <CalendarClock className="h-5 w-5 min-w-5" />
+                    <CalendarClock className="h-5 w-5" />
 
                     <p className="text-sm font-medium">
                       Creado el{" "}
@@ -207,13 +207,12 @@ const ExpensePage = () => {
                     </div>
 
                     <Button
+                      aria-label="Toggle show panel list"
                       onClick={handleShowParticipants}
-                      aria-label="Show or hide panel list"
                       unstyled
                       className="hover:text-info/90 h-5 w-5 cursor-pointer align-middle transition-colors duration-300"
                     >
                       <CircleChevronDown
-                        strokeWidth={2.5}
                         className={clsx(
                           "h-5 w-5 transition-transform duration-300",
                           showParticipants && "-rotate-180",

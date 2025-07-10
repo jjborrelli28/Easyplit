@@ -30,7 +30,7 @@ const token = z
         invalid_type_error: "El token debe ser un string",
     })
     .min(10, "El token es inválido");
-const id = z.string();
+const id = z.string();;
 /* End of rules */
 
 /* Form schemes without authentication */
@@ -103,7 +103,7 @@ export const createExpenseSchema = z.object({
         })
         .min(3, "El nombre del gasto debe tener al menos 3 caracteres.")
         .max(50, "El nombre del gasto no puede superar los 50 caracteres."),
-    paidById: id,
+    paidById: z.string().min(3, { message: "Falta seleccionar quien pago el gasto." }),
     participantIds: z
         .array(z.string(), {
             required_error: "Debes agregar al menos 2 participantes al gasto.",
@@ -113,8 +113,8 @@ export const createExpenseSchema = z.object({
         .number({
             required_error: "El monto es obligatorio.",
         })
-        .max(1_000_000_000, {
-            message: "El monto no puede ser mayor a $1.000.000.000",
+        .max(1_000_000_000_000, {
+            message: "El monto no puede ser mayor a $1.000.000.000.000",
         })
         .refine((val) => val !== 0, {
             message: "El monto no puede ser $0.",

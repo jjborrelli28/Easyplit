@@ -43,8 +43,8 @@ const ThemeToggle = () => {
 
   return (
     <button
-      onClick={handleToggle}
       aria-label="Change theme"
+      onClick={handleToggle}
       className="group bg-h-background border-primary relative flex h-8 w-16 cursor-pointer items-center rounded-full border px-1 transition-colors duration-300"
     >
       {isMounted && (

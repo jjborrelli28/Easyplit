@@ -45,14 +45,14 @@ export const POST: CreateGroupHandler = async (req: Request) => {
     );
   }
 
-  const { name, type, createdById, memberIds } = res.data;
+  const { name, createdById, memberIds } = res.data;
 
   try {
     // Create group
     const group = await prisma.group.create({
       data: {
         name,
-        type,
+        //    type,
         createdById,
         members: {
           create: memberIds.map((userId: string) => ({
@@ -109,80 +109,6 @@ export const POST: CreateGroupHandler = async (req: Request) => {
           code: API_RESPONSE_CODE.INTERNAL_SERVER_ERROR,
           message: ["Error interno del servidor."],
           details: error,
-          statusCode: 500,
-        },
-      },
-      { status: 500 },
-    );
-  }
-};
-
-type GetLinkedGroupsHandler = (
-  req: Request,
-) => Promise<
-  NextResponse<
-    SuccessResponse<Group[]> | ServerErrorResponse<CreateGroupFields>
-  >
->;
-
-// Get linked groups
-export const GET: GetLinkedGroupsHandler = async (req: Request) => {
-  const { searchParams } = new URL(req.url);
-  const userId = searchParams.get("userId");
-
-  // User not found
-  if (!userId) {
-    return NextResponse.json({
-      success: true,
-      code: API_RESPONSE_CODE.USERS_FOUND,
-      data: [],
-    });
-  }
-
-  try {
-    // Search linked group by user id
-    const groups = await prisma.group.findMany({
-      where: {
-        members: {
-          some: {
-            userId,
-          },
-        },
-      },
-      include: {
-        createdBy: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            image: true,
-          },
-        },
-        members: {
-          include: {
-            user: true,
-          },
-        },
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
-
-    return NextResponse.json({
-      success: true,
-      code: API_RESPONSE_CODE.DATA_FETCHED,
-      data: groups as Group[],
-    });
-  } catch (error) {
-    console.error(error);
-
-    return NextResponse.json(
-      {
-        success: false,
-        error: {
-          code: API_RESPONSE_CODE.INTERNAL_SERVER_ERROR,
-          message: ["Error interno del servidor."],
           statusCode: 500,
         },
       },

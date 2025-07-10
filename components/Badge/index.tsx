@@ -21,6 +21,7 @@ export interface BadgeProps {
   rightItem?: ReactNode;
   color?: Colors;
   className?: string;
+  contentClassName?: string;
 }
 
 const Badge = ({
@@ -30,10 +31,16 @@ const Badge = ({
   rightItem,
   color = "primary",
   className,
+  contentClassName,
 }: BadgeProps) => {
   return (
     <span ref={ref} className={clsx(BASE_STYLES, COLORS[color], className)}>
-      <span className="flex items-center gap-x-2 truncate overflow-visible text-xs font-semibold">
+      <span
+        className={clsx(
+          "flex items-center gap-x-2 truncate overflow-visible text-xs font-semibold",
+          contentClassName,
+        )}
+      >
         {leftItem}
 
         <span className="truncate">{children}</span>

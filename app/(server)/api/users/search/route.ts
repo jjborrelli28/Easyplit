@@ -1,9 +1,15 @@
 import { NextResponse } from "next/server";
 
-import prisma from "@/lib/prisma";
 import API_RESPONSE_CODE from "@/lib/api/API_RESPONSE_CODE";
+import type { ServerErrorResponse, SuccessResponse, User } from "@/lib/api/types";
+import prisma from "@/lib/prisma";
 
-export async function GET(req: Request) {
+type GetSearchUsersHandler = (
+    req: Request,
+) => Promise<NextResponse<SuccessResponse<User[]> | ServerErrorResponse>>;
+
+// Search users by name or email
+export const GET: GetSearchUsersHandler = async (req: Request) => {
     try {
         const { searchParams } = new URL(req.url);
         const q = searchParams.get("q");

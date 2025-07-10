@@ -17,7 +17,7 @@ interface GroupAndExpenseListProps {
 const GroupAndExpenseList = ({ user }: GroupAndExpenseListProps) => {
   const { data, isPending } = useGetMyExpensesAndGroups(user?.id);
 
-  const [activePanel, setActivePanel] = useState<CARD_TYPE>(CARD_TYPE.GROUP);
+  const [activePanel, setActivePanel] = useState<CARD_TYPE>(CARD_TYPE.EXPENSE);
 
   const handleTogglePanel = () =>
     setActivePanel((prevState) =>

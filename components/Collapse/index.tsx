@@ -6,14 +6,14 @@ interface CollapseProps {
   children: ReactNode;
   isOpen: boolean;
   className?: string;
-  containerClassName?: string;
+  contentClassName?: string;
 }
 
 const Collapse = ({
   children,
   isOpen,
   className,
-  containerClassName,
+  contentClassName,
 }: CollapseProps) => {
   return (
     <div
@@ -23,7 +23,7 @@ const Collapse = ({
         isOpen && "grid-rows-[1fr] opacity-100",
       )}
     >
-      <div className={clsx("overflow-hidden", containerClassName)}>
+      <div className={clsx("overflow-hidden", contentClassName)}>
         {children}
       </div>
     </div>
