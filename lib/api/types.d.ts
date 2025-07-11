@@ -1,12 +1,10 @@
-import type {
-    ExpenseType,
-    GroupType
-} from "@prisma/client";
+import type { ExpenseType, GroupType } from "@prisma/client";
 
 import ICON_MAP from "../icons";
 import API_RESPONSE_CODE from "./API_RESPONSE_CODE";
 
 import type { MessageCardProps } from "@/components/MessageCard";
+import { EXPENSE_TYPE } from "@/components/ExpenseTypeSelect/constants";
 
 /* Response message types */
 export type ResponseIcon = keyof typeof ICON_MAP;
@@ -104,22 +102,26 @@ export interface Expense {
     name: string;
     type?: ExpenseType | null;
     amount: number;
+    participants: ExpenseParticipant[];
     paidById: string;
     paidBy: User;
+    paymentDate: Date;
     groupId?: string | null;
     group?: Group | null;
     createdAt: Date;
-    participants: ExpenseParticipant[];
+    createdById: string;
+    createdBy: User;
 }
 
 export interface CreateExpenseFields {
     name: string;
-    type?: ExpenseType | null;
+    type?: EXPENSE_TYPE;
     amount: number;
     participantIds: string[];
-    participants: Session["user"][];
     paidById: string;
+    paymentDate: Date;
     groupId?: string;
+    createdById: string;
 }
 
 export interface ExpenseCreationFieldErrors {
@@ -128,7 +130,9 @@ export interface ExpenseCreationFieldErrors {
     amount?: string;
     participantIds?: string;
     paidById?: string;
+    paymentDate?: string;
     groupId?: string;
+    createdById?: string;
 }
 
 export interface DeleteExpenseGroupFields {
@@ -171,5 +175,3 @@ export interface GroupCreationFieldErrors {
     expenses?: string;
 }
 /* End group types */
-
-

@@ -27,6 +27,10 @@ import MessageCard from "@/components/MessageCard";
 import Select from "@/components/Select";
 import UserPicker from "@/components/UserPicker";
 import { getParticipantOptions } from "..";
+import DatePicker from "@/components/DatePicker";
+import { today } from "@/lib/utils";
+import { EXPENSE_TYPE } from "@/components/ExpenseTypeSelect/constants";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface ExpenseFromProps {
   user: Session["user"];
@@ -39,6 +43,7 @@ const ExpenseForm = ({
   onClose,
   handleShowModalHeader,
 }: ExpenseFromProps) => {
+  const queryClient = useQueryClient();
   const { mutate: createExpense, isPending } = useCreateExpense();
 
   const [participants, setParticipants] = useState<User[]>([user as User]);
@@ -58,10 +63,12 @@ const ExpenseForm = ({
   >({
     defaultValues: {
       name: "",
-      paidById: user.id!,
+      type: EXPENSE_TYPE.UNCATEGORIZED,
       amount: 0,
       participantIds: [user.id!],
-      participants: [user],
+      paidById: user.id!,
+      paymentDate: today,
+      createdById: user.id!,
       groupId: undefined,
     },
     onSubmit: async ({ value }) => {
@@ -70,6 +77,11 @@ const ExpenseForm = ({
           handleShowModalHeader(false);
 
           res?.message && setMessage(res.message);
+          queryClient.invalidateQueries({
+            predicate: (query) =>
+              query.queryKey[0] === "my-groups-and-expenses" &&
+              query.queryKey[1] === user.id!,
+          });
         },
         onError: (res) => {
           const {
@@ -210,6 +222,24 @@ const ExpenseForm = ({
                   }
                 />
               </div>
+            )}
+          </form.Field>
+
+          <form.Field
+            name="paymentDate"
+            validators={{
+              onChange: createExpenseSchema.shape.paymentDate,
+            }}
+          >
+            {(field) => (
+              <DatePicker
+                value={field.state.value}
+                onChange={field.handleChange}
+                error={
+                  field.state.meta.errors[0]?.message ||
+                  field.state.meta.errorMap.onSubmit
+                }
+              />
             )}
           </form.Field>
 

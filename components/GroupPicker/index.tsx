@@ -15,8 +15,8 @@ import Modal from "../Modal";
 
 interface GroupPickerProps
   extends Omit<GroupSearchEngineProps, "onChange" | "onSelect"> {
-  value: string;
-  onChange: (groupId: string) => void;
+  value?: string;
+  onChange: (groupId?: string) => void;
 }
 
 const GroupPicker = ({ user, value, onChange, error }: GroupPickerProps) => {
@@ -42,6 +42,8 @@ const GroupPicker = ({ user, value, onChange, error }: GroupPickerProps) => {
   };
 
   const handleCloseModal = () => setIsOpen(false);
+
+  const excludeGroupIds = value ? [value] : [];
 
   return (
     <>
@@ -79,10 +81,10 @@ const GroupPicker = ({ user, value, onChange, error }: GroupPickerProps) => {
         <GroupSearchEngine
           user={user}
           onSelect={handleSelect}
-          excludeGroupIds={[value]}
+          excludeGroupIds={excludeGroupIds}
         />
 
-        {selectedGroup && (
+        {selectedGroup && !!value && (
           <div className="relative pt-7">
             <label
               className={clsx(

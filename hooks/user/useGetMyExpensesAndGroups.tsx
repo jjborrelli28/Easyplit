@@ -15,7 +15,7 @@ const getMyExpensesAndGroups = async (userId?: string | null) => {
 
 const useGetMyExpensesAndGroups = (userId?: string | null) => {
   return useQuery({
-    queryKey: ["my-groups-and-expenses", userId],
+    queryKey: ["my-expenses-and-groups", userId],
     queryFn: () => getMyExpensesAndGroups(userId),
     enabled: !!userId,
     staleTime: 1000 * 10,

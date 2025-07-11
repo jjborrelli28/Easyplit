@@ -2,6 +2,8 @@ import { z } from "zod";
 
 import { ExpenseType } from "@prisma/client";
 
+import { fiveYearsAgo, today } from "../utils";
+
 import { EXPENSE_TYPE } from "@/components/ExpenseTypeSelect/constants";
 
 /* Rules */
@@ -30,7 +32,7 @@ const token = z
         invalid_type_error: "El token debe ser un string",
     })
     .min(10, "El token es inválido");
-const id = z.string();;
+const id = z.string();
 /* End of rules */
 
 /* Form schemes without authentication */
@@ -103,12 +105,27 @@ export const createExpenseSchema = z.object({
         })
         .min(3, "El nombre del gasto debe tener al menos 3 caracteres.")
         .max(50, "El nombre del gasto no puede superar los 50 caracteres."),
-    paidById: z.string().min(3, { message: "Falta seleccionar quien pago el gasto." }),
+    type: z.nativeEnum(EXPENSE_TYPE).optional(),
     participantIds: z
         .array(z.string(), {
             required_error: "Debes agregar al menos 2 participantes al gasto.",
         })
-        .min(2, "El gasto debe tener al menos 2 participantes.").max(20),
+        .min(2, "El gasto debe tener al menos 2 participantes.")
+        .max(20),
+    paidById: z
+        .string()
+        .min(3, { message: "Falta seleccionar quien pago el gasto." }),
+    paymentDate: z
+        .date({
+            required_error: "La fecha de pago es obligatoria.",
+        })
+        .refine(
+            (d) => d >= fiveYearsAgo && d <= today,
+            {
+                message: "La fecha de pago debe estar entre hoy y los últimos 5 años.",
+            }
+        ),
+    groupId: z.string().optional(),
     amount: z
         .number({
             required_error: "El monto es obligatorio.",
@@ -119,8 +136,7 @@ export const createExpenseSchema = z.object({
         .refine((val) => val !== 0, {
             message: "El monto no puede ser $0.",
         }),
-    type: z.nativeEnum(EXPENSE_TYPE).optional(),
-    groupId: z.string().nullable().optional(),
+    createdById: id,
 });
 
 export const createGroupSchema = z.object({

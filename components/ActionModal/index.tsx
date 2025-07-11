@@ -42,6 +42,7 @@ const ActionModal = ({
       }
       showHeader={showHeader}
       unstyled={!showHeader}
+      className="!gap-y-4"
     >
       {type === ACTION_TYPE.CREATE_EXPENSE && (
         <ExpenseForm

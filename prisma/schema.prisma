@@ -48,13 +48,16 @@ model User {
   resetToken     String?   @unique @map("reset_token")
   resetTokenExp  DateTime? @unique @map("reset_token_exp")
   createdAt      DateTime  @default(now())
-  accounts       Account[]
-  sessions       Session[]
+
+  accounts Account[]
+  sessions Session[]
 
   groupsCreated      Group[]              @relation("UserCreatedGroups")
   GroupMember        GroupMember[]
-  Expense            Expense[]
   ExpenseParticipant ExpenseParticipant[]
+
+  expensesPaid    Expense[] @relation("PaidBy")
+  expensesCreated Expense[] @relation("CreatedBy")
 }
 
 model VerificationToken {
@@ -121,16 +124,24 @@ enum ExpenseType {
 }
 
 model Expense {
-  id           String               @id @default(cuid())
-  name         String
-  type         ExpenseType?
-  amount       Float
-  paidById     String               @map("paid_by")
-  paidBy       User                 @relation(fields: [paidById], references: [id])
-  groupId      String?
-  group        Group?               @relation(fields: [groupId], references: [id])
-  createdAt    DateTime             @default(now())
+  id     String       @id @default(cuid())
+  name   String
+  type   ExpenseType?
+  amount Float
+
+  paidById    String    @map("paid_by")
+  paidBy      User      @relation("PaidBy", fields: [paidById], references: [id])
+  paymentDate DateTime?
+
+  createdById String? @map("created_by")
+  createdBy   User?   @relation("CreatedBy", fields: [createdById], references: [id])
+
   participants ExpenseParticipant[]
+
+  groupId String?
+  group   Group?  @relation(fields: [groupId], references: [id])
+
+  createdAt DateTime @default(now())
 }
 
 model ExpenseParticipant {
@@ -139,8 +150,8 @@ model ExpenseParticipant {
   userId    String
   amount    Float
 
-  expense Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
   user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expense Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
 
   @@unique([expenseId, userId])
 }
@@ -155,22 +166,27 @@ enum GroupType {
 }
 
 model Group {
-  id          String        @id @default(cuid())
-  name        String
-  type        GroupType?    @default(OTHER)
-  createdAt   DateTime      @default(now())
-  createdById String        @map("created_by")
-  createdBy   User          @relation("UserCreatedGroups", fields: [createdById], references: [id], onDelete: Cascade)
-  members     GroupMember[]
-  expenses    Expense[]
+  id   String     @id @default(cuid())
+  name String
+  type GroupType? @default(OTHER)
+
+  createdById String @map("created_by")
+  createdBy   User   @relation("UserCreatedGroups", fields: [createdById], references: [id], onDelete: Cascade)
+
+  members GroupMember[]
+
+  expenses Expense[]
+
+  createdAt DateTime @default(now())
 }
 
 model GroupMember {
   id      String @id @default(cuid())
   userId  String
   groupId String
-  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  group   Group  @relation(fields: [groupId], references: [id])
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  group Group @relation(fields: [groupId], references: [id])
 
   @@unique([userId, groupId])
 }

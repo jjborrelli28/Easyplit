@@ -27,7 +27,10 @@ export const POST: CreateExpenseHandler = async (req: Request) => {
   try {
     const body = await req.json();
 
-    const res = createExpenseSchema.safeParse(body);
+    const parsedPaymentDateString = new Date(body.paymentDate);
+    const data = { ...body, paymentDate: parsedPaymentDateString }
+
+    const res = createExpenseSchema.safeParse(data);
 
     if (!res.success) {
       const fields = parseZodErrors(res.error) as ExpenseCreationFieldErrors;
@@ -46,25 +49,40 @@ export const POST: CreateExpenseHandler = async (req: Request) => {
       );
     }
 
-    const { name, type, amount, paidById, participantIds, groupId } = res.data;
+    const {
+      name,
+      type,
+      amount,
+      participantIds,
+      paidById,
+      paymentDate,
+      groupId,
+      createdById,
+    } = res.data;
 
     const expense = await prisma.expense.create({
       data: {
         name,
         type: type ?? EXPENSE_TYPE.UNCATEGORIZED,
         amount,
-        paidBy: {
-          connect: { id: paidById },
-        },
         participants: {
-          create: participantIds.map((participantId: string) => ({
+          create: participantIds.map((participantId) => ({
             userId: participantId,
             amount: participantId === paidById ? amount : 0,
           })),
         },
+        paidBy: {
+          connect: { id: paidById },
+        },
+        paymentDate,
         ...(groupId && {
-          group: { connect: { id: groupId } },
+          group: {
+            connect: { id: groupId },
+          },
         }),
+        createdBy: {
+          connect: { id: createdById },
+        },
       },
     });
 

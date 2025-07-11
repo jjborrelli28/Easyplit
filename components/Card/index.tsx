@@ -135,7 +135,7 @@ const Card = ({ type, data, loggedInUser }: CardProps) => {
   const creatorUserName = IsUserCreator
     ? "mi"
     : type === CARD_TYPE.EXPENSE
-      ? (data as Expense).paidBy.name
+      ? (data as Expense).createdBy?.name
       : (data as Group).createdBy.name;
   const isDeleting = expenseIsPending || groupIsPending;
 

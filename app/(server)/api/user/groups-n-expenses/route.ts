@@ -73,14 +73,6 @@ export const GET: GetMyExpensesAndGroupsHandler = async (req: Request) => {
                 },
             },
             include: {
-                paidBy: {
-                    select: {
-                        id: true,
-                        name: true,
-                        email: true,
-                        image: true,
-                    },
-                },
                 participants: {
                     include: {
                         user: {
@@ -91,6 +83,14 @@ export const GET: GetMyExpensesAndGroupsHandler = async (req: Request) => {
                                 image: true,
                             },
                         },
+                    },
+                },
+                paidBy: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        image: true,
                     },
                 },
                 group: {
@@ -115,6 +115,14 @@ export const GET: GetMyExpensesAndGroupsHandler = async (req: Request) => {
                                 },
                             },
                         },
+                    },
+                },
+                createdBy: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        image: true,
                     },
                 },
             },
