@@ -128,7 +128,7 @@ const ExpenseForm = ({
             e.preventDefault();
             form.handleSubmit();
           }}
-          className="flex flex-col gap-y-1"
+          className="grid grid-cols-1 gap-y-1 lg:grid-cols-2 lg:gap-x-8"
         >
           <form.Field
             name="name"
@@ -150,6 +150,7 @@ const ExpenseForm = ({
                   field.state.meta.errors[0]?.message ||
                   field.state.meta.errorMap.onSubmit
                 }
+                containerClassName="col-span-1"
               />
             )}
           </form.Field>
@@ -169,6 +170,7 @@ const ExpenseForm = ({
                   field.state.meta.errors[0]?.message ||
                   field.state.meta.errorMap.onSubmit
                 }
+                containerClassName="col-span-1"
               />
             )}
           </form.Field>
@@ -195,6 +197,7 @@ const ExpenseForm = ({
                   field.state.meta.errors[0]?.message ||
                   field.state.meta.errorMap.onSubmit
                 }
+                containerClassName="col-span-1 lg:col-span-2"
               />
             )}
           </form.Field>
@@ -206,7 +209,7 @@ const ExpenseForm = ({
             }}
           >
             {(field) => (
-              <div className="flex flex-col">
+              <div className="col-span-1 flex flex-col">
                 <Select
                   options={getParticipantOptions(participants)}
                   value={field.state.value}
@@ -239,6 +242,7 @@ const ExpenseForm = ({
                   field.state.meta.errors[0]?.message ||
                   field.state.meta.errorMap.onSubmit
                 }
+                containerClassName="col-span-1"
               />
             )}
           </form.Field>
@@ -260,6 +264,7 @@ const ExpenseForm = ({
                   field.state.meta.errors[0]?.message ||
                   field.state.meta.errorMap.onSubmit
                 }
+                containerClassName="col-span-1 lg:col-span-2"
               />
             )}
           </form.Field>
@@ -281,17 +286,28 @@ const ExpenseForm = ({
                   field.state.meta.errors[0]?.message ||
                   field.state.meta.errorMap.onSubmit
                 }
+                containerClassName="col-span-1 mx-auto lg:col-span-2"
               />
             )}
           </form.Field>
 
-          <Button type="submit" className="mt-4" loading={isPending} fullWidth>
+          <Button
+            type="submit"
+            className="col-span-1 mt-4 lg:col-span-2 lg:mt-7"
+            loading={isPending}
+            fullWidth
+          >
             Crear
           </Button>
 
           <form.Subscribe selector={(state) => [state.errorMap]}>
             {([errorMap]) => {
-              return <FormErrorMessage message={errorMap.onServer} />;
+              return (
+                <FormErrorMessage
+                  message={errorMap.onServer}
+                  className="col-span-1 lg:col-span-2"
+                />
+              );
             }}
           </form.Subscribe>
         </form>

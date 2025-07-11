@@ -14,6 +14,7 @@ interface ExpenseTypeSelectProps {
   value?: EXPENSE_TYPE;
   onChange: (value: EXPENSE_TYPE) => void;
   error?: string | null;
+  containerClassName?: string;
 }
 
 const ExpenseTypeSelect = ({
@@ -21,6 +22,7 @@ const ExpenseTypeSelect = ({
   value = EXPENSE_TYPE.UNCATEGORIZED,
   onChange,
   error,
+  containerClassName,
 }: ExpenseTypeSelectProps) => {
   const [isOpen, setIsisOpen] = useState(false);
 
@@ -29,7 +31,7 @@ const ExpenseTypeSelect = ({
 
   return (
     <>
-      <div className="relative flex flex-col pt-7">
+      <div className={clsx("relative flex flex-col pt-7", containerClassName)}>
         {label && (
           <label
             className={clsx(

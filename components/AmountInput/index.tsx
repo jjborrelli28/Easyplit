@@ -1,10 +1,17 @@
 "use client";
 
-import { type CSSProperties, useEffect, useRef, useState } from "react";
+import {
+  type CSSProperties,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 
 import clsx from "clsx";
 
 import InputErrorMessage from "../InputErrorMessage";
+import useWindowsDimensions from "@/hooks/useWindowsDimensions";
 
 interface AmountInputProps {
   label?: string;
@@ -35,12 +42,16 @@ const AmountInput = ({
   className,
   containerClassName,
 }: AmountInputProps) => {
+  const { width } = useWindowsDimensions();
+
   const hasMounted = useRef(false);
+  const lastWidthRef = useRef<number | null>(null);
 
   const [isFocused, setIsFocused] = useState(false);
   const [inputWidth, setInputWidth] = useState(0);
   const [numberWidth, setNumberWidth] = useState(0);
   const [fontScale, setFontScale] = useState(1);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const formattedValue = value.toFixed(2);
   const [integerPart, decimalPart] = formattedValue.split(".");
@@ -61,6 +72,19 @@ const AmountInput = ({
       setFontScale((prev) => prev * 1.1);
     }
   }, [inputWidth, numberWidth, fontScale]);
+
+  useLayoutEffect(() => {
+    const last = lastWidthRef.current;
+
+    if (
+      (last !== null && last < 1024 && width >= 1024) ||
+      (last !== null && last >= 1024 && width < 1024)
+    ) {
+      setRefreshKey((prev) => prev + 1);
+    }
+
+    lastWidthRef.current = width;
+  }, [width]);
 
   const forceCursorToEnd = (e: React.SyntheticEvent<HTMLInputElement>) => {
     const input = e.currentTarget;
@@ -93,7 +117,9 @@ const AmountInput = ({
   };
 
   return (
-    <fieldset className="relative flex w-full flex-col pt-7">
+    <fieldset
+      className={clsx("relative flex w-full flex-col pt-7", containerClassName)}
+    >
       {label && (
         <label
           className={clsx(
@@ -109,7 +135,6 @@ const AmountInput = ({
         className={clsx(
           "relative flex h-22 w-full justify-center",
           disabled && "opacity-60",
-          containerClassName,
         )}
       >
         <input
@@ -131,6 +156,7 @@ const AmountInput = ({
         />
 
         <div
+          key={refreshKey}
           ref={(el) => {
             el && setNumberWidth(el.clientWidth);
           }}
@@ -143,7 +169,7 @@ const AmountInput = ({
         >
           <span
             className={clsx(
-              "px-2 font-semibold transition-colors duration-300",
+              "overflow-hidden px-2 font-semibold transition-colors duration-300",
               value === 0 && "text-foreground/50",
             )}
             style={{ fontSize: `calc(2.5rem * ${fontScale})` }}

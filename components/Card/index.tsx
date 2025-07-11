@@ -147,11 +147,14 @@ const Card = ({ type, data, loggedInUser }: CardProps) => {
       >
         <div
           className={clsx(
-            "flex h-14 w-14 items-center justify-center rounded-full",
+            "flex h-14 w-14 items-center justify-center",
             type === CARD_TYPE.EXPENSE
-              ? EXPENSE_TYPES[
-                  (data as Expense).type ?? EXPENSE_TYPE.UNCATEGORIZED
-                ].color
+              ? [
+                  EXPENSE_TYPES[
+                    (data as Expense).type ?? EXPENSE_TYPE.UNCATEGORIZED
+                  ].color,
+                  "rounded-full",
+                ]
               : GROUP_TYPES[(data as Group).type ?? GROUP_TYPE.OTHER].color,
           )}
         >

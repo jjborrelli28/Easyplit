@@ -19,7 +19,13 @@ interface GroupPickerProps
   onChange: (groupId?: string) => void;
 }
 
-const GroupPicker = ({ user, value, onChange, error }: GroupPickerProps) => {
+const GroupPicker = ({
+  user,
+  value,
+  onChange,
+  error,
+  containerClassName,
+}: GroupPickerProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
 
@@ -47,7 +53,7 @@ const GroupPicker = ({ user, value, onChange, error }: GroupPickerProps) => {
 
   return (
     <>
-      <div className="flex flex-col">
+      <div className={clsx("flex flex-col", containerClassName)}>
         {selectedGroup ? (
           <div className="relative flex flex-col pt-7">
             <label className="text-primary absolute left-0 translate-x-1 -translate-y-6 transform text-sm font-semibold">

@@ -37,6 +37,7 @@ const UserPicker = ({
   modalTitle = "Buscar usuario",
   modalListTitle = "Usuarios",
   error,
+  containerClassName,
 }: UserPickerProps) => {
   const [users, setUsers] = useState<User[]>([user as User]);
   const [isOpen, setIsOpen] = useState(false);
@@ -74,7 +75,7 @@ const UserPicker = ({
 
   return (
     <>
-      <div className="relative flex flex-col pt-7">
+      <div className={clsx("relative flex flex-col pt-7", containerClassName)}>
         {label && (
           <label
             className={clsx(

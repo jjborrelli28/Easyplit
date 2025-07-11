@@ -10,21 +10,24 @@ import { fiveYearsAgo, today } from "@/lib/utils";
 
 import Input from "../Input";
 import { Popover, PopoverContent, PopoverTrigger } from "../Popover";
+import clsx from "clsx";
 
 interface DatePickerProps {
   value?: Date;
   onChange?: (date: Date) => void;
   error?: string | null;
+  containerClassName?: string;
 }
 
 export const DatePicker = ({
   value = today,
   onChange,
   error,
+  containerClassName,
 }: DatePickerProps) => {
   return (
     <Popover>
-      <div className="relative">
+      <div className={clsx("relative", containerClassName)}>
         <Input
           label={value ? "Fecha de pago:" : "Elegí una fecha de pago →"}
           value={
