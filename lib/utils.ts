@@ -1,4 +1,5 @@
-export const today = new Date();
+import { startOfToday, subYears } from "date-fns";
 
-export const fiveYearsAgo = new Date();
-fiveYearsAgo.setFullYear(today.getFullYear() - 5);
+export const today = startOfToday();
+
+export const fiveYearsAgo = subYears(today, 5);
