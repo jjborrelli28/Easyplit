@@ -104,7 +104,7 @@ const Tooltip = ({
         ref={ref}
         onMouseEnter={() => setVisible(true)}
         onMouseLeave={() => setVisible(false)}
-        className={clsx("inline-flex", containerClassName)}
+        className={clsx("inline-flex w-fit", containerClassName)}
       >
         {children}
       </div>

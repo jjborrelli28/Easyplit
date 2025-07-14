@@ -1,23 +1,23 @@
 import { NextResponse } from "next/server";
 
+import type { Group } from "@prisma/client";
+
 import API_RESPONSE_CODE from "@/lib/api/API_RESPONSE_CODE";
 import type {
-  CreateGroupFields,
   DeleteExpenseGroupFields,
-
+  GroupCreationFieldErrors,
   ServerErrorResponse,
-  SuccessResponse,
+  SuccessResponse
 } from "@/lib/api/types";
 import prisma from "@/lib/prisma";
 import { parseZodErrors } from "@/lib/validations/helpers";
 import { createGroupSchema } from "@/lib/validations/schemas";
-import { Group } from "@prisma/client";
 
 type CreateGroupHandler = (
   req: Request,
 ) => Promise<
   NextResponse<
-    SuccessResponse<Group> | ServerErrorResponse<CreateGroupFields>
+    SuccessResponse<Group> | ServerErrorResponse<GroupCreationFieldErrors>
   >
 >;
 
@@ -25,11 +25,10 @@ type CreateGroupHandler = (
 export const POST: CreateGroupHandler = async (req: Request) => {
   const body = await req.json();
 
-  // Format validation
   const res = createGroupSchema.safeParse(body);
 
   if (!res.success) {
-    const fields = parseZodErrors(res.error) as unknown as CreateGroupFields;
+    const fields = parseZodErrors(res.error) as GroupCreationFieldErrors;
 
     return NextResponse.json(
       {
@@ -45,14 +44,13 @@ export const POST: CreateGroupHandler = async (req: Request) => {
     );
   }
 
-  const { name, createdById, memberIds } = res.data;
+  const { name, type, memberIds, createdById, } = res.data;
 
   try {
-    // Create group
     const group = await prisma.group.create({
       data: {
         name,
-        //    type,
+        type,
         createdById,
         members: {
           create: memberIds.map((userId: string) => ({
@@ -97,7 +95,7 @@ export const POST: CreateGroupHandler = async (req: Request) => {
           },
         ],
       },
-      data: group as Group,
+      data: group,
     });
   } catch (error) {
     console.error(error);
@@ -130,7 +128,6 @@ export const DELETE: DeleteGroupHandler = async (req) => {
   try {
     const { id } = await req.json();
 
-    // ID validation
     if (!id || typeof id !== "string" || id.length <= 1) {
       return NextResponse.json(
         {
@@ -145,7 +142,6 @@ export const DELETE: DeleteGroupHandler = async (req) => {
       );
     }
 
-    // Search group by id
     const group = await prisma.group.findUnique({
       where: { id },
       include: {
@@ -179,7 +175,6 @@ export const DELETE: DeleteGroupHandler = async (req) => {
       );
     }
 
-    // Delete group
     await prisma.groupMember.deleteMany({
       where: { groupId: id },
     });

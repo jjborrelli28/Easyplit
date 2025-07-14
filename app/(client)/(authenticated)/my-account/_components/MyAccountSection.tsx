@@ -8,7 +8,7 @@ import { useSession } from "next-auth/react";
 import { useForm } from "@tanstack/react-form";
 import clsx from "clsx";
 
-import useUpdateUser from "@/hooks/user/useUpdateUser";
+import useUpdateUser from "@/hooks/data/user/useUpdateUser";
 
 import type {
   ResponseMessage,

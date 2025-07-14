@@ -4,7 +4,7 @@ import type { Session } from "next-auth";
 
 import clsx from "clsx";
 
-import useGetMyExpensesAndGroups from "@/hooks/user/useGetMyExpensesAndGroups";
+import useGetMyExpensesAndGroups from "@/hooks/data/user/useGetMyExpensesAndGroups";
 
 import { CARD_TYPE } from "@/components/Card";
 import PanelList from "@/components/PanelList";

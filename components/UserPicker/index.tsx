@@ -92,7 +92,7 @@ const UserPicker = ({
 
         <div className="flex max-h-25 flex-wrap gap-2 overflow-y-scroll py-3">
           {selectedUsers.map((u) => (
-            <Tooltip key={u.id} content={u.name ?? ""}>
+            <Tooltip key={u.id} color="info" content={u.name}>
               <Badge
                 color="info"
                 leftItem={
@@ -125,17 +125,15 @@ const UserPicker = ({
             </Tooltip>
           ))}
 
-          <Tooltip content="Agregar participante">
+          <Tooltip color="info" content="Agregar participante">
             <Button
               type="button"
               aria-label="Add user"
               onClick={() => setIsOpen(true)}
               unstyled
               className={clsx(
-                "text-background hover:bg-background box-border flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border transition-colors duration-300",
-                value.length > 1
-                  ? "border-info bg-info hover:text-info"
-                  : "border-primary bg-primary hover:text-primary",
+                "text-background border-info bg-info hover:text-info hover:bg-background box-border flex h-6 w-6 cursor-pointer items-center justify-center rounded-full border transition-colors duration-300",
+                value.length > 1 ? "" : "",
               )}
             >
               <Plus className="h-3.5 w-3.5 stroke-3" />
@@ -169,7 +167,7 @@ const UserPicker = ({
 
           <div className="flex max-h-50 flex-wrap gap-2 overflow-y-scroll pt-3">
             {selectedUsers.map((u) => (
-              <Tooltip key={u.id} content={u.name}>
+              <Tooltip key={u.id} color="info" content={u.name}>
                 <Badge
                   color="info"
                   leftItem={

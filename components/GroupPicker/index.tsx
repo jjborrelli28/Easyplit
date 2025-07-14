@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import clsx from "clsx";
 import { Check, Trash } from "lucide-react";
 
-import type { Group } from "@/hooks/groups/useSearchGroups";
+import type { Group } from "@/hooks/data/groups/useSearchGroups";
 
 import Button from "../Button";
 import GroupSearchEngine, {

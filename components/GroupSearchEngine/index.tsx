@@ -8,7 +8,9 @@ import clsx from "clsx";
 import debounce from "lodash.debounce";
 import { Search } from "lucide-react";
 
-import useSearchGroups, { type Group } from "@/hooks/groups/useSearchGroups";
+import useSearchGroups, {
+  type Group,
+} from "@/hooks/data/groups/useSearchGroups";
 
 import { GROUP_TYPE, GROUP_TYPES } from "../GroupTypeSelect/constants";
 import Input, { type InputProps } from "../Input";

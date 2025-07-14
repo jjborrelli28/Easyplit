@@ -6,7 +6,7 @@ import api from "@/lib/axios";
 const getMyExpensesAndGroups = async (userId?: string | null) => {
   const { data } = await api.get<
     SuccessResponse<{ expenses: Expense[]; groups: Group[] }>
-  >("/user/groups-n-expenses", {
+  >("/user/expenses-groups", {
     params: { userId },
   });
 

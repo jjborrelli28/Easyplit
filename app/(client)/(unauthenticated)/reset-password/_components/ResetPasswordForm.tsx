@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 
 import { useForm } from "@tanstack/react-form";
 
-import useResetPassword from "@/hooks/auth/useResetPassword";
+import useResetPassword from "@/hooks/data/auth/useResetPassword";
 
 import type {
   ResetPasswordFields,

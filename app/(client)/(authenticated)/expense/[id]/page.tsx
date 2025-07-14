@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import clsx from "clsx";
 
-import useGetExpenseById from "@/hooks/expense/useGetExpenseById";
+import useGetExpenseById from "@/hooks/data/expense/useGetExpenseById";
 
 import PageContainer from "@/components/PageContainer";
 import Spinner from "@/components/Spinner";

@@ -8,6 +8,8 @@ import type { User } from "@/lib/api/types";
 
 import Modal, { type ModalProps } from "../Modal";
 import ExpenseForm from "./components/ExpenseForm";
+import GroupForm from "./components/GroupForm";
+import clsx from "clsx";
 
 export enum ACTION_TYPE {
   CREATE_EXPENSE = "CREATE_EXPENSE",
@@ -42,7 +44,10 @@ const ActionModal = ({
       }
       showHeader={showHeader}
       unstyled={!showHeader}
-      className="!gap-y-4 lg:!w-3xl lg:!max-w-3xl lg:!gap-y-8"
+      className={clsx(
+        "!gap-y-4 lg:!gap-y-8",
+        type === ACTION_TYPE.CREATE_EXPENSE && "lg:!w-3xl lg:!max-w-3xl",
+      )}
     >
       {type === ACTION_TYPE.CREATE_EXPENSE && (
         <ExpenseForm
@@ -52,13 +57,13 @@ const ActionModal = ({
         />
       )}
 
-      {/* {type === ACTION_TYPE.CREATE_GROUP && (
+      {type === ACTION_TYPE.CREATE_GROUP && (
         <GroupForm
           user={user}
           onClose={onClose}
           handleShowModalHeader={handleShowModalHeader}
         />
-      )} */}
+      )}
     </Modal>
   );
 };

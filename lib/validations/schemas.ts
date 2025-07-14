@@ -1,10 +1,9 @@
 import { z } from "zod";
 
-import { ExpenseType } from "@prisma/client";
-
 import { fiveYearsAgo, today } from "../utils";
 
 import { EXPENSE_TYPE } from "@/components/ExpenseTypeSelect/constants";
+import { GROUP_TYPE } from "@/components/GroupTypeSelect/constants";
 
 /* Rules */
 const name = z
@@ -105,7 +104,11 @@ export const createExpenseSchema = z.object({
         })
         .min(3, "El nombre del gasto debe tener al menos 3 caracteres.")
         .max(50, "El nombre del gasto no puede superar los 50 caracteres."),
-    type: z.nativeEnum(EXPENSE_TYPE).optional(),
+    type: z
+        .nativeEnum(EXPENSE_TYPE, {
+            invalid_type_error: "El tipo de gasto no es válido.",
+        })
+        .optional(),
     participantIds: z
         .array(z.string(), {
             required_error: "Debes agregar al menos 2 participantes al gasto.",
@@ -119,19 +122,16 @@ export const createExpenseSchema = z.object({
         .date({
             required_error: "La fecha de pago es obligatoria.",
         })
-        .refine(
-            (d) => d >= fiveYearsAgo && d <= today,
-            {
-                message: "La fecha de pago debe estar entre hoy y los últimos 5 años.",
-            }
-        ),
+        .refine((d) => d >= fiveYearsAgo && d <= today, {
+            message: "La fecha de pago debe estar entre hoy y los últimos 5 años.",
+        }),
     groupId: z.string().optional(),
     amount: z
         .number({
             required_error: "El monto es obligatorio.",
         })
-        .max(1_000_000_000_000, {
-            message: "El monto no puede ser mayor a $1.000.000.000.000",
+        .max(100_000_000, {
+            message: "El monto no puede ser mayor a $100.000.000",
         })
         .refine((val) => val !== 0, {
             message: "El monto no puede ser $0.",
@@ -145,10 +145,11 @@ export const createGroupSchema = z.object({
             required_error: "El nombre del grupo es obligatorio.",
         })
         .min(3, "El nombre del grupo debe tener al menos 3 caracteres."),
-    type: z.nativeEnum(ExpenseType, {
-        required_error: "El tipo de grupo es obligatorio.",
-        invalid_type_error: "El tipo de grupo no es válido.",
-    }),
+    type: z
+        .nativeEnum(GROUP_TYPE, {
+            invalid_type_error: "El tipo de grupo no es válido.",
+        })
+        .optional(),
     createdById: z.string({
         required_error: "El ID del creador es obligatorio.",
     }),

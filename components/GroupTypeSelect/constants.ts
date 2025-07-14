@@ -24,27 +24,36 @@ export const GROUP_TYPES = {
     },
     TRIP: {
         icon: Plane,
-        label: "Casa",
+        label: "Viaje",
         color: "transition-colors duration-300 bg-blue hover:bg-blue/90",
     },
     FRIENDS: {
         icon: Handshake,
-        label: "Casa",
+        label: "Amigos",
         color: "transition-colors duration-300 bg-green hover:bg-green/90",
     },
     COUPLE: {
         icon: Heart,
-        label: "Casa",
+        label: "Pareja",
         color: "transition-colors duration-300 bg-red hover:bg-red/90",
     },
     FAMILY: {
         icon: UsersRound,
-        label: "Casa",
+        label: "Familia",
         color: "transition-colors duration-300 bg-orange hover:bg-orange/90",
     },
     OTHER: {
         icon: Component,
-        label: "Casa",
+        label: "Otros",
         color: "transition-colors duration-300 bg-secondary hover:bg-secondary/90",
     },
 };
+
+export const GROUP_CATEGORIES = [
+    GROUP_TYPE.HOUSEHOLD,
+    GROUP_TYPE.FAMILY,
+    GROUP_TYPE.FRIENDS,
+    GROUP_TYPE.COUPLE,
+    GROUP_TYPE.TRIP,
+    GROUP_TYPE.OTHER
+]

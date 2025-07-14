@@ -3,9 +3,9 @@ import { useState } from "react";
 import type { Session } from "next-auth";
 
 import { useForm } from "@tanstack/react-form";
-
-import useCreateExpense from "@/hooks/expense/useCreateExpense";
 import { useQueryClient } from "@tanstack/react-query";
+
+import useCreateExpense from "@/hooks/data/expense/useCreateExpense";
 
 import type {
   CreateExpenseFields,
@@ -91,7 +91,7 @@ const ExpenseForm = ({
           form.setErrorMap({
             onSubmit: {
               fields: fields as Partial<
-                Record<keyof CreateExpenseFields, unknown>
+                Record<keyof ExpenseCreationFieldErrors, unknown>
               >,
             },
             onServer: message,

@@ -3,8 +3,9 @@ import type { ExpenseType, GroupType } from "@prisma/client";
 import ICON_MAP from "../icons";
 import API_RESPONSE_CODE from "./API_RESPONSE_CODE";
 
-import type { MessageCardProps } from "@/components/MessageCard";
 import { EXPENSE_TYPE } from "@/components/ExpenseTypeSelect/constants";
+import { GROUP_TYPE } from "@/components/GroupTypeSelect/constants";
+import type { MessageCardProps } from "@/components/MessageCard";
 
 /* Response message types */
 export type ResponseIcon = keyof typeof ICON_MAP;
@@ -161,17 +162,16 @@ export interface Group {
 
 export interface CreateGroupFields {
     name: string;
-    type?: GroupType;
-    createdById: string;
+    type?: GROUP_TYPE;
     memberIds: string[];
-    expenses?: Expense[];
+    createdById: string;
 }
 
 export interface GroupCreationFieldErrors {
     name?: string;
     type?: string;
-    createdById?: string;
     memberIds?: string;
     expenses?: string;
+    createdById?: string;
 }
 /* End group types */

@@ -97,7 +97,7 @@ const ExpenseTypeSelect = ({
                   const Icon = EXPENSE_TYPES[type].icon;
 
                   return (
-                    <Tooltip key={type} content={label}>
+                    <Tooltip key={type} color="info" content={label}>
                       <Button
                         type="button"
                         aria-label="Select expense type"

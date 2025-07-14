@@ -105,6 +105,9 @@ const AmountInput = ({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value.replace(/\D/g, "");
+
+    if (raw.length > 15) return;
+
     const padded = raw.padStart(3, "0");
     const intPart = padded.slice(0, -2);
     const decimalPart = padded.slice(-2);

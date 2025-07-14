@@ -5,7 +5,7 @@ import { signOut } from "next-auth/react";
 
 import { useForm } from "@tanstack/react-form";
 
-import useDeleteUser from "@/hooks/user/useDeleteUser";
+import useDeleteUser from "@/hooks/data/user/useDeleteUser";
 
 import type {
   DeleteUserFields,

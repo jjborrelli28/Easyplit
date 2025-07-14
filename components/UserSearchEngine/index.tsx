@@ -10,7 +10,7 @@ import clsx from "clsx";
 import debounce from "lodash.debounce";
 import { UserRoundSearch } from "lucide-react";
 
-import useSearchUsers from "@/hooks/users/useSearchUsers";
+import useSearchUsers from "@/hooks/data/users/useSearchUsers";
 
 import type { User } from "@/lib/api/types";
 

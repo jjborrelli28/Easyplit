@@ -3,7 +3,7 @@ import { type Dispatch, type SetStateAction, useRef } from "react";
 import { useForm } from "@tanstack/react-form";
 import type ReCAPTCHA from "react-google-recaptcha";
 
-import useForgotPassword from "@/hooks/auth/useForgotPassword";
+import useForgotPassword from "@/hooks/data/auth/useForgotPassword";
 
 import type {
   ForgotPasswordFields,

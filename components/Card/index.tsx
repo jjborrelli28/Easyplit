@@ -11,8 +11,8 @@ import { format } from "date-fns";
 import { es } from "date-fns/locale";
 import { CircleChevronDown, Trash } from "lucide-react";
 
-import useDeleteExpense from "@/hooks/expense/useDeleteExpense";
-import useDeleteGroup from "@/hooks/group/useDeleteGroup";
+import useDeleteExpense from "@/hooks/data/expense/useDeleteExpense";
+import useDeleteGroup from "@/hooks/data/group/useDeleteGroup";
 
 import type { Expense, Group, ResponseMessage } from "@/lib/api/types";
 import ICON_MAP from "@/lib/icons";
@@ -163,14 +163,18 @@ const Card = ({ type, data, loggedInUser }: CardProps) => {
 
         <div className="flex min-w-0 flex-1 flex-col gap-y-2">
           <div className="flex flex-col gap-y-0.5">
-            <div className="grid-rows-auto grid grid-cols-1 gap-x-4 lg:grid-cols-2 lg:grid-rows-1 lg:items-center">
-              <Tooltip content={data.name} color="info">
-                <p
+            <div className="grid-rows-auto grid grid-cols-1 gap-x-4 lg:grid-cols-[1fr_134px] lg:grid-rows-1 lg:items-center">
+              <Tooltip
+                content={data.name}
+                color="info"
+                containerClassName="truncate"
+              >
+                <span
                   id="name"
                   className="group-hover:text-primary truncate text-lg font-semibold transition-colors duration-300"
                 >
                   {data.name}
-                </p>
+                </span>
               </Tooltip>
 
               {type === CARD_TYPE.EXPENSE && (
