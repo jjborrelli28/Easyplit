@@ -1,5 +1,8 @@
 "use client";
 
+import { useState } from "react";
+
+import clsx from "clsx";
 import { format, isSameDay } from "date-fns";
 import { es } from "date-fns/locale";
 import { CalendarIcon } from "lucide-react";
@@ -10,7 +13,6 @@ import { fiveYearsAgo, today } from "@/lib/utils";
 
 import Input from "../Input";
 import { Popover, PopoverContent, PopoverTrigger } from "../Popover";
-import clsx from "clsx";
 
 interface DatePickerProps {
   value?: Date;
@@ -25,8 +27,16 @@ export const DatePicker = ({
   error,
   containerClassName,
 }: DatePickerProps) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const handleSelect = (date?: Date) => {
+    if (date && onChange) {
+      onChange(date);
+      setIsOpen(false);
+    }
+  };
   return (
-    <Popover>
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
       <div className={clsx("relative", containerClassName)}>
         <Input
           label={value ? "Fecha de pago:" : "Elegí una fecha de pago →"}
@@ -52,9 +62,7 @@ export const DatePicker = ({
           locale={es}
           mode="single"
           selected={value}
-          onSelect={(date) => {
-            if (date && onChange) onChange(date);
-          }}
+          onSelect={handleSelect}
           disabled={{ before: fiveYearsAgo, after: new Date() }}
           modifiersClassNames={{
             selected: "bg-primary !text-background rounded-full font-semibold",

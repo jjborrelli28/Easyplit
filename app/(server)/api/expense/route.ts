@@ -28,7 +28,7 @@ export const POST: CreateExpenseHandler = async (req: Request) => {
     const body = await req.json();
 
     const parsedPaymentDateString = new Date(body.paymentDate);
-    const data = { ...body, paymentDate: parsedPaymentDateString }
+    const data = { ...body, paymentDate: parsedPaymentDateString };
 
     const res = createExpenseSchema.safeParse(data);
 
@@ -290,11 +290,26 @@ export const GET: GetExpenseByIdHandler = async (req) => {
       include: {
         participants: {
           include: {
-            user: true,
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                image: true,
+              },
+            },
           },
         },
         paidBy: true,
         group: true,
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
+          },
+        },
       },
     });
 

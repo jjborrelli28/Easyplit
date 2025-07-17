@@ -178,19 +178,21 @@ const Card = ({ type, data, loggedInUser }: CardProps) => {
               </Tooltip>
 
               {type === CARD_TYPE.EXPENSE && (
-                <Tooltip
-                  content={`$${(data as Expense).amount}`}
-                  color="info"
-                  containerClassName="lg:justify-end"
-                >
-                  <span className="text-primary flex max-w-full cursor-default items-center gap-x-0.75 font-semibold">
-                    <span className="text-sm">$</span>
+                <div className="flex justify-end">
+                  <Tooltip
+                    content={`$${(data as Expense).amount}`}
+                    color="info"
+                    containerClassName="lg:justify-end"
+                  >
+                    <span className="text-primary flex max-w-full cursor-default items-center gap-x-0.75 font-semibold">
+                      <span className="text-sm">$</span>
 
-                    <p className="truncate text-lg">
-                      {(data as Expense).amount}
-                    </p>
-                  </span>
-                </Tooltip>
+                      <p className="truncate text-lg">
+                        {(data as Expense).amount}
+                      </p>
+                    </span>
+                  </Tooltip>
+                </div>
               )}
             </div>
 
