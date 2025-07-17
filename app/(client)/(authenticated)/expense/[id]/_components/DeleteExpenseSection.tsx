@@ -1,20 +1,13 @@
-import { useState } from "react";
+import { type FormEvent, useState } from "react";
 
-import { signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
-import { useForm } from "@tanstack/react-form";
+import useDeleteExpense from "@/hooks/data/expense/useDeleteExpense";
 
-import useDeleteUser from "@/hooks/data/user/useDeleteUser";
-
-import type {
-  DeleteUserFields,
-  ResponseMessage,
-  ServerErrorResponse,
-} from "@/lib/api/types";
+import type { ResponseMessage } from "@/lib/api/types";
 import ICON_MAP from "@/lib/icons";
 
 import Button from "@/components/Button";
-import FormErrorMessage from "@/components/FormErrorMessage";
 import MessageCard from "@/components/MessageCard";
 import Modal from "@/components/Modal";
 
@@ -23,58 +16,44 @@ interface DeleteAccountSectionProps {
 }
 
 const DeleteExpenseSection = ({ expenseId }: DeleteAccountSectionProps) => {
-  const { mutate: deleteUser, isPending } = useDeleteUser();
+  const router = useRouter();
+  const { mutate: deleteExpense, isPending } = useDeleteExpense();
 
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [message, setMessage] = useState<ResponseMessage | null>(null);
 
-  const form = useForm<
-    DeleteUserFields,
-    undefined,
-    undefined,
-    undefined,
-    undefined,
-    undefined,
-    undefined,
-    undefined,
-    () => string[],
-    undefined
-  >({
-    defaultValues: {
-      id: expenseId,
-    },
-    onSubmit: async ({ value }) => {
-      deleteUser(value, {
-        onSuccess: (res) => {
-          form.reset();
+  const handleDelete = (e: FormEvent) => {
+    e.preventDefault();
 
-          res?.message && setMessage(res.message);
-        },
-        onError: (res) => {
-          const {
-            error: { message, fields = {} },
-          }: ServerErrorResponse<DeleteUserFields> = res.response.data;
+    const body = {
+      data: {
+        id: expenseId,
+      },
+    };
 
-          form.setErrorMap({
-            onSubmit: {
-              fields,
-            },
-            onServer: message,
-          });
-        },
-      });
-    },
-  });
+    deleteExpense(body, {
+      onSuccess: (res) => {
+        res?.message && setMessage(res.message);
+      },
+      onError: (res) => {
+        const {
+          error: { message },
+        } = res.response.data;
 
-  const handleCloseModal = () => {
-    setModalIsOpen(false);
-    form.reset();
+        setMessage({
+          color: "danger",
+          icon: "CircleX",
+          title: "No se puedo eliminar el gasto",
+          content: message.map((paragraph) => ({
+            text: paragraph,
+          })),
+        });
+      },
+    });
   };
 
   return (
     <>
-      <hr className="border-h-background" />
-
       <section className="flex justify-end">
         <div className="w-full lg:w-auto">
           <Button
@@ -93,6 +72,7 @@ const DeleteExpenseSection = ({ expenseId }: DeleteAccountSectionProps) => {
         onClose={() => setModalIsOpen(false)}
         showHeader={!message}
         title="¿Estás seguro que querés eliminar el gasto?"
+        unstyled={!!message}
       >
         {message ? (
           <MessageCard
@@ -102,57 +82,45 @@ const DeleteExpenseSection = ({ expenseId }: DeleteAccountSectionProps) => {
               color: message.color,
               start: 3,
               onComplete: async () => {
-                await signOut({ callbackUrl: "/" });
-
                 setModalIsOpen(false);
+                setMessage(null);
+                router.push("/dashboard");
               },
             }}
+            className="w-md"
           >
             {message.content}
           </MessageCard>
         ) : (
           <>
-            <p className="text-sm">
-              Esta acción eliminará tu gasto permanentemente.
-            </p>
-
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                form.handleSubmit();
-              }}
-              className="flex flex-col gap-y-8"
-            >
-              <div className="flex flex-col">
-                <div className="flex flex-col gap-y-4">
-                  <Button
-                    type="submit"
-                    color="danger"
-                    loading={isPending}
-                    fullWidth
-                  >
-                    Eliminar gasto
-                  </Button>
-
-                  <Button
-                    onClick={handleCloseModal}
-                    color="secondary"
-                    fullWidth
-                  >
-                    Cancelar
-                  </Button>
-                </div>
-
-                <form.Subscribe selector={(state) => [state.errorMap]}>
-                  {([errorMap]) => (
-                    <FormErrorMessage
-                      message={errorMap.onServer}
-                      contentClassName="!mt-4 !mb-0"
-                    />
-                  )}
-                </form.Subscribe>
+            <div className="flex flex-col gap-y-8">
+              <div className="flex flex-col gap-y-2">
+                <p className="text-sm">
+                  Esta acción eliminará tu gasto de forma permanente para todos
+                  los participantes del mismo.
+                </p>
               </div>
-            </form>
+            </div>
+
+            <div className="flex flex-col gap-y-4">
+              <Button
+                onClick={handleDelete}
+                color="danger"
+                loading={isPending}
+                fullWidth
+              >
+                Eliminar gasto
+              </Button>
+
+              <Button
+                onClick={() => setModalIsOpen(false)}
+                variant="outlined"
+                color="secondary"
+                fullWidth
+              >
+                Cancelar
+              </Button>
+            </div>
           </>
         )}
       </Modal>

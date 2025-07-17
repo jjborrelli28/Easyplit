@@ -262,7 +262,7 @@ const Card = ({ type, data, loggedInUser }: CardProps) => {
       <Modal
         isOpen={deleteModalIsOpen}
         onClose={() => setDeleteModalIsOpen(false)}
-        showHeader={!message}
+        showHeader={!!message}
         title={`¿Estás seguro de que quieres eliminar este
                   ${type === CARD_TYPE.EXPENSE ? "gasto" : "grupo"}?`}
         unstyled={!!message}
