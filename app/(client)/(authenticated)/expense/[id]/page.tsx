@@ -36,11 +36,11 @@ const ExpensePage = () => {
         <div className="flex flex-1 flex-col gap-y-8">
           {isPending || !loggedUser ? (
             <div className="flex flex-1 flex-col items-center justify-center">
-              <Spinner />
+              <Spinner className="h-12 w-12" />
             </div>
           ) : expense ? (
             <>
-              <HeaderSection expense={expense} />
+              <HeaderSection expense={expense} loggedUser={loggedUser} />
 
               <hr className="border-h-background" />
 

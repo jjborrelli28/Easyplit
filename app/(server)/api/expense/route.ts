@@ -7,12 +7,18 @@ import API_RESPONSE_CODE from "@/lib/api/API_RESPONSE_CODE";
 import type {
   DeleteExpenseGroupFields,
   ExpenseCreationFieldErrors,
+  ExpenseUpdateFieldErrors,
   ServerErrorResponse,
   SuccessResponse,
+  UpdateExpenseFields,
 } from "@/lib/api/types";
 import prisma from "@/lib/prisma";
+import { compareMembers } from "@/lib/utils";
 import { parseZodErrors } from "@/lib/validations/helpers";
-import { createExpenseSchema } from "@/lib/validations/schemas";
+import {
+  createExpenseSchema,
+  updateExpenseSchema,
+} from "@/lib/validations/schemas";
 
 type CreateExpenseHandler = (
   req: Request,
@@ -59,6 +65,63 @@ export const POST: CreateExpenseHandler = async (req: Request) => {
       groupId,
       createdById,
     } = res.data;
+
+    if (groupId) {
+      const group = await prisma.group.findUnique({
+        where: { id: groupId },
+        include: {
+          members: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  image: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      if (!group) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: API_RESPONSE_CODE.NOT_FOUND,
+              message: ["No se encontró el grupo seleccionado."],
+              statusCode: 404,
+            },
+          },
+          { status: 404 },
+        );
+      }
+
+      const pickedParticipants = participantIds.map((id) => ({ id }));
+      const { haveDifferences, differences } = compareMembers(
+        pickedParticipants,
+        group.members,
+      );
+
+      if (haveDifferences && differences.excessParticipants.length > 0) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: API_RESPONSE_CODE.INVALID_FIELD,
+              message: [
+                "Los participantes del gasto deben ser miembros del grupo.",
+              ],
+              details: differences,
+              statusCode: 400,
+            },
+          },
+          { status: 400 },
+        );
+      }
+    }
 
     const expense = await prisma.expense.create({
       data: {
@@ -340,7 +403,7 @@ export const GET: GetExpenseByIdHandler = async (req) => {
           },
         ],
       },
-      data: expense as Expense,
+      data: expense,
     });
   } catch (error) {
     console.error(error);
@@ -352,6 +415,180 @@ export const GET: GetExpenseByIdHandler = async (req) => {
           code: API_RESPONSE_CODE.INTERNAL_SERVER_ERROR,
           message: ["Error interno del servidor."],
           details: error,
+          statusCode: 500,
+        },
+      },
+      { status: 500 },
+    );
+  }
+};
+
+// Update expense
+export const PATCH = async (
+  req: Request,
+): Promise<
+  NextResponse<
+    SuccessResponse<Expense> | ServerErrorResponse<ExpenseUpdateFieldErrors>
+  >
+> => {
+  try {
+    let body = await req.json();
+
+    if (body?.paymentDate) {
+      const parsedPaymentDateString = new Date(body.paymentDate);
+
+      body.paymentDate = parsedPaymentDateString;
+    }
+
+    const res = updateExpenseSchema.safeParse(body);
+
+    if (!res.success) {
+      const fields = parseZodErrors(res.error) as ExpenseUpdateFieldErrors;
+
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: API_RESPONSE_CODE.INVALID_FIELD_FORMAT,
+            message: ["Revisá los datos ingresados."],
+            fields,
+            statusCode: 400,
+          },
+        },
+        { status: 400 },
+      );
+    }
+
+    const {
+      id,
+      name,
+      type,
+      participantIds,
+      paidById,
+      paymentDate,
+      groupId,
+      amount,
+    } = res.data;
+
+    const expense = await prisma.expense.findUnique({
+      where: { id },
+      include: {
+        group: {
+          include: {
+            members: {
+              include: {
+                user: {
+                  select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    image: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!expense) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: API_RESPONSE_CODE.NOT_FOUND,
+            message: ["Gasto no encontrado."],
+            statusCode: 404,
+          },
+        },
+        { status: 404 },
+      );
+    }
+
+    if (expense.group && participantIds) {
+      const pickedParticipants = participantIds.map((id) => ({ id }));
+      const { haveDifferences, differences } = compareMembers(
+        pickedParticipants,
+        expense.group.members,
+      );
+
+      if (haveDifferences && differences.excessParticipants.length > 0) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: API_RESPONSE_CODE.INVALID_FIELD,
+              message: [
+                "Los participantes del gasto deben ser miembros del grupo.",
+              ],
+              details: differences,
+              statusCode: 400,
+            },
+          },
+          { status: 400 },
+        );
+      }
+    }
+
+    const updatedExpense = await prisma.expense.update({
+      where: { id },
+      data: {
+        ...(name && { name }),
+        ...(type && { type }),
+        ...(amount && { amount }),
+        // ...(participantIds && {
+        //   participants: {
+        //     create: participantIds.map((participantId) => ({
+        //       userId: participantId,
+        //       amount: participantId === paidById ? amount : 0,
+        //     })),
+        //   }
+        // }),
+        ...(paidById && {
+          paidBy: {
+            connect: { id: paidById },
+          },
+        }),
+        ...(paymentDate && {
+          paymentDate,
+        }),
+        ...(groupId && {
+          group: {
+            connect: { id: groupId },
+          },
+        }),
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      code: API_RESPONSE_CODE.DATA_UPDATED,
+      message: {
+        color: "success",
+        icon: "CheckCircle",
+        title: "¡Gasto actualizado con éxito!",
+        content: [
+          {
+            text: "Los cambios realizados fueron las siguientes:",
+          },
+          // ...(name
+          //   ? [{ text: `El nombre fue modificado a ${name}.`, style: "small" }]
+          //   : []),
+
+        ],
+      },
+      data: updatedExpense,
+    });
+  } catch (error) {
+    console.error(error);
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: {
+          code: API_RESPONSE_CODE.INTERNAL_SERVER_ERROR,
+          message: ["Error interno del servidor."],
           statusCode: 500,
         },
       },

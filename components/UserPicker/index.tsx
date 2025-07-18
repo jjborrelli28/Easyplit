@@ -202,12 +202,7 @@ const UserPicker = ({
           </div>
         </div>
 
-        <Button
-          type="button"
-          onClick={handleCloseModal}
-          variant="outlined"
-          fullWidth
-        >
+        <Button type="button" onClick={handleCloseModal} fullWidth>
           Listo <Check />
         </Button>
       </Modal>

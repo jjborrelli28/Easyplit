@@ -18,7 +18,7 @@ export const GET: GetSearchUsersHandler = async (req: Request) => {
         if (!q || q.length < 2) {
             return NextResponse.json({
                 success: true,
-                code: API_RESPONSE_CODE.USERS_FOUND,
+                code: API_RESPONSE_CODE.DATA_FETCHED,
                 data: [],
             });
         }
@@ -56,7 +56,7 @@ export const GET: GetSearchUsersHandler = async (req: Request) => {
 
         return NextResponse.json({
             success: true,
-            code: API_RESPONSE_CODE.USERS_FOUND,
+            code: API_RESPONSE_CODE.DATA_FETCHED,
             data: users,
         });
     } catch (error) {

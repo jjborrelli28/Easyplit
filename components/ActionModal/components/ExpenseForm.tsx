@@ -259,6 +259,7 @@ const ExpenseForm = ({
                 user={user}
                 value={field.state.value}
                 onChange={field.handleChange}
+                pickedParticipants={participants}
                 onBlur={field.handleBlur}
                 error={
                   field.state.meta.errors[0]?.message ||

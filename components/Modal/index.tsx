@@ -71,7 +71,7 @@ const Modal = ({
               aria-label="Close modal"
               onClick={onClose}
               unstyled
-              className="hover:text-foreground/90 cursor-pointer transition-colors duration-300"
+              className="hover:text-foreground/90 cursor-pointer pl-4 transition-colors duration-300 lg:pl-8"
             >
               <X />
             </Button>

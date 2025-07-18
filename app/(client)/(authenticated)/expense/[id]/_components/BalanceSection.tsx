@@ -144,7 +144,7 @@ const BalanceSection = ({ expense, loggedUser }: BalanceSectionProps) => {
                 </div>
               )}
 
-              {user.id === loggedUser.id && (
+              {user.id === loggedUser.id && user.id !== expense.paidById && (
                 <div className="flex w-full flex-col items-end justify-end gap-1 lg:w-auto">
                   <Button
                     aria-label="Remove participant"

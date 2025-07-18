@@ -34,7 +34,7 @@ export const GET: GetSearchGroupsByUserIdHandler = async (req: Request) => {
         if (!q || q.length < 2) {
             return NextResponse.json({
                 success: true,
-                code: API_RESPONSE_CODE.GROUPS_FOUND,
+                code: API_RESPONSE_CODE.DATA_FETCHED,
                 data: [],
             });
         }
@@ -53,6 +53,18 @@ export const GET: GetSearchGroupsByUserIdHandler = async (req: Request) => {
             },
             include: {
                 expenses: true,
+                members: {
+                    include: {
+                        user: {
+                            select: {
+                                id: true,
+                                name: true,
+                                email: true,
+                                image: true,
+                            },
+                        },
+                    },
+                },
             },
         });
 

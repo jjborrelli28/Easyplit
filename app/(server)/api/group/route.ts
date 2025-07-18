@@ -155,7 +155,14 @@ export const DELETE: DeleteGroupHandler = async (req) => {
         },
         members: {
           include: {
-            user: true,
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                image: true,
+              },
+            },
           },
         },
       },
@@ -196,7 +203,7 @@ export const DELETE: DeleteGroupHandler = async (req) => {
           },
         ],
       },
-      data: group as Group,
+      data: group,
     });
   } catch (error) {
     console.error(error);

@@ -139,6 +139,28 @@ export interface ExpenseCreationFieldErrors {
 export interface DeleteExpenseGroupFields {
     data: { id?: string };
 }
+
+export interface UpdateExpenseFields {
+    id: string;
+    name?: string;
+    type?: EXPENSE_TYPE;
+    amount?: number;
+    participantIds?: string[];
+    paidById?: string;
+    paymentDate?: Date;
+    groupId?: string;
+}
+
+export interface ExpenseUpdateFieldErrors {
+    id?: string;
+    name?: string;
+    type?: string;
+    amount?: string;
+    participantIds?: string;
+    paidById?: string;
+    paymentDate?: string;
+    groupId?: string;
+}
 /* End expense types */
 
 /* Group types */

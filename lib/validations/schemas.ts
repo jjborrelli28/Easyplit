@@ -32,6 +32,42 @@ const token = z
     })
     .min(10, "El token es inválido");
 const id = z.string();
+const expenseType = z
+    .nativeEnum(EXPENSE_TYPE, {
+        invalid_type_error: "El tipo de gasto no es válido.",
+    })
+    .optional();
+const groupType = z
+    .nativeEnum(GROUP_TYPE, {
+        invalid_type_error: "El tipo de grupo no es válido.",
+    })
+    .optional();
+const participantIds = z
+    .array(z.string(), {
+        required_error: "Debes agregar al menos 2 participantes al gasto.",
+    })
+    .min(2, "El gasto debe tener al menos 2 participantes.")
+    .max(20);
+const paidById = z
+    .string()
+    .min(3, { message: "Falta seleccionar quien pago el gasto." });
+const paymentDate = z
+    .date({
+        required_error: "La fecha de pago es obligatoria.",
+    })
+    .refine((d) => d >= fiveYearsAgo && d <= today, {
+        message: "La fecha de pago debe estar entre hoy y los últimos 5 años.",
+    });
+const amount = z
+    .number({
+        required_error: "El monto es obligatorio.",
+    })
+    .max(100_000_000, {
+        message: "El monto no puede ser mayor a $100.000.000",
+    })
+    .refine((val) => val !== 0, {
+        message: "El monto no puede ser $0.",
+    });
 /* End of rules */
 
 /* Form schemes without authentication */
@@ -96,7 +132,7 @@ export const userSchema = z.object({
 });
 /* End of user form schemas  */
 
-/* Form schemes for expenses */
+/* Expense form schemas */
 export const createExpenseSchema = z.object({
     name: z
         .string({
@@ -104,52 +140,35 @@ export const createExpenseSchema = z.object({
         })
         .min(3, "El nombre del gasto debe tener al menos 3 caracteres.")
         .max(50, "El nombre del gasto no puede superar los 50 caracteres."),
-    type: z
-        .nativeEnum(EXPENSE_TYPE, {
-            invalid_type_error: "El tipo de gasto no es válido.",
-        })
-        .optional(),
-    participantIds: z
-        .array(z.string(), {
-            required_error: "Debes agregar al menos 2 participantes al gasto.",
-        })
-        .min(2, "El gasto debe tener al menos 2 participantes.")
-        .max(20),
-    paidById: z
-        .string()
-        .min(3, { message: "Falta seleccionar quien pago el gasto." }),
-    paymentDate: z
-        .date({
-            required_error: "La fecha de pago es obligatoria.",
-        })
-        .refine((d) => d >= fiveYearsAgo && d <= today, {
-            message: "La fecha de pago debe estar entre hoy y los últimos 5 años.",
-        }),
-    groupId: z.string().optional(),
-    amount: z
-        .number({
-            required_error: "El monto es obligatorio.",
-        })
-        .max(100_000_000, {
-            message: "El monto no puede ser mayor a $100.000.000",
-        })
-        .refine((val) => val !== 0, {
-            message: "El monto no puede ser $0.",
-        }),
+    type: expenseType,
+    participantIds,
+    paidById,
+    paymentDate,
+    groupId: id.optional(),
+    amount,
     createdById: id,
 });
 
+export const updateExpenseSchema = z.object({
+    id,
+    name: name.optional(),
+    type: expenseType,
+    participantIds: participantIds.optional(),
+    paidById: paidById.optional(),
+    paymentDate: paymentDate.optional(),
+    groupId: id.optional(),
+    amount: amount.optional(),
+});
+/* End expense form schemas */
+
+/* Group form schemas */
 export const createGroupSchema = z.object({
     name: z
         .string({
             required_error: "El nombre del grupo es obligatorio.",
         })
         .min(3, "El nombre del grupo debe tener al menos 3 caracteres."),
-    type: z
-        .nativeEnum(GROUP_TYPE, {
-            invalid_type_error: "El tipo de grupo no es válido.",
-        })
-        .optional(),
+    type: groupType,
     createdById: z.string({
         required_error: "El ID del creador es obligatorio.",
     }),
@@ -159,3 +178,4 @@ export const createGroupSchema = z.object({
         })
         .min(2, "El grupo debe tener al menos 2 miembros."),
 });
+/* End group form schemas */

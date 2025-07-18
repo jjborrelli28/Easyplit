@@ -3,11 +3,16 @@ import { useQuery } from "@tanstack/react-query";
 import type { Expense, Group as PrismaGroup } from "@prisma/client";
 import type { AxiosError } from "axios";
 
-import type { ServerErrorResponse, SuccessResponse } from "@/lib/api/types";
+import type {
+  GroupMember,
+  ServerErrorResponse,
+  SuccessResponse,
+} from "@/lib/api/types";
 import api from "@/lib/axios";
 
 export interface Group extends PrismaGroup {
   expenses: Expense[];
+  members: GroupMember[];
 }
 
 const searchGroups = async (q: string, userId: string | null) => {
