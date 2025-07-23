@@ -10,7 +10,6 @@ import type {
   ExpenseUpdateFieldErrors,
   ServerErrorResponse,
   SuccessResponse,
-  UpdateExpenseFields,
 } from "@/lib/api/types";
 import prisma from "@/lib/prisma";
 import { compareMembers } from "@/lib/utils";
@@ -489,6 +488,7 @@ export const PATCH = async (
             },
           },
         },
+        participants: true,
       },
     });
 
@@ -503,6 +503,28 @@ export const PATCH = async (
           },
         },
         { status: 404 },
+      );
+    }
+
+    if (paidById && paidById !== expense.paidById) {
+      const participantsToUpdate = expense.participants.filter(
+        (p) => p.userId === paidById || p.userId === expense.paidById,
+      );
+
+      await Promise.all(
+        participantsToUpdate.map((participant) =>
+          prisma.expenseParticipant.update({
+            where: {
+              expenseId_userId: {
+                expenseId: id,
+                userId: participant.userId,
+              },
+            },
+            data: {
+              amount: participant.userId === paidById ? expense.amount : 0,
+            },
+          }),
+        ),
       );
     }
 
@@ -529,6 +551,33 @@ export const PATCH = async (
           { status: 400 },
         );
       }
+
+      const existingParticipantIds = expense.participants.map((p) => p.userId);
+      const participantsToRemove = expense.participants.filter(
+        (p) => !participantIds.includes(p.userId),
+      );
+      const participantsToAdd = participantIds.filter(
+        (id) => !existingParticipantIds.includes(id),
+      );
+
+      if (participantsToRemove.length) {
+        await prisma.expenseParticipant.deleteMany({
+          where: {
+            expenseId: id,
+            userId: { in: participantsToRemove.map((p) => p.userId) },
+          },
+        });
+      }
+
+      if (participantsToAdd.length) {
+        await prisma.expenseParticipant.createMany({
+          data: participantsToAdd.map((userId) => ({
+            expenseId: id,
+            userId,
+            amount: 0,
+          })),
+        });
+      }
     }
 
     const updatedExpense = await prisma.expense.update({
@@ -537,14 +586,6 @@ export const PATCH = async (
         ...(name && { name }),
         ...(type && { type }),
         ...(amount && { amount }),
-        // ...(participantIds && {
-        //   participants: {
-        //     create: participantIds.map((participantId) => ({
-        //       userId: participantId,
-        //       amount: participantId === paidById ? amount : 0,
-        //     })),
-        //   }
-        // }),
         ...(paidById && {
           paidBy: {
             connect: { id: paidById },
@@ -575,7 +616,6 @@ export const PATCH = async (
           // ...(name
           //   ? [{ text: `El nombre fue modificado a ${name}.`, style: "small" }]
           //   : []),
-
         ],
       },
       data: updatedExpense,

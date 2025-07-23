@@ -17,7 +17,7 @@ const useGetExpenseById = (id?: string | null) => {
     queryFn: () => getLinkedExpenses(id),
     enabled: !!id,
     staleTime: 1000 * 10,
-    refetchInterval: 3000,
+    refetchInterval: 10000,
   });
 };
 

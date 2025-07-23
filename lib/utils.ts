@@ -79,3 +79,19 @@ export const formatAmount = (value: number) => {
         maximumFractionDigits: 2,
     });
 };
+
+export const getParticipantIds = (participants: ExpenseParticipant[]) => {
+    return participants.map((p) => p.userId);
+};
+
+export const getParticipantObjs = (participants: ExpenseParticipant[]) => {
+    const seen = new Set();
+
+    return participants
+        .map((p) => p.user)
+        .filter((user) => {
+            if (seen.has(user.id)) return false;
+            seen.add(user.id);
+            return true;
+        });
+};

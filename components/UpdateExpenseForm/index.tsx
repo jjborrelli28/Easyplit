@@ -1,29 +1,39 @@
+import { type Dispatch, type SetStateAction, useState } from "react";
+
+import { useForm } from "@tanstack/react-form";
+
 import useUpdateExpense from "@/hooks/data/expense/useUpdateExpense";
-import {
+import type {
   Expense,
   ExpenseUpdateFieldErrors,
   ResponseMessage,
   ServerErrorResponse,
   UpdateExpenseFields,
+  User,
 } from "@/lib/api/types";
 import ICON_MAP from "@/lib/icons";
 import { updateExpenseSchema } from "@/lib/validations/schemas";
-import { useForm } from "@tanstack/react-form";
-import { Session } from "next-auth";
-import { Dispatch, SetStateAction, useState } from "react";
+import type { Session } from "next-auth";
+
+import { getParticipantOptions } from "../ActionModal";
 import AmountInput from "../AmountInput";
 import Button from "../Button";
 import DatePicker from "../DatePicker";
 import ExpenseTypeSelect from "../ExpenseTypeSelect";
+import { EXPENSE_TYPE } from "../ExpenseTypeSelect/constants";
 import FormErrorMessage from "../FormErrorMessage";
 import GroupPicker from "../GroupPicker";
 import Input from "../Input";
+import InputErrorMessage from "../InputErrorMessage";
 import MessageCard from "../MessageCard";
 import Modal from "../Modal";
+import Select from "../Select";
 import { modalTitles } from "./constants";
-import { EXPENSE_TYPE } from "../ExpenseTypeSelect/constants";
 
-export type UpdateExpenseFieldKeys = (keyof Omit<UpdateExpenseFields, "id">)[];
+export type UpdateExpenseFieldKeys = (keyof Omit<
+  UpdateExpenseFields,
+  "id" | "participantIds"
+>)[];
 
 interface UpdateExpenseFormProps {
   isOpen: boolean;
@@ -31,6 +41,7 @@ interface UpdateExpenseFormProps {
   expense: Expense;
   user: Session["user"];
   fieldsToUpdate: UpdateExpenseFieldKeys;
+  participantToRemove?: User;
 }
 
 const UpdateExpenseForm = ({
@@ -46,6 +57,7 @@ const UpdateExpenseForm = ({
 
   const editName = fieldsToUpdate.includes("name");
   const editType = fieldsToUpdate.includes("type");
+  const editPaidById = fieldsToUpdate.includes("paidById");
   const editPaymentDate = fieldsToUpdate.includes("paymentDate");
   const editGroupId = fieldsToUpdate.includes("groupId");
   const editAmount = fieldsToUpdate.includes("amount");
@@ -66,8 +78,12 @@ const UpdateExpenseForm = ({
       id: expense.id,
       ...(editName && { name: expense.name }),
       ...(editType && { type: expense.type as EXPENSE_TYPE }),
+      ...(editPaidById && { paidById: expense.paidById }),
       ...(editPaymentDate && {
-        paymentDate: expense.paymentDate,
+        paymentDate:
+          typeof expense.paymentDate === "string"
+            ? new Date(expense.paymentDate)
+            : expense.paymentDate,
       }),
       ...(editAmount && { amount: expense.amount }),
     },
@@ -189,60 +205,33 @@ const UpdateExpenseForm = ({
               </form.Field>
             )}
 
-            {/*
-            <form.Field
-              name="participantIds"
-              validators={{
-                onChange: updateExpenseSchema.shape.participantIds,
-                onBlur: updateExpenseSchema.shape.participantIds,
-              }}
-            >
-              {(field) => (
-                <UserPicker
-                  label="Participantes del gasto"
-                  user={user}
-                  value={field.state.value}
-                  onChange={field.handleChange}
-                  onUserListChange={(e) => setParticipants(e)}
-                  onBlur={field.handleBlur}
-                  excludeUserIds={field.state.value}
-                  modalTitle="Buscar participantes"
-                  modalListTitle="Participantes"
-                  error={
-                    field.state.meta.errors[0]?.message ||
-                    field.state.meta.errorMap.onSubmit
-                  }
-                  containerClassName="col-span-1 lg:col-span-2"
-                />
-              )}
-            </form.Field>
+            {editPaidById && (
+              <form.Field
+                name="paidById"
+                validators={{
+                  onChange: updateExpenseSchema.shape.paidById,
+                }}
+              >
+                {(field) => (
+                  <div className="col-span-1 flex flex-col">
+                    <Select
+                      options={getParticipantOptions(participants)}
+                      value={field.state.value}
+                      onChange={field.handleChange}
+                      label="Pagado por:"
+                      placeholder="Selecciona un participante"
+                    />
 
-            <form.Field
-              name="paidById"
-              validators={{
-                onChange: updateExpenseSchema.shape.paidById,
-              }}
-            >
-              {(field) => (
-                <div className="col-span-1 flex flex-col">
-                  <Select
-                    options={getParticipantOptions(participants)}
-                    value={field.state.value}
-                    onChange={field.handleChange}
-                    label="Pagado por:"
-                    placeholder="Selecciona un participante"
-                  />
-
-                  <InputErrorMessage
-                    message={
-                      field.state.meta.errors[0]?.message ||
-                      field.state.meta.errorMap.onSubmit
-                    }
-                  />
-                </div>
-              )}
-            </form.Field>
-*/}
+                    <InputErrorMessage
+                      message={
+                        field.state.meta.errors[0]?.message ||
+                        field.state.meta.errorMap.onSubmit
+                      }
+                    />
+                  </div>
+                )}
+              </form.Field>
+            )}
 
             {editPaymentDate && (
               <form.Field

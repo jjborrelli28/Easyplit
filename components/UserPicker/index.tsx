@@ -29,7 +29,7 @@ interface UserPickerProps
 const UserPicker = ({
   label,
   user,
-  value,
+  value = [],
   onChange,
   onBlur,
   onUserListChange,

@@ -172,7 +172,7 @@ const HeaderSection = ({ expense, loggedUser }: HeaderSectionProps) => {
             <Button
               aria-label="Change payment date"
               onClick={() => {
-                setFieldsToUpdate(["paymentDate"]);
+                setFieldsToUpdate(["paidById", "paymentDate"]);
                 setIsOpen(true);
               }}
               unstyled
@@ -180,7 +180,7 @@ const HeaderSection = ({ expense, loggedUser }: HeaderSectionProps) => {
             >
               <Tooltip
                 color="info"
-                content="Modificar fecha de págo"
+                content="Modificar información del pago"
                 containerClassName="!flex"
               >
                 <Repeat className="h-5 w-5" />
