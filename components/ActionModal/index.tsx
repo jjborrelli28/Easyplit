@@ -46,7 +46,9 @@ const ActionModal = ({
       unstyled={!showHeader}
       className={clsx(
         "!gap-y-4 lg:!gap-y-8",
-        type === ACTION_TYPE.CREATE_EXPENSE && "lg:!w-3xl lg:!max-w-3xl",
+        type === ACTION_TYPE.CREATE_EXPENSE &&
+          showHeader &&
+          "lg:!w-3xl lg:!max-w-3xl",
       )}
     >
       {type === ACTION_TYPE.CREATE_EXPENSE && (

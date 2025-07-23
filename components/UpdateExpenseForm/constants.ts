@@ -1,9 +1,9 @@
 export const modalTitles = {
-    name: 'Modificar el nombre del gasto',
-    type: 'Modificar la categoría del gasto',
-    amount: 'Modificar el monto del gasto',
-    participantIds: 'Modificar los participantes del gasto',
+    name: 'Modificar nombre del gasto',
+    type: 'Modificar categoría del gasto',
+    amount: 'Modificar monto del gasto',
+    participantIds: 'Modificar participantes del gasto',
     paidById: 'Modificar quién pagó el gasto',
-    paymentDate: 'Modificar la fecha de pago del gasto',
-    groupId: 'Asignar el gasto a un grupo'
+    paymentDate: 'Modificar fecha de pago del gasto',
+    groupId: 'Asignar gasto a un grupo'
 }

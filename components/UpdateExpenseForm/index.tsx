@@ -1,5 +1,4 @@
-import React, { Dispatch, SetStateAction, useState } from "react";
-import Modal from "../Modal";
+import useUpdateExpense from "@/hooks/data/expense/useUpdateExpense";
 import {
   Expense,
   ExpenseUpdateFieldErrors,
@@ -7,24 +6,22 @@ import {
   ServerErrorResponse,
   UpdateExpenseFields,
 } from "@/lib/api/types";
-import { useForm } from "@tanstack/react-form";
-import useUpdateExpense from "@/hooks/data/expense/useUpdateExpense";
-import MessageCard from "../MessageCard";
 import ICON_MAP from "@/lib/icons";
 import { updateExpenseSchema } from "@/lib/validations/schemas";
-import Input from "../Input";
-import ExpenseTypeSelect from "../ExpenseTypeSelect";
-import UserPicker from "../UserPicker";
-import Select from "../Select";
-import { getParticipantOptions } from "../ActionModal";
-import InputErrorMessage from "../InputErrorMessage";
-import DatePicker from "../DatePicker";
-import GroupPicker from "../GroupPicker";
+import { useForm } from "@tanstack/react-form";
+import { Session } from "next-auth";
+import { Dispatch, SetStateAction, useState } from "react";
 import AmountInput from "../AmountInput";
 import Button from "../Button";
+import DatePicker from "../DatePicker";
+import ExpenseTypeSelect from "../ExpenseTypeSelect";
 import FormErrorMessage from "../FormErrorMessage";
-import { Session } from "next-auth";
+import GroupPicker from "../GroupPicker";
+import Input from "../Input";
+import MessageCard from "../MessageCard";
+import Modal from "../Modal";
 import { modalTitles } from "./constants";
+import { EXPENSE_TYPE } from "../ExpenseTypeSelect/constants";
 
 export type UpdateExpenseFieldKeys = (keyof Omit<UpdateExpenseFields, "id">)[];
 
@@ -47,6 +44,12 @@ const UpdateExpenseForm = ({
 
   const [message, setMessage] = useState<ResponseMessage | null>(null);
 
+  const editName = fieldsToUpdate.includes("name");
+  const editType = fieldsToUpdate.includes("type");
+  const editPaymentDate = fieldsToUpdate.includes("paymentDate");
+  const editGroupId = fieldsToUpdate.includes("groupId");
+  const editAmount = fieldsToUpdate.includes("amount");
+
   const form = useForm<
     UpdateExpenseFields,
     undefined,
@@ -61,9 +64,12 @@ const UpdateExpenseForm = ({
   >({
     defaultValues: {
       id: expense.id,
-      ...(fieldsToUpdate.includes("paymentDate") && {
+      ...(editName && { name: expense.name }),
+      ...(editType && { type: expense.type as EXPENSE_TYPE }),
+      ...(editPaymentDate && {
         paymentDate: expense.paymentDate,
       }),
+      ...(editAmount && { amount: expense.amount }),
     },
     onSubmit: async ({ value }) => {
       updateExpense(value, {
@@ -134,51 +140,56 @@ const UpdateExpenseForm = ({
             }}
             className="flex flex-col gap-y-1"
           >
-            {/* <form.Field
-              name="name"
-              validators={{
-                onBlur: updateExpenseSchema.shape.name,
-              }}
-            >
-              {(field) => (
-                <Input
-                  id="name"
-                  label="Nombre del gasto"
-                  placeholder="Nombre del gasto"
-                  value={field.state.value}
-                  onChange={(e) => field.handleChange(e.target.value)}
-                  onBlur={field.handleBlur}
-                  autoComplete="name"
-                  required
-                  error={
-                    field.state.meta.errors[0]?.message ||
-                    field.state.meta.errorMap.onSubmit
-                  }
-                  containerClassName="col-span-1"
-                />
-              )}
-            </form.Field>
+            {editName && (
+              <form.Field
+                name="name"
+                validators={{
+                  onBlur: updateExpenseSchema.shape.name,
+                }}
+              >
+                {(field) => (
+                  <Input
+                    id="name"
+                    label="Nombre del gasto"
+                    placeholder="Nombre del gasto"
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e.target.value)}
+                    onBlur={field.handleBlur}
+                    autoComplete="name"
+                    required
+                    error={
+                      field.state.meta.errors[0]?.message ||
+                      field.state.meta.errorMap.onSubmit
+                    }
+                    containerClassName="col-span-1"
+                  />
+                )}
+              </form.Field>
+            )}
 
-            <form.Field
-              name="type"
-              validators={{
-                onChange: updateExpenseSchema.shape.type,
-              }}
-            >
-              {(field) => (
-                <ExpenseTypeSelect
-                  label="Tipo de gasto:"
-                  value={field.state.value}
-                  onChange={(e) => field.handleChange(e)}
-                  error={
-                    field.state.meta.errors[0]?.message ||
-                    field.state.meta.errorMap.onSubmit
-                  }
-                  containerClassName="col-span-1"
-                />
-              )}
-            </form.Field>
+            {editType && (
+              <form.Field
+                name="type"
+                validators={{
+                  onChange: updateExpenseSchema.shape.type,
+                }}
+              >
+                {(field) => (
+                  <ExpenseTypeSelect
+                    label="Tipo de gasto:"
+                    value={field.state.value}
+                    onChange={(e) => field.handleChange(e)}
+                    error={
+                      field.state.meta.errors[0]?.message ||
+                      field.state.meta.errorMap.onSubmit
+                    }
+                    containerClassName="col-span-1"
+                  />
+                )}
+              </form.Field>
+            )}
 
+            {/*
             <form.Field
               name="participantIds"
               validators={{
@@ -233,26 +244,28 @@ const UpdateExpenseForm = ({
             </form.Field>
 */}
 
-            <form.Field
-              name="paymentDate"
-              validators={{
-                onChange: updateExpenseSchema.shape.paymentDate,
-              }}
-            >
-              {(field) => (
-                <DatePicker
-                  value={field.state.value}
-                  onChange={field.handleChange}
-                  error={
-                    field.state.meta.errors[0]?.message ||
-                    field.state.meta.errorMap.onSubmit
-                  }
-                  containerClassName="col-span-1"
-                />
-              )}
-            </form.Field>
+            {editPaymentDate && (
+              <form.Field
+                name="paymentDate"
+                validators={{
+                  onChange: updateExpenseSchema.shape.paymentDate,
+                }}
+              >
+                {(field) => (
+                  <DatePicker
+                    value={field.state.value}
+                    onChange={field.handleChange}
+                    error={
+                      field.state.meta.errors[0]?.message ||
+                      field.state.meta.errorMap.onSubmit
+                    }
+                    containerClassName="col-span-1"
+                  />
+                )}
+              </form.Field>
+            )}
 
-            {fieldsToUpdate.includes("groupId") && (
+            {editGroupId && (
               <form.Field
                 name="groupId"
                 validators={{
@@ -277,27 +290,29 @@ const UpdateExpenseForm = ({
               </form.Field>
             )}
 
-            {/* <form.Field
-              name="amount"
-              validators={{
-                onChange: updateExpenseSchema.shape.amount,
-                onBlur: updateExpenseSchema.shape.amount,
-              }}
-            >
-              {(field) => (
-                <AmountInput
-                  label="Monto"
-                  value={field.state.value}
-                  onChange={field.handleChange}
-                  onBlur={field.handleBlur}
-                  error={
-                    field.state.meta.errors[0]?.message ||
-                    field.state.meta.errorMap.onSubmit
-                  }
-                  containerClassName="col-span-1 mx-auto lg:col-span-2"
-                />
-              )}
-            </form.Field> */}
+            {editAmount && (
+              <form.Field
+                name="amount"
+                validators={{
+                  onChange: updateExpenseSchema.shape.amount,
+                  onBlur: updateExpenseSchema.shape.amount,
+                }}
+              >
+                {(field) => (
+                  <AmountInput
+                    label="Monto"
+                    value={field.state.value}
+                    onChange={field.handleChange}
+                    onBlur={field.handleBlur}
+                    error={
+                      field.state.meta.errors[0]?.message ||
+                      field.state.meta.errorMap.onSubmit
+                    }
+                    containerClassName="col-span-1 mx-auto lg:col-span-2"
+                  />
+                )}
+              </form.Field>
+            )}
 
             <Button
               type="submit"

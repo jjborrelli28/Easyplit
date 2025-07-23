@@ -15,7 +15,7 @@ import useWindowsDimensions from "@/hooks/useWindowsDimensions";
 
 interface AmountInputProps {
   label?: string;
-  value: number;
+  value?: number;
   onChange: (formattedValue: number) => void;
   onFocus?: VoidFunction;
   onBlur?: VoidFunction;
@@ -30,7 +30,7 @@ interface AmountInputProps {
 
 const AmountInput = ({
   label,
-  value,
+  value = 0,
   onChange,
   onFocus,
   onBlur,

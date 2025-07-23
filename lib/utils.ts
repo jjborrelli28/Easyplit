@@ -39,7 +39,11 @@ export const compareMembers = (
     participants?: User[] | { id: string }[],
     members?: GroupMember[],
 ) => {
-    if (!participants || !members) return { haveDifferences: false, differences: { missingMembers: [], excessParticipants: [] } };
+    if (!participants || !members)
+        return {
+            haveDifferences: false,
+            differences: { missingMembers: [], excessParticipants: [] },
+        };
 
     const memberIds = members.map((m) => m.userId);
     const participantIds = participants.map((p) => p.id);
@@ -59,7 +63,19 @@ export const compareMembers = (
                 haveDifferences: true,
                 differences: { missingMembers, excessParticipants },
             }
-            : { haveDifferences: false, differences: { missingMembers: [], excessParticipants: [] } };
+            : {
+                haveDifferences: false,
+                differences: { missingMembers: [], excessParticipants: [] },
+            };
 
     return response;
+};
+
+export const formatAmount = (value: number) => {
+    const hasDecimals = value % 1 !== 0;
+
+    return value.toLocaleString("es-AR", {
+        minimumFractionDigits: hasDecimals ? 2 : 0,
+        maximumFractionDigits: 2,
+    });
 };

@@ -11,7 +11,7 @@ const SidePanel = () => {
   const pathname = usePathname();
 
   return (
-    <aside className="mt-header from-h-background to-background hidden w-sm bg-gradient-to-l md:block lg:w-md xl:w-lg">
+    <aside className="mt-header from-h-background to-background hidden w-sm bg-gradient-to-l md:block lg:w-md lg:min-w-md">
       <nav className="flex flex-col">
         <CTA
           icon={MonitorCog}
@@ -20,6 +20,7 @@ const SidePanel = () => {
         >
           Panel de control
         </CTA>
+
         <CTA
           icon={ClockFading}
           isActive={pathname === "/recent-activity"}
@@ -28,6 +29,7 @@ const SidePanel = () => {
         >
           Actividad reciente
         </CTA>
+
         <CTA
           icon={List}
           isActive={pathname === "/all-expenses"}

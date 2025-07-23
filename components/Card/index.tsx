@@ -16,7 +16,9 @@ import useDeleteGroup from "@/hooks/data/group/useDeleteGroup";
 
 import type { Expense, Group, ResponseMessage } from "@/lib/api/types";
 import ICON_MAP from "@/lib/icons";
+import { formatAmount } from "@/lib/utils";
 
+import AmountNumber from "../AmountNumber";
 import Badge from "../Badge";
 import Button from "../Button";
 import Collapse from "../Collapse";
@@ -163,11 +165,11 @@ const Card = ({ type, data, loggedInUser }: CardProps) => {
 
         <div className="flex min-w-0 flex-1 flex-col gap-y-2">
           <div className="flex flex-col gap-y-0.5">
-            <div className="grid-rows-auto grid grid-cols-1 gap-x-4 lg:grid-cols-[1fr_134px] lg:grid-rows-1 lg:items-center">
+            <div className="grid-rows-auto grid grid-cols-1 gap-x-4 lg:grid-cols-[1fr_auto] lg:grid-rows-1 lg:items-center">
               <Tooltip
                 content={data.name}
                 color="info"
-                containerClassName="truncate"
+                containerClassName="truncate max-w-full"
               >
                 <span
                   id="name"
@@ -180,17 +182,13 @@ const Card = ({ type, data, loggedInUser }: CardProps) => {
               {type === CARD_TYPE.EXPENSE && (
                 <div className="flex justify-end">
                   <Tooltip
-                    content={`$${(data as Expense).amount}`}
+                    content={`$${formatAmount((data as Expense).amount)}`}
                     color="info"
                     containerClassName="lg:justify-end"
                   >
-                    <span className="text-primary flex max-w-full cursor-default items-center gap-x-0.75 font-semibold">
-                      <span className="text-sm">$</span>
-
-                      <p className="truncate text-lg">
-                        {(data as Expense).amount}
-                      </p>
-                    </span>
+                    <AmountNumber size="lg" className="text-primary">
+                      {formatAmount((data as Expense).amount)}
+                    </AmountNumber>
                   </Tooltip>
                 </div>
               )}

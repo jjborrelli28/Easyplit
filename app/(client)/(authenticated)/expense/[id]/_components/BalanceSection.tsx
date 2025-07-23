@@ -1,5 +1,3 @@
-import type { ReactNode } from "react";
-
 import Image from "next/image";
 
 import type { Session } from "next-auth";
@@ -14,6 +12,7 @@ import {
   sortParticipants,
 } from "@/lib/utils";
 
+import AmountNumber from "@/components/AmountNumber";
 import Button from "@/components/Button";
 
 interface BalanceSectionProps {
@@ -53,49 +52,49 @@ const BalanceSection = ({ expense, loggedUser }: BalanceSectionProps) => {
 
           const payerStatement = isLoggedUser ? (
             <>
-              Pagaste <Amount>{amount}</Amount> y te deben{" "}
-              <Amount className="text-s-foreground">
+              Pagaste <AmountNumber>{amount}</AmountNumber> y te deben{" "}
+              <AmountNumber className="text-s-foreground">
                 {parsedPersonalBalance}
-              </Amount>
+              </AmountNumber>
             </>
           ) : (
             <>
-              {user.name} pagó <Amount>{amount}</Amount> y le deben{" "}
-              <Amount className="text-d-foreground">
+              {user.name} pagó <AmountNumber>{amount}</AmountNumber> y le deben{" "}
+              <AmountNumber className="text-d-foreground">
                 {parsedPersonalBalance}
-              </Amount>
+              </AmountNumber>
             </>
           );
           const debtorStatement = isLoggedUser ? (
             loggedUser.id === expense.paidById ? (
               <>
                 {user.name} te debe{" "}
-                <Amount className="text-s-foreground">
+                <AmountNumber className="text-s-foreground">
                   {parsedPersonalBalance}
-                </Amount>
+                </AmountNumber>
               </>
             ) : (
               <>
                 Debes{" "}
-                <Amount className="text-d-foreground">
+                <AmountNumber className="text-d-foreground">
                   {parsedPersonalBalance}
-                </Amount>{" "}
+                </AmountNumber>{" "}
                 a {expense.paidBy.name}
               </>
             )
           ) : loggedUser.id === expense.paidById ? (
             <>
               {user.name} te debe{" "}
-              <Amount className="text-s-foreground">
+              <AmountNumber className="text-s-foreground">
                 {parsedPersonalBalance}
-              </Amount>
+              </AmountNumber>
             </>
           ) : (
             <>
               {user.name} debe{" "}
-              <Amount className="text-d-foreground">
+              <AmountNumber className="text-d-foreground">
                 {parsedPersonalBalance}
-              </Amount>{" "}
+              </AmountNumber>{" "}
               a {expense.paidBy.name}
             </>
           );
@@ -171,18 +170,3 @@ const BalanceSection = ({ expense, loggedUser }: BalanceSectionProps) => {
 };
 
 export default BalanceSection;
-
-const Amount = ({
-  children,
-  className,
-}: {
-  children: ReactNode;
-  className?: string;
-}) => (
-  <span className={clsx("font-semibold text-nowrap", className)}>
-    <span className="relative top-[-1.75px] mr-0.25 inline-block text-[11px]">
-      $
-    </span>
-    {children}
-  </span>
-);
