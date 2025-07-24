@@ -145,7 +145,8 @@ export interface UpdateExpenseFields {
     name?: string;
     type?: EXPENSE_TYPE;
     amount?: number;
-    participantIds?: string[];
+    participantsToAdd?: string[];
+    participantToRemove?: string;
     paidById?: string;
     paymentDate?: Date;
     groupId?: string;
@@ -156,7 +157,8 @@ export interface ExpenseUpdateFieldErrors {
     name?: string;
     type?: string;
     amount?: string;
-    participantIds?: string;
+    participantsToAdd?: string;
+    participantToRemove?: string;
     paidById?: string;
     paymentDate?: string;
     groupId?: string;

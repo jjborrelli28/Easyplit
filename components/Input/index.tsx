@@ -50,6 +50,11 @@ const Input = ({
   const [onFocus, setOnFocus] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [internalValue, setInternalValue] = useState(rawValue);
+
+  useEffect(() => {
+    setInternalValue(rawValue);
+  }, [rawValue]);
+
   const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {

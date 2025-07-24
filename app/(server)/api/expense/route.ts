@@ -422,6 +422,36 @@ export const GET: GetExpenseByIdHandler = async (req) => {
   }
 };
 
+const successMessages = {
+  name: {
+    text: "El nombre del gasto fue actualizado correctamente.",
+  },
+  type: {
+    text: "La categoría del gasto fue actualizada correctamente.",
+  },
+  participantsToAdd: {
+    text: "El/los participantes fueron agregados al gasto correctamente.",
+  },
+  participantToRemove: {
+    text: "El participante fue eliminado del gasto correctamente.",
+  },
+  paidById: {
+    text: "Quien pago el gasto fue actualizado correctamente.",
+  },
+  paymentDate: {
+    text: "La fecha de pago del gasto fue actualizada correctamente.",
+  },
+  paymentData: {
+    text: "Los datos del pago fueron actualizados correctamente.",
+  },
+  groupId: {
+    text: "El gasto fue añadido al grupo correctamente.",
+  },
+  amount: {
+    text: "El monto del gasto fue actualizado correctamente.",
+  },
+};
+
 // Update expense
 export const PATCH = async (
   req: Request,
@@ -431,7 +461,7 @@ export const PATCH = async (
   >
 > => {
   try {
-    let body = await req.json();
+    const body = await req.json();
 
     if (body?.paymentDate) {
       const parsedPaymentDateString = new Date(body.paymentDate);
@@ -462,7 +492,8 @@ export const PATCH = async (
       id,
       name,
       type,
-      participantIds,
+      participantsToAdd,
+      participantToRemove,
       paidById,
       paymentDate,
       groupId,
@@ -528,56 +559,50 @@ export const PATCH = async (
       );
     }
 
-    if (expense.group && participantIds) {
-      const pickedParticipants = participantIds.map((id) => ({ id }));
-      const { haveDifferences, differences } = compareMembers(
-        pickedParticipants,
-        expense.group.members,
-      );
-
-      if (haveDifferences && differences.excessParticipants.length > 0) {
-        return NextResponse.json(
-          {
-            success: false,
-            error: {
-              code: API_RESPONSE_CODE.INVALID_FIELD,
-              message: [
-                "Los participantes del gasto deben ser miembros del grupo.",
-              ],
-              details: differences,
-              statusCode: 400,
-            },
+    if (participantToRemove) {
+      await prisma.expenseParticipant.delete({
+        where: {
+          expenseId_userId: {
+            expenseId: id,
+            userId: participantToRemove,
           },
-          { status: 400 },
+        },
+      });
+    }
+
+    if (participantsToAdd) {
+      if (expense.group) {
+        const { haveDifferences, differences } = compareMembers(
+          expense.participants,
+          expense.group.members,
         );
+
+        if (haveDifferences && differences.excessParticipants.length > 0) {
+          return NextResponse.json(
+            {
+              success: false,
+              error: {
+                code: API_RESPONSE_CODE.INVALID_FIELD,
+                message: [
+                  "Los participantes del gasto deben ser miembros del grupo.",
+                ],
+                details: differences,
+                statusCode: 400,
+              },
+            },
+            { status: 400 },
+          );
+        }
       }
 
-      const existingParticipantIds = expense.participants.map((p) => p.userId);
-      const participantsToRemove = expense.participants.filter(
-        (p) => !participantIds.includes(p.userId),
-      );
-      const participantsToAdd = participantIds.filter(
-        (id) => !existingParticipantIds.includes(id),
-      );
-
-      if (participantsToRemove.length) {
-        await prisma.expenseParticipant.deleteMany({
-          where: {
-            expenseId: id,
-            userId: { in: participantsToRemove.map((p) => p.userId) },
-          },
-        });
-      }
-
-      if (participantsToAdd.length) {
-        await prisma.expenseParticipant.createMany({
-          data: participantsToAdd.map((userId) => ({
-            expenseId: id,
-            userId,
-            amount: 0,
-          })),
-        });
-      }
+      await prisma.expenseParticipant.createMany({
+        data: participantsToAdd.map((userId) => ({
+          expenseId: id,
+          userId,
+          amount: 0,
+        })),
+        skipDuplicates: true,
+      });
     }
 
     const updatedExpense = await prisma.expense.update({
@@ -610,12 +635,19 @@ export const PATCH = async (
         icon: "CheckCircle",
         title: "¡Gasto actualizado con éxito!",
         content: [
-          {
-            text: "Los cambios realizados fueron las siguientes:",
-          },
-          // ...(name
-          //   ? [{ text: `El nombre fue modificado a ${name}.`, style: "small" }]
-          //   : []),
+          ...(name ? [successMessages.name] : []),
+          ...(type ? [successMessages.type] : []),
+          ...(paidById && paymentDate
+            ? [successMessages.paymentData]
+            : paidById
+              ? [successMessages.paidById]
+              : paymentDate
+                ? [successMessages.paymentDate]
+                : []),
+          ...(groupId ? [successMessages.groupId] : []),
+          ...(amount ? [successMessages.amount] : []),
+          ...(participantsToAdd ? [successMessages.participantsToAdd] : []),
+          ...(participantToRemove ? [successMessages.participantToRemove] : []),
         ],
       },
       data: updatedExpense,

@@ -1,5 +1,7 @@
 import { startOfToday, subYears } from "date-fns";
 
+import { ExpenseParticipant as PrismaExpenseParticipant } from '@prisma/client'
+
 import type { ExpenseParticipant, GroupMember, User } from "./api/types";
 
 export const today = startOfToday();
@@ -80,7 +82,7 @@ export const formatAmount = (value: number) => {
     });
 };
 
-export const getParticipantIds = (participants: ExpenseParticipant[]) => {
+export const getParticipantIds = (participants: ExpenseParticipant[] | PrismaExpenseParticipant[]) => {
     return participants.map((p) => p.userId);
 };
 

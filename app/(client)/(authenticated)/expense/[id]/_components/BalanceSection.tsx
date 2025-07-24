@@ -7,7 +7,7 @@ import type { Session } from "next-auth";
 import clsx from "clsx";
 import { BanknoteArrowUp, Scale, UserRoundX } from "lucide-react";
 
-import type { Expense } from "@/lib/api/types";
+import type { Expense, User } from "@/lib/api/types";
 import {
   getPersonalBalance,
   getPositiveTruncatedNumber,
@@ -29,6 +29,9 @@ const BalanceSection = ({ expense, loggedUser }: BalanceSectionProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [fieldsToUpdate, setFieldsToUpdate] = useState<UpdateExpenseFieldKeys>(
     [],
+  );
+  const [selectedParticipant, setSelectedParticipant] = useState<User | null>(
+    null,
   );
 
   const isUserEditor =
@@ -150,6 +153,8 @@ const BalanceSection = ({ expense, loggedUser }: BalanceSectionProps) => {
                     <Button
                       aria-label="Remove participant"
                       onClick={() => {
+                        setFieldsToUpdate(["participantToRemove"]);
+                        setSelectedParticipant(user);
                         setIsOpen(true);
                       }}
                       unstyled
@@ -182,6 +187,7 @@ const BalanceSection = ({ expense, loggedUser }: BalanceSectionProps) => {
           expense={expense}
           user={loggedUser}
           fieldsToUpdate={fieldsToUpdate}
+          selectedParticipant={selectedParticipant}
         />
       )}
     </>
