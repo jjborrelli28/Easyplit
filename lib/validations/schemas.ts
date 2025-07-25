@@ -153,7 +153,12 @@ export const updateExpenseSchema = z.object({
     id,
     name: name.optional(),
     type: expenseType,
-    participantsToAdd: participantIds.optional(),
+    participantsToAdd: z
+        .array(z.string(), {
+            required_error: "Debes agregar al menos 1 participante.",
+        })
+        .min(1, "Debes agregar al menos 1 participante.")
+        .max(20).optional(),
     participantToRemove: z.string().optional(),
     paidById: paidById.optional(),
     paymentDate: paymentDate.optional(),

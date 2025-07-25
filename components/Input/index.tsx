@@ -7,6 +7,7 @@ import {
   type ChangeEvent,
   type FocusEvent,
   type InputHTMLAttributes,
+  type ReactNode,
 } from "react";
 
 import clsx from "clsx";
@@ -24,6 +25,7 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   labelClassName?: string;
   className?: string;
   errorClassName?: string;
+  rightItem?: ReactNode;
 }
 
 const Input = ({
@@ -41,6 +43,7 @@ const Input = ({
   labelClassName,
   className,
   errorClassName,
+  rightItem,
   ...props
 }: InputProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -205,36 +208,42 @@ const Input = ({
           {...props}
         />
 
-        {(type === "password" && !editableToggle) ||
-          (type === "password" && editableToggle && isEditing && (
+        {rightItem && !editableToggle && type !== "password" && rightItem}
+
+        {((type === "password" && !editableToggle) ||
+          (type === "password" && editableToggle && isEditing)) && (
+          <div className="bg-background absolute top-1/2 right-0 flex max-h-[48px] -translate-y-1/2 p-3 pt-3.5">
             <Button
               ref={showPasswordRef}
               aria-label="Toggle show password"
               onClick={handleShowPasswordToggle}
               unstyled
               className={clsx(
-                "text-foreground hover:text-primary absolute top-1/2 right-3 flex h-12 flex-1 -translate-y-1/2 transform cursor-pointer items-center transition-colors duration-300",
+                "text-foreground hover:text-primary cursor-pointer transition-colors duration-300",
                 editableToggle && "right-15",
               )}
             >
               {showPassword ? <EyeOff /> : <Eye />}
-            </Button>
-          ))}
+            </Button>{" "}
+          </div>
+        )}
 
         {editableToggle && (
-          <Button
-            ref={editableToggleRef}
-            aria-label="Toggle edit input"
-            onClick={handleEditableToggle}
-            unstyled
-            className="mx-3 cursor-pointer"
-          >
-            {isEditing ? (
-              <PencilOff className="animate-color-pulse transition-colors duration-300" />
-            ) : (
-              <Pencil className="hover:text-primary transition-colors duration-300" />
-            )}
-          </Button>
+          <div className="bg-background absolute top-1/2 right-0 flex max-h-[48px] -translate-y-1/2 p-3 pt-3.5">
+            <Button
+              ref={editableToggleRef}
+              aria-label="Toggle edit input"
+              onClick={handleEditableToggle}
+              unstyled
+              className="cursor-pointer"
+            >
+              {isEditing ? (
+                <PencilOff className="animate-color-pulse transition-colors duration-300" />
+              ) : (
+                <Pencil className="hover:text-primary transition-colors duration-300" />
+              )}
+            </Button>
+          </div>
         )}
       </div>
 

@@ -1,8 +1,13 @@
 import { type Dispatch, type SetStateAction, useState } from "react";
 
+import Image from "next/image";
+
 import type { Session } from "next-auth";
 
 import { useForm } from "@tanstack/react-form";
+import clsx from "clsx";
+import { isEqual } from "date-fns";
+import { X } from "lucide-react";
 
 import useUpdateExpense from "@/hooks/data/expense/useUpdateExpense";
 import type {
@@ -14,11 +19,14 @@ import type {
   User,
 } from "@/lib/api/types";
 import ICON_MAP from "@/lib/icons";
+import { getParticipantIds } from "@/lib/utils";
 import { updateExpenseSchema } from "@/lib/validations/schemas";
 
 import { getParticipantOptions } from "../ActionModal";
 import AmountInput from "../AmountInput";
+import Badge from "../Badge";
 import Button from "../Button";
+import Collapse from "../Collapse";
 import DatePicker from "../DatePicker";
 import ExpenseTypeSelect from "../ExpenseTypeSelect";
 import { EXPENSE_TYPE } from "../ExpenseTypeSelect/constants";
@@ -29,7 +37,8 @@ import InputErrorMessage from "../InputErrorMessage";
 import MessageCard from "../MessageCard";
 import Modal from "../Modal";
 import Select from "../Select";
-import { isEqual } from "date-fns";
+import Tooltip from "../Tooltip";
+import UserSearchEngine from "../UserSearchEngine";
 
 const modalTitles = {
   name: "Modificar nombre",
@@ -38,7 +47,7 @@ const modalTitles = {
   paidById: "Modificar quién pagó",
   paymentDate: "Modificar fecha de pago",
   paymentData: "Modificar datos del pago",
-  participantsToAdd: "Agregar nuevos participantes",
+  participantsToAdd: "Agregar participante/s",
   participantToRemove: "Eliminar participante",
   groupId: "Asignar gasto a un grupo",
   default: "Modificar datos del gasto",
@@ -51,9 +60,9 @@ const buttonLabels = {
   paidById: "Aplicar cambios",
   paymentDate: "Aplicar cambios",
   paymentData: "Aplicar cambios",
-  participantsToAdd: "Agregar",
-  participantToRemove: "Eliminar",
-  groupId: "Agregar",
+  participantsToAdd: "Agregar participante/s",
+  participantToRemove: "Eliminar participante",
+  groupId: "Agregar a grupo",
   default: "Aplicar cambios",
 };
 
@@ -79,6 +88,7 @@ const UpdateExpenseForm = ({
 }: UpdateExpenseFormProps) => {
   const { mutate: updateExpense, isPending } = useUpdateExpense();
 
+  const [newParticipants, setNewParticipants] = useState<User[]>([]);
   const [message, setMessage] = useState<ResponseMessage | null>(null);
 
   const editName = fieldsToUpdate.includes("name");
@@ -92,6 +102,29 @@ const UpdateExpenseForm = ({
     fieldsToUpdate[0] === "paidById" && fieldsToUpdate[1] === "paymentDate";
   const editGroupId = fieldsToUpdate.includes("groupId");
   const editAmount = fieldsToUpdate.includes("amount");
+
+  const newParticipantIds = newParticipants.map((p) => p.id);
+
+  const handleSelectNewParticipants = (
+    newParticipant: User,
+    handleChange: (e: string[]) => void,
+  ) => {
+    if (newParticipantIds.includes(newParticipant.id)) return;
+
+    const newParticipantsArray = [...newParticipants, newParticipant];
+    const newParticipantIdsArray = newParticipantsArray.map((p) => p.id);
+
+    handleChange(newParticipantIdsArray);
+    setNewParticipants(newParticipantsArray);
+  };
+
+  const handleRemoveNewParticipant = (participantId: string) => {
+    const newParticipantsArray = newParticipants.filter(
+      (p) => p.id !== participantId,
+    );
+
+    setNewParticipants(newParticipantsArray);
+  };
 
   const form = useForm<
     UpdateExpenseFields,
@@ -109,7 +142,7 @@ const UpdateExpenseForm = ({
       id: expense.id,
       ...(editName && { name: expense.name }),
       ...(editType && { type: expense.type as EXPENSE_TYPE }),
-      ...(addParticipants && { participantsToAdd: [] }), // TODO
+      ...(addParticipants && { participantsToAdd: [] }),
       ...(removeParticipant && { participantToRemove: selectedParticipant.id }),
       ...(editPaidById && { paidById: expense.paidById }),
       ...(editPaymentDate && {
@@ -156,6 +189,7 @@ const UpdateExpenseForm = ({
 
   const handleClose = () => {
     setIsOpen(false);
+    setNewParticipants([]);
     setMessage(null);
     form.reset();
   };
@@ -163,6 +197,7 @@ const UpdateExpenseForm = ({
   const participants = expense.participants.map(
     (participant) => participant.user,
   );
+  const participantsIds = getParticipantIds(expense.participants);
 
   return (
     <Modal
@@ -221,7 +256,6 @@ const UpdateExpenseForm = ({
                       field.state.meta.errors[0]?.message ||
                       field.state.meta.errorMap.onSubmit
                     }
-                    containerClassName="col-span-1"
                   />
                 )}
               </form.Field>
@@ -243,8 +277,93 @@ const UpdateExpenseForm = ({
                       field.state.meta.errors[0]?.message ||
                       field.state.meta.errorMap.onSubmit
                     }
-                    containerClassName="col-span-1"
                   />
+                )}
+              </form.Field>
+            )}
+
+            {addParticipants && (
+              <form.Field
+                name="participantsToAdd"
+                validators={{
+                  onChange: updateExpenseSchema.shape.participantsToAdd,
+                  onBlur: updateExpenseSchema.shape.participantsToAdd,
+                }}
+              >
+                {(field) => (
+                  <div className="flex flex-col gap-y-8">
+                    <UserSearchEngine
+                      user={user}
+                      onSelect={(p) =>
+                        handleSelectNewParticipants(p, field.handleChange)
+                      }
+                      excludeUserIds={[
+                        ...participantsIds,
+                        ...newParticipantIds,
+                      ]}
+                      onBlur={field.handleBlur}
+                    />
+
+                    <Collapse
+                      isOpen={newParticipantIds.length > 0}
+                      contentClassName={clsx(
+                        "relative transition-[padding] duration-300",
+                        newParticipantIds.length > 0 ? "pt-7" : "pt-0",
+                      )}
+                    >
+                      <label
+                        className={clsx(
+                          "absolute left-0 transform font-semibold transition-all duration-300",
+                          !!field.state.value
+                            ? "translate-x-1 -translate-y-6 text-sm"
+                            : "text-md translate-x-3 translate-y-2.5 text-lg",
+                          field.state.value &&
+                            field.state.value.length > 1 &&
+                            "text-primary",
+                        )}
+                      >
+                        Nuevos participantes
+                      </label>
+
+                      <div className="flex max-h-50 flex-wrap gap-2 overflow-y-scroll pt-3">
+                        {newParticipants.map((p) => (
+                          <Tooltip key={p.id} color="info" content={p.name}>
+                            <Badge
+                              color="info"
+                              leftItem={
+                                p.image && (
+                                  <Image
+                                    alt="User avatar"
+                                    src={p.image}
+                                    height={14}
+                                    width={14}
+                                    className="-ml-1.5 h-3.5 w-3.5 flex-shrink-0 rounded-full"
+                                  />
+                                )
+                              }
+                              rightItem={
+                                participantsIds.length > 1 && (
+                                  <Button
+                                    aria-label="Remove selected user"
+                                    type="button"
+                                    onClick={() =>
+                                      handleRemoveNewParticipant(p.id)
+                                    }
+                                    unstyled
+                                    className="hover:text-background/90 text-background cursor-pointer rounded-full transition-colors duration-300"
+                                  >
+                                    <X className="-mr-1 h-3.5 w-3.5 stroke-3" />
+                                  </Button>
+                                )
+                              }
+                            >
+                              {p.id === user.id ? "Tu" : p.name}
+                            </Badge>
+                          </Tooltip>
+                        ))}
+                      </div>
+                    </Collapse>
+                  </div>
                 )}
               </form.Field>
             )}
@@ -302,7 +421,6 @@ const UpdateExpenseForm = ({
                       field.state.meta.errors[0]?.message ||
                       field.state.meta.errorMap.onSubmit
                     }
-                    containerClassName="col-span-1"
                   />
                 )}
               </form.Field>
@@ -351,7 +469,6 @@ const UpdateExpenseForm = ({
                       field.state.meta.errors[0]?.message ||
                       field.state.meta.errorMap.onSubmit
                     }
-                    containerClassName="col-span-1 mx-auto lg:col-span-2"
                   />
                 )}
               </form.Field>

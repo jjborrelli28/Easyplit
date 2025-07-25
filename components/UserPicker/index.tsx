@@ -54,19 +54,19 @@ const UserPicker = ({
   const handleSelect = (user: User) => {
     if (selectedUserIds.has(user.id)) return;
 
-    const newUser = [...users, user];
-    const newIds = newUser.map((p) => p.id);
+    const newUsers = [...users, user];
+    const newIds = newUsers.map((p) => p.id);
 
     onChange(newIds);
-    updateUserList(newUser);
+    updateUserList(newUsers);
   };
 
   const handleRemove = (userId: string) => {
-    const newUser = users.filter((p) => p.id !== userId);
-    const newIds = newUser.map((p) => p.id);
+    const newUsers = users.filter((p) => p.id !== userId);
+    const newIds = newUsers.map((p) => p.id);
 
     onChange(newIds);
-    updateUserList(newUser);
+    updateUserList(newUsers);
   };
 
   const handleCloseModal = () => setIsOpen(false);

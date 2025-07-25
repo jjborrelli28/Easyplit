@@ -172,10 +172,15 @@ const BalanceSection = ({ expense, loggedUser }: BalanceSectionProps) => {
         <div className="flex justify-end">
           <Button
             aria-label="Add participant"
+            onClick={() => {
+              setFieldsToUpdate(["participantsToAdd"]);
+
+              setIsOpen(true);
+            }}
             color="secondary"
             variant="outlined"
           >
-            Añadir participante
+            Añadir participante/s
           </Button>
         </div>
       </section>

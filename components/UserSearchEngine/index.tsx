@@ -113,6 +113,16 @@ const UserSearchEngine = ({
         onFocus={handleFocus}
         onBlur={handleBlur}
         onKeyDown={handleKeyDown}
+        rightItem={
+          <div className="bg-background pointer-events-none absolute top-1/2 right-0 -translate-y-1/2 p-3 pt-3.5">
+            <UserRoundSearch
+              className={clsx(
+                "text-foreground h-5.5 w-5.5 transition-colors duration-300",
+                isFocused && "text-primary",
+              )}
+            />
+          </div>
+        }
         error={
           isFetched && users.length === 0 && !error
             ? "No se encontraron resultados para su busqueda"
@@ -120,15 +130,6 @@ const UserSearchEngine = ({
         }
         errorClassName="text-warning"
       />
-
-      <div className="bg-background pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 pl-3">
-        <UserRoundSearch
-          className={clsx(
-            "text-foreground h-5.5 w-5.5 transition-colors duration-300",
-            isFocused && "text-primary",
-          )}
-        />
-      </div>
 
       {users.length > 0 && (
         <ul className="bg-h-background border-primary absolute top-full right-0 left-0 z-20 max-h-60 overflow-y-auto border !border-t-0 shadow-xl">

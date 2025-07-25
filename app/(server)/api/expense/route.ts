@@ -637,6 +637,8 @@ export const PATCH = async (
         content: [
           ...(name ? [successMessages.name] : []),
           ...(type ? [successMessages.type] : []),
+          ...(participantsToAdd ? [successMessages.participantsToAdd] : []),
+          ...(participantToRemove ? [successMessages.participantToRemove] : []),
           ...(paidById && paymentDate
             ? [successMessages.paymentData]
             : paidById
@@ -646,8 +648,6 @@ export const PATCH = async (
                 : []),
           ...(groupId ? [successMessages.groupId] : []),
           ...(amount ? [successMessages.amount] : []),
-          ...(participantsToAdd ? [successMessages.participantsToAdd] : []),
-          ...(participantToRemove ? [successMessages.participantToRemove] : []),
         ],
       },
       data: updatedExpense,
