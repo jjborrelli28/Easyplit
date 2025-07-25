@@ -43,8 +43,8 @@ const ExpenseForm = ({
   onClose,
   handleShowModalHeader,
 }: ExpenseFromProps) => {
-  const queryClient = useQueryClient();
   const { mutate: createExpense, isPending } = useCreateExpense();
+  const queryClient = useQueryClient();
 
   const [participants, setParticipants] = useState<User[]>([user as User]);
   const [message, setMessage] = useState<ResponseMessage | null>(null);
@@ -74,14 +74,13 @@ const ExpenseForm = ({
     onSubmit: async ({ value }) => {
       createExpense(value, {
         onSuccess: (res) => {
+          queryClient.invalidateQueries({
+            queryKey: ["my-expenses-and-groups", user.id!],
+          });
+
           handleShowModalHeader(false);
 
           res?.message && setMessage(res.message);
-          queryClient.invalidateQueries({
-            predicate: (query) =>
-              query.queryKey[0] === "my-groups-and-expenses" &&
-              query.queryKey[1] === user.id!,
-          });
         },
         onError: (res) => {
           const {

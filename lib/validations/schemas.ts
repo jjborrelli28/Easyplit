@@ -68,6 +68,12 @@ const amount = z
     .refine((val) => val !== 0, {
         message: "El monto no puede ser $0.",
     });
+const participantPayment = z
+    .object({
+        userId: id,
+        amount,
+    })
+    .optional();
 /* End of rules */
 
 /* Form schemes without authentication */
@@ -151,6 +157,7 @@ export const createExpenseSchema = z.object({
 
 export const updateExpenseSchema = z.object({
     id,
+    userId: id,
     name: name.optional(),
     type: expenseType,
     participantsToAdd: z
@@ -158,12 +165,14 @@ export const updateExpenseSchema = z.object({
             required_error: "Debes agregar al menos 1 participante.",
         })
         .min(1, "Debes agregar al menos 1 participante.")
-        .max(20).optional(),
+        .max(20)
+        .optional(),
     participantToRemove: z.string().optional(),
     paidById: paidById.optional(),
     paymentDate: paymentDate.optional(),
     groupId: id.optional(),
     amount: amount.optional(),
+    participantPayment,
 });
 /* End expense form schemas */
 

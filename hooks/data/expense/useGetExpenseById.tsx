@@ -13,7 +13,7 @@ const getLinkedExpenses = async (id?: string | null) => {
 
 const useGetExpenseById = (id?: string | null) => {
   return useQuery({
-    queryKey: ["linked-expenses", id],
+    queryKey: ["linked-expense", id],
     queryFn: () => getLinkedExpenses(id),
     enabled: !!id,
     staleTime: 1000 * 10,

@@ -498,6 +498,7 @@ export const PATCH = async (
       paymentDate,
       groupId,
       amount,
+      participantPayment,
     } = res.data;
 
     const expense = await prisma.expense.findUnique({
@@ -602,6 +603,20 @@ export const PATCH = async (
           amount: 0,
         })),
         skipDuplicates: true,
+      });
+    }
+
+    if (participantPayment) {
+      await prisma.expenseParticipant.update({
+        where: {
+          expenseId_userId: {
+            expenseId: id,
+            userId: participantPayment.userId,
+          },
+        },
+        data: {
+          amount: participantPayment.amount,
+        },
       });
     }
 

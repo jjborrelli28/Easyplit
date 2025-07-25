@@ -142,6 +142,7 @@ export interface DeleteExpenseGroupFields {
 
 export interface UpdateExpenseFields {
     id: string;
+    userId: string;
     name?: string;
     type?: EXPENSE_TYPE;
     amount?: number;
@@ -150,10 +151,15 @@ export interface UpdateExpenseFields {
     paidById?: string;
     paymentDate?: Date;
     groupId?: string;
+    participantPayment?: {
+        userId: string;
+        amount: number;
+    };
 }
 
 export interface ExpenseUpdateFieldErrors {
     id?: string;
+    userId?: string;
     name?: string;
     type?: string;
     amount?: string;
@@ -162,6 +168,7 @@ export interface ExpenseUpdateFieldErrors {
     paidById?: string;
     paymentDate?: string;
     groupId?: string;
+    participantPayment?: string;
 }
 /* End expense types */
 

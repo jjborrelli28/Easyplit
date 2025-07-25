@@ -39,6 +39,7 @@ import Modal from "../Modal";
 import Select from "../Select";
 import Tooltip from "../Tooltip";
 import UserSearchEngine from "../UserSearchEngine";
+import { useQueryClient } from "@tanstack/react-query";
 
 const modalTitles = {
   name: "Modificar nombre",
@@ -51,6 +52,7 @@ const modalTitles = {
   participantToRemove: "Eliminar participante",
   groupId: "Asignar gasto a un grupo",
   default: "Modificar datos del gasto",
+  participantPayment: "Liquidar deuda",
 };
 
 const buttonLabels = {
@@ -64,9 +66,13 @@ const buttonLabels = {
   participantToRemove: "Eliminar participante",
   groupId: "Agregar a grupo",
   default: "Aplicar cambios",
+  participantPayment: "Agregar pago",
 };
 
-export type UpdateExpenseFieldKeys = (keyof Omit<UpdateExpenseFields, "id">)[];
+export type UpdateExpenseFieldKeys = (keyof Omit<
+  UpdateExpenseFields,
+  "id" | "userId"
+>)[];
 
 interface UpdateExpenseFormProps {
   isOpen: boolean;
@@ -76,6 +82,7 @@ interface UpdateExpenseFormProps {
   fieldsToUpdate: UpdateExpenseFieldKeys;
   participantToRemove?: User;
   selectedParticipant?: User | null;
+  amountToBeSettled?: number | null;
 }
 
 const UpdateExpenseForm = ({
@@ -85,8 +92,10 @@ const UpdateExpenseForm = ({
   user,
   fieldsToUpdate,
   selectedParticipant,
+  amountToBeSettled,
 }: UpdateExpenseFormProps) => {
   const { mutate: updateExpense, isPending } = useUpdateExpense();
+  const queryClient = useQueryClient();
 
   const [newParticipants, setNewParticipants] = useState<User[]>([]);
   const [message, setMessage] = useState<ResponseMessage | null>(null);
@@ -102,6 +111,10 @@ const UpdateExpenseForm = ({
     fieldsToUpdate[0] === "paidById" && fieldsToUpdate[1] === "paymentDate";
   const editGroupId = fieldsToUpdate.includes("groupId");
   const editAmount = fieldsToUpdate.includes("amount");
+  const addParticipantPayment =
+    fieldsToUpdate.includes("participantPayment") &&
+    selectedParticipant &&
+    amountToBeSettled;
 
   const newParticipantIds = newParticipants.map((p) => p.id);
 
@@ -140,6 +153,7 @@ const UpdateExpenseForm = ({
   >({
     defaultValues: {
       id: expense.id,
+      userId: user.id!,
       ...(editName && { name: expense.name }),
       ...(editType && { type: expense.type as EXPENSE_TYPE }),
       ...(addParticipants && { participantsToAdd: [] }),
@@ -152,6 +166,12 @@ const UpdateExpenseForm = ({
             : expense.paymentDate,
       }),
       ...(editAmount && { amount: expense.amount }),
+      ...(addParticipantPayment && {
+        participantPayment: {
+          userId: selectedParticipant.id,
+          amount: amountToBeSettled,
+        },
+      }),
     },
     onSubmit: async ({ value }) => {
       const { paidById, paymentDate, ...restFields } = value;
@@ -165,6 +185,10 @@ const UpdateExpenseForm = ({
 
       updateExpense(body, {
         onSuccess: (res) => {
+          queryClient.invalidateQueries({
+            queryKey: ["linked-expense", expense.id],
+          });
+
           res?.message && setMessage(res.message);
         },
         onError: (res) => {
@@ -472,6 +496,46 @@ const UpdateExpenseForm = ({
                   />
                 )}
               </form.Field>
+            )}
+
+            {addParticipantPayment && (
+              <div className="flex flex-col gap-8">
+                <div className="flex flex-col gap-2">
+                  <p>
+                    Se marcará como{" "}
+                    <span className="font-semibold">pagado</span> el total del
+                    monto adeudado.
+                  </p>
+
+                  <p className="text-foreground/75 text-sm">
+                    El monto no es editable y esta acción no se puede deshacer.
+                  </p>
+                </div>
+
+                <form.Field
+                  name="participantPayment"
+                  validators={{
+                    onChange: updateExpenseSchema.shape.participantPayment,
+                    onBlur: updateExpenseSchema.shape.participantPayment,
+                  }}
+                >
+                  {(field) => (
+                    <AmountInput
+                      label="Total a liquidar"
+                      value={field.state.value?.amount}
+                      onChange={(value) =>
+                        field.handleChange((e) => e && { ...e, amount: value })
+                      }
+                      onBlur={field.handleBlur}
+                      error={
+                        field.state.meta.errors[0]?.message ||
+                        field.state.meta.errorMap.onSubmit
+                      }
+                      disabled
+                    />
+                  )}
+                </form.Field>
+              </div>
             )}
 
             <Button
