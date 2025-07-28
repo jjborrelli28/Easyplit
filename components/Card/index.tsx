@@ -27,6 +27,7 @@ import { GROUP_TYPE, GROUP_TYPES } from "../GroupTypeSelect/constants";
 import MessageCard from "../MessageCard";
 import Modal from "../Modal";
 import Tooltip from "../Tooltip";
+import { useQueryClient } from "@tanstack/react-query";
 
 export enum CARD_TYPE {
   EXPENSE = "EXPENSE",
@@ -41,6 +42,7 @@ interface CardProps {
 
 const Card = ({ type, data, loggedInUser }: CardProps) => {
   const router = useRouter();
+  const queryClient = useQueryClient();
 
   const { mutate: deleteExpense, isPending: expenseIsPending } =
     useDeleteExpense();
@@ -77,6 +79,10 @@ const Card = ({ type, data, loggedInUser }: CardProps) => {
     if (type === CARD_TYPE.EXPENSE) {
       deleteExpense(body, {
         onSuccess: (res) => {
+          queryClient.invalidateQueries({
+            queryKey: ["my-expenses-and-groups", loggedInUser.id!],
+          });
+
           res?.message && setMessage(res.message);
         },
         onError: (res) => {
@@ -97,6 +103,10 @@ const Card = ({ type, data, loggedInUser }: CardProps) => {
     } else {
       deleteGroup(body, {
         onSuccess: (res) => {
+          queryClient.invalidateQueries({
+            queryKey: ["my-expenses-and-groups", loggedInUser.id!],
+          });
+
           res?.message && setMessage(res.message);
         },
         onError: (res) => {

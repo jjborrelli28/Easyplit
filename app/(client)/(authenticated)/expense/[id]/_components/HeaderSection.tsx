@@ -10,7 +10,11 @@ import { es } from "date-fns/locale";
 import { BanknoteArrowUp, CalendarArrowUp, Group, Repeat } from "lucide-react";
 
 import type { Expense } from "@/lib/api/types";
-import { formatAmount } from "@/lib/utils";
+import {
+  formatAmount,
+  getPersonalBalance,
+  getPositiveTruncatedNumber,
+} from "@/lib/utils";
 
 import Button from "@/components/Button";
 import {
@@ -35,6 +39,16 @@ const HeaderSection = ({ expense, loggedUser }: HeaderSectionProps) => {
 
   const type = expense?.type ?? EXPENSE_TYPE.UNCATEGORIZED;
   const Icon = EXPENSE_TYPES[type].icon;
+  const allDebtsSettled = expense.participants
+    .filter((p) => p.userId !== expense.paidById)
+    .every((p) => {
+      const personalBalance = getPersonalBalance(
+        p.amount,
+        expense.amount,
+        expense.participants.length,
+      );
+      return getPositiveTruncatedNumber(personalBalance) === 0;
+    });
 
   return (
     <>
@@ -48,61 +62,67 @@ const HeaderSection = ({ expense, loggedUser }: HeaderSectionProps) => {
           >
             <Icon className="text-background h-8 w-8" />
 
-            <Button
-              aria-label="Change expense type"
-              onClick={() => {
-                setFieldsToUpdate(["type"]);
-                setIsOpen(true);
-              }}
-              unstyled
-              className="absolute inset-0 flex cursor-pointer items-center justify-center bg-black/75 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
-            >
-              <Repeat className="group-hover:text-primary h-8 w-8 text-transparent transition-colors duration-300" />
-            </Button>
+            {!allDebtsSettled && (
+              <Button
+                aria-label="Change expense type"
+                onClick={() => {
+                  setFieldsToUpdate(["type"]);
+                  setIsOpen(true);
+                }}
+                unstyled
+                className="absolute inset-0 flex cursor-pointer items-center justify-center bg-black/75 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+              >
+                <Repeat className="group-hover:text-primary h-8 w-8 text-transparent transition-colors duration-300" />
+              </Button>
+            )}
           </div>
 
           <div className="group flex min-w-0 items-center gap-2">
             <h1 className="truncate text-3xl font-bold">{expense.name}</h1>
 
-            <Button
-              aria-label="Change payment date"
-              onClick={() => {
-                setFieldsToUpdate(["name"]);
-                setIsOpen(true);
-              }}
-              unstyled
-              className="group-hover:text-primary transition-colors duration-300 group-hover:cursor-pointer"
-            >
-              <Tooltip
-                color="info"
-                content="Modificar nombre"
-                containerClassName="!flex"
+            {!allDebtsSettled && (
+              <Button
+                aria-label="Change payment date"
+                onClick={() => {
+                  setFieldsToUpdate(["name"]);
+                  setIsOpen(true);
+                }}
+                unstyled
+                className="group-hover:text-primary transition-colors duration-300 group-hover:cursor-pointer"
               >
-                <Repeat className="h-5 w-5" />
-              </Tooltip>
-            </Button>
+                <Tooltip
+                  color="info"
+                  content="Modificar nombre"
+                  containerClassName="!flex"
+                >
+                  <Repeat className="h-5 w-5" />
+                </Tooltip>
+              </Button>
+            )}
           </div>
         </div>
 
         <div className="group 2xl:border-h-background flex flex-col gap-x-2 gap-y-1 md:flex-row md:items-center 2xl:justify-end 2xl:border-l 2xl:pl-15">
           <div className="relative flex gap-x-2">
-            <Button
-              aria-label="Change amount"
-              unstyled
-              onClick={() => {
-                setFieldsToUpdate(["amount"]);
-                setIsOpen(true);
-              }}
-              className="group-hover:text-primary hidden cursor-pointer transition-colors duration-300 md:block 2xl:absolute 2xl:top-1/2 2xl:-left-7 2xl:-translate-y-1/2"
-            >
-              <Tooltip
-                color="info"
-                content="Modificar monto"
-                containerClassName="!flex"
+            {!allDebtsSettled && (
+              <Button
+                aria-label="Change amount"
+                unstyled
+                onClick={() => {
+                  setFieldsToUpdate(["amount"]);
+                  setIsOpen(true);
+                }}
+                className="group-hover:text-primary hidden cursor-pointer transition-colors duration-300 md:block 2xl:absolute 2xl:top-1/2 2xl:-left-7 2xl:-translate-y-1/2"
               >
-                <Repeat className="h-5 w-5" />
-              </Tooltip>
-            </Button>
+                <Tooltip
+                  color="info"
+                  content="Modificar monto"
+                  containerClassName="!flex"
+                >
+                  <Repeat className="h-5 w-5" />
+                </Tooltip>
+              </Button>
+            )}
 
             <p className="text-foreground/75 text-sm font-semibold">Monto:</p>
           </div>
@@ -114,23 +134,25 @@ const HeaderSection = ({ expense, loggedUser }: HeaderSectionProps) => {
               {formatAmount(expense.amount)}
             </p>
 
-            <Button
-              aria-label="Change amount"
-              unstyled
-              onClick={() => {
-                setFieldsToUpdate(["amount"]);
-                setIsOpen(true);
-              }}
-              className="text-foreground group-hover:text-primary cursor-pointer transition-colors duration-300 md:hidden 2xl:absolute 2xl:top-1/2 2xl:-left-7 2xl:-translate-y-1/2"
-            >
-              <Tooltip
-                color="info"
-                content="Modificar monto"
-                containerClassName="!flex"
+            {!allDebtsSettled && (
+              <Button
+                aria-label="Change amount"
+                unstyled
+                onClick={() => {
+                  setFieldsToUpdate(["amount"]);
+                  setIsOpen(true);
+                }}
+                className="text-foreground group-hover:text-primary cursor-pointer transition-colors duration-300 md:hidden 2xl:absolute 2xl:top-1/2 2xl:-left-7 2xl:-translate-y-1/2"
               >
-                <Repeat className="h-5 w-5" />
-              </Tooltip>
-            </Button>
+                <Tooltip
+                  color="info"
+                  content="Modificar monto"
+                  containerClassName="!flex"
+                >
+                  <Repeat className="h-5 w-5" />
+                </Tooltip>
+              </Button>
+            )}
           </div>
         </div>
 
@@ -169,27 +191,31 @@ const HeaderSection = ({ expense, loggedUser }: HeaderSectionProps) => {
               </span>
             </p>
 
-            <Button
-              aria-label="Change payment date"
-              onClick={() => {
-                setFieldsToUpdate(["paidById", "paymentDate"]);
-                setIsOpen(true);
-              }}
-              unstyled
-              className="group-hover:text-primary transition-colors duration-300 group-hover:cursor-pointer"
-            >
-              <Tooltip
-                color="info"
-                content="Modificar información del pago"
-                containerClassName="!flex"
+            {!allDebtsSettled && (
+              <Button
+                aria-label="Change payment date"
+                onClick={() => {
+                  setFieldsToUpdate(["paidById", "paymentDate"]);
+                  setIsOpen(true);
+                }}
+                unstyled
+                className="group-hover:text-primary transition-colors duration-300 group-hover:cursor-pointer"
               >
-                <Repeat className="h-5 w-5" />
-              </Tooltip>
-            </Button>
+                <Tooltip
+                  color="info"
+                  content="Modificar información del pago"
+                  containerClassName="!flex"
+                >
+                  <Repeat className="h-5 w-5" />
+                </Tooltip>
+              </Button>
+            )}
           </div>
 
           <div className="text-foreground/75 flex items-center gap-x-2">
-            <Group className="h-5 w-5" />
+            {(expense.group || !allDebtsSettled) && (
+              <Group className="h-5 w-5" />
+            )}
 
             {expense.groupId ? (
               <p className="text-sm">
@@ -201,7 +227,7 @@ const HeaderSection = ({ expense, loggedUser }: HeaderSectionProps) => {
                   {expense.group?.name}
                 </Link>
               </p>
-            ) : (
+            ) : !allDebtsSettled ? (
               <Button
                 aria-label="Add expense to group"
                 onClick={() => {
@@ -213,7 +239,7 @@ const HeaderSection = ({ expense, loggedUser }: HeaderSectionProps) => {
               >
                 ¿Deseas añadir este gasto a un grupo existente?
               </Button>
-            )}
+            ) : null}
           </div>
         </div>
       </section>

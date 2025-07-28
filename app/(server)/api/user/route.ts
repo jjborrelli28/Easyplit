@@ -14,17 +14,16 @@ import { hashPassword } from "@/lib/auth/helpers";
 import prisma from "@/lib/prisma";
 import { parseZodErrors } from "@/lib/validations/helpers";
 import { deleteUserSchema, updateUserSchema } from "@/lib/validations/schemas";
+import { isExpenseComplete } from "@/lib/utils";
 
 type UpdateUserHandler = (
     req: Request,
 ) => Promise<
-    NextResponse<
-        SuccessResponse<User> | ServerErrorResponse<UpdateUserFields>
-    >
+    NextResponse<SuccessResponse<User> | ServerErrorResponse<UpdateUserFields>>
 >;
 
 // Update user
-export const POST: UpdateUserHandler = async (req: Request) => {
+export const PATCH: UpdateUserHandler = async (req: Request) => {
     try {
         const body = await req.json();
 
@@ -69,8 +68,8 @@ export const POST: UpdateUserHandler = async (req: Request) => {
             );
         }
 
-        const nameIsModified = name !== '' && name !== user.name;
-        const passwordModified = password !== '' && password !== user.password;
+        const nameIsModified = name !== "" && name !== user.name;
+        const passwordModified = password !== "" && password !== user.password;
 
         if (!nameIsModified && !passwordModified) {
             return NextResponse.json({
@@ -92,7 +91,7 @@ export const POST: UpdateUserHandler = async (req: Request) => {
             });
         }
 
-        if (passwordModified && currentPassword) {
+        if (password && passwordModified && currentPassword) {
             if (!user?.password) {
                 return NextResponse.json(
                     {
@@ -181,9 +180,7 @@ export const POST: UpdateUserHandler = async (req: Request) => {
 type DeleteUserHandler = (
     req: Request,
 ) => Promise<
-    NextResponse<
-        SuccessResponse<User> | ServerErrorResponse<DeleteUserFields>
-    >
+    NextResponse<SuccessResponse<User> | ServerErrorResponse<DeleteUserFields>>
 >;
 
 // Delete user
@@ -258,7 +255,9 @@ export const DELETE: DeleteUserHandler = async (req) => {
                     success: false,
                     error: {
                         code: API_RESPONSE_CODE.NO_CHANGES_PROVIDED,
-                        message: ["No se puede eliminar el usuario porque tiene grupos creados."],
+                        message: [
+                            "No se puede eliminar el usuario porque tiene grupos creados.",
+                        ],
                         statusCode: 400,
                     },
                 },
@@ -266,19 +265,28 @@ export const DELETE: DeleteUserHandler = async (req) => {
             );
         }
 
-        const expensesCount = await prisma.expense.count({
+        const expenses = await prisma.expense.findMany({
             where: {
-                paidById: id,
+                OR: [{ paidById: id }, { createdById: id }],
+            },
+            include: {
+                participants: true,
             },
         });
 
-        if (expensesCount > 0) {
+        const hasIncompleteExpenses = expenses.some(
+            (expense) => !isExpenseComplete(expense),
+        );
+
+        if (hasIncompleteExpenses) {
             return NextResponse.json(
                 {
                     success: false,
                     error: {
                         code: API_RESPONSE_CODE.NO_CHANGES_PROVIDED,
-                        message: ["No se puede eliminar el usuario porque tiene gastos creados."],
+                        message: [
+                            "No se puede eliminar el usuario porque tiene gastos con pagos incompletos.",
+                        ],
                         statusCode: 400,
                     },
                 },

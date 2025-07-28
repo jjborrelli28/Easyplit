@@ -16,7 +16,7 @@ const useDeleteGroup = () => {
     >({
         mutationFn: async (body) => {
             const { data } = await api.delete<SuccessResponse<Group>>(
-                "/groups",
+                "/group",
                 body,
             );
 

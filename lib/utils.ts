@@ -1,8 +1,13 @@
 import { startOfToday, subYears } from "date-fns";
 
-import { ExpenseParticipant as PrismaExpenseParticipant } from '@prisma/client'
+import { Expense as PrismaExpense, ExpenseParticipant as PrismaExpenseParticipant } from "@prisma/client";
 
-import type { ExpenseParticipant, GroupMember, User } from "./api/types";
+import type {
+    Expense,
+    ExpenseParticipant,
+    GroupMember,
+    User,
+} from "./api/types";
 
 export const today = startOfToday();
 
@@ -82,7 +87,9 @@ export const formatAmount = (value: number) => {
     });
 };
 
-export const getParticipantIds = (participants: ExpenseParticipant[] | PrismaExpenseParticipant[]) => {
+export const getParticipantIds = (
+    participants: ExpenseParticipant[] | PrismaExpenseParticipant[],
+) => {
     return participants.map((p) => p.userId);
 };
 
@@ -96,4 +103,30 @@ export const getParticipantObjs = (participants: ExpenseParticipant[]) => {
             seen.add(user.id);
             return true;
         });
+};
+
+export const areAllDebtsSettled = (expense: Expense) => {
+    return expense.participants
+        .filter((p) => p.userId !== expense.paidById)
+        .every((p) => {
+            const personalBalance = getPersonalBalance(
+                p.amount,
+                expense.amount,
+                expense.participants.length,
+            );
+
+            const roundedBalance = Math.floor(personalBalance * 100) / 100;
+
+            return roundedBalance <= 0;
+        });
+};
+
+export const isExpenseComplete = (expense: PrismaExpense & { participants: PrismaExpenseParticipant[] }) => {
+    const participantsCount = expense.participants.length;
+
+    return expense.participants.every((p) => {
+        const personalBalance = p.amount - expense.amount / participantsCount;
+        const roundedBalance = Math.floor(personalBalance * 100) / 100;
+        return roundedBalance <= 0;
+    });
 };

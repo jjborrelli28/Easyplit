@@ -12,6 +12,7 @@ import clsx from "clsx";
 
 import InputErrorMessage from "../InputErrorMessage";
 import useWindowsDimensions from "@/hooks/useWindowsDimensions";
+import { formatAmount } from "@/lib/utils";
 
 interface AmountInputProps {
   label?: string;
@@ -184,7 +185,7 @@ const AmountInput = ({
             className="truncate font-semibold"
             style={{ fontSize: `calc(4rem * ${fontScale})` }}
           >
-            {integerPart}
+            {formatAmount(parseInt(integerPart))}
           </span>
 
           <span

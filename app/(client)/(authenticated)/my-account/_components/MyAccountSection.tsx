@@ -55,7 +55,18 @@ const MyAccountSection = ({ user }: MyAccountSectionProps) => {
       currentPassword: "",
     },
     onSubmit: async ({ value }) => {
-      updateUser(value, {
+      const { id, name, password, currentPassword } = value;
+
+      const nameUpdated = name !== "" && name !== currentUser.name;
+      const passwordUpdated = password !== "";
+
+      const body = {
+        id,
+        ...(nameUpdated && { name }),
+        ...(passwordUpdated && { password, currentPassword }),
+      };
+
+      updateUser(body, {
         onSuccess: (res) => {
           form.reset();
 
@@ -210,8 +221,9 @@ const MyAccountSection = ({ user }: MyAccountSectionProps) => {
       <Modal
         isOpen={modalIsOpen}
         onClose={handleCloseModal}
-        showHeader={!message}
         title="Confirmar cambios"
+        showHeader={!message}
+        unstyled={!!message}
       >
         {message ? (
           <MessageCard

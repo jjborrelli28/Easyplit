@@ -101,8 +101,9 @@ const DeleteAccountSection = ({ user }: DeleteAccountSectionProps) => {
       <Modal
         isOpen={modalIsOpen}
         onClose={() => setModalIsOpen(false)}
-        showHeader={!message}
         title="¿Estás seguro que querés eliminar tu cuenta?"
+        showHeader={!message}
+        unstyled={!!message}
       >
         {message ? (
           <MessageCard

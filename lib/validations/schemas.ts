@@ -108,15 +108,17 @@ export const getUserSchema = z.object({
 
 export const updateUserSchema = z.object({
     id,
-    name,
-    password: z.union([
-        z.literal(""),
-        z
-            .string()
-            .min(6, "La contraseña debe tener al menos 6 caracteres")
-            .regex(/[A-Za-z]/, "La contraseña debe contener al menos una letra")
-            .regex(/[0-9]/, "La contraseña debe contener al menos un número"),
-    ]),
+    name: name.optional(),
+    password: z
+        .union([
+            z.literal(""),
+            z
+                .string()
+                .min(6, "La contraseña debe tener al menos 6 caracteres")
+                .regex(/[A-Za-z]/, "La contraseña debe contener al menos una letra")
+                .regex(/[0-9]/, "La contraseña debe contener al menos un número"),
+        ])
+        .optional(),
     currentPassword: z
         .string()
         .min(6, "La contraseña debe tener al menos 6 caracteres")

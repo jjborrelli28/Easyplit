@@ -607,6 +607,31 @@ export const PATCH = async (
     }
 
     if (participantPayment) {
+      const existingParticipant = await prisma.expenseParticipant.findUnique({
+        where: {
+          expenseId_userId: {
+            expenseId: id,
+            userId: participantPayment.userId,
+          },
+        },
+      });
+
+      if (!existingParticipant) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: API_RESPONSE_CODE.NOT_FOUND,
+              message: ["Participante no encontrado."],
+              statusCode: 404,
+            },
+          },
+          { status: 404 },
+        );
+      }
+
+      const newAmount = existingParticipant.amount + participantPayment.amount;
+
       await prisma.expenseParticipant.update({
         where: {
           expenseId_userId: {
@@ -615,7 +640,7 @@ export const PATCH = async (
           },
         },
         data: {
-          amount: participantPayment.amount,
+          amount: newAmount,
         },
       });
     }

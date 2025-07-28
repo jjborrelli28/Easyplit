@@ -15,7 +15,7 @@ const useUpdateUser = () => {
         UpdateUserFields
     >({
         mutationFn: async (body) => {
-            const { data } = await api.post<SuccessResponse<User>>("/user", body);
+            const { data } = await api.patch<SuccessResponse<User>>("/user", body);
 
             return data;
         },
