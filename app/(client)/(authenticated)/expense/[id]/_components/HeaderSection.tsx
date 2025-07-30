@@ -49,6 +49,10 @@ const HeaderSection = ({ expense, loggedUser }: HeaderSectionProps) => {
       );
       return getPositiveTruncatedNumber(personalBalance) === 0;
     });
+  const isUserEditor =
+    loggedUser?.id === expense?.createdById ||
+    loggedUser?.id === expense?.paidById;
+  const hasGroup = expense.groupId;
 
   return (
     <>
@@ -62,7 +66,7 @@ const HeaderSection = ({ expense, loggedUser }: HeaderSectionProps) => {
           >
             <Icon className="text-background h-8 w-8" />
 
-            {!allDebtsSettled && (
+            {isUserEditor && !allDebtsSettled && (
               <Button
                 aria-label="Change expense type"
                 onClick={() => {
@@ -80,7 +84,7 @@ const HeaderSection = ({ expense, loggedUser }: HeaderSectionProps) => {
           <div className="group flex min-w-0 items-center gap-2">
             <h1 className="truncate text-3xl font-bold">{expense.name}</h1>
 
-            {!allDebtsSettled && (
+            {isUserEditor && !allDebtsSettled && (
               <Button
                 aria-label="Change payment date"
                 onClick={() => {
@@ -104,7 +108,7 @@ const HeaderSection = ({ expense, loggedUser }: HeaderSectionProps) => {
 
         <div className="group 2xl:border-h-background flex flex-col gap-x-2 gap-y-1 md:flex-row md:items-center 2xl:justify-end 2xl:border-l 2xl:pl-15">
           <div className="relative flex gap-x-2">
-            {!allDebtsSettled && (
+            {isUserEditor && !allDebtsSettled && (
               <Button
                 aria-label="Change amount"
                 unstyled
@@ -134,7 +138,7 @@ const HeaderSection = ({ expense, loggedUser }: HeaderSectionProps) => {
               {formatAmount(expense.amount)}
             </p>
 
-            {!allDebtsSettled && (
+            {isUserEditor && !allDebtsSettled && (
               <Button
                 aria-label="Change amount"
                 unstyled
@@ -191,7 +195,7 @@ const HeaderSection = ({ expense, loggedUser }: HeaderSectionProps) => {
               </span>
             </p>
 
-            {!allDebtsSettled && (
+            {isUserEditor && !allDebtsSettled && (
               <Button
                 aria-label="Change payment date"
                 onClick={() => {
@@ -212,35 +216,35 @@ const HeaderSection = ({ expense, loggedUser }: HeaderSectionProps) => {
             )}
           </div>
 
-          <div className="text-foreground/75 flex items-center gap-x-2">
-            {(expense.group || !allDebtsSettled) && (
+          {(hasGroup || isUserEditor) && (
+            <div className="text-foreground/75 flex items-center gap-x-2">
               <Group className="h-5 w-5" />
-            )}
 
-            {expense.groupId ? (
-              <p className="text-sm">
-                Este gasto pertenece al grupo{" "}
-                <Link
-                  href={`/group/${expense.groupId}`}
-                  className="hover:text-primary cursor-pointer font-semibold transition-colors duration-300"
+              {hasGroup ? (
+                <p className="text-sm">
+                  Este gasto pertenece al grupo{" "}
+                  <Link
+                    href={`/group/${expense.groupId}`}
+                    className="hover:text-primary cursor-pointer font-semibold transition-colors duration-300"
+                  >
+                    {expense.group?.name}
+                  </Link>
+                </p>
+              ) : !allDebtsSettled ? (
+                <Button
+                  aria-label="Add expense to group"
+                  onClick={() => {
+                    setFieldsToUpdate(["groupId"]);
+                    setIsOpen(true);
+                  }}
+                  unstyled
+                  className="hover:text-primary cursor-pointer text-sm transition-colors duration-300"
                 >
-                  {expense.group?.name}
-                </Link>
-              </p>
-            ) : !allDebtsSettled ? (
-              <Button
-                aria-label="Add expense to group"
-                onClick={() => {
-                  setFieldsToUpdate(["groupId"]);
-                  setIsOpen(true);
-                }}
-                unstyled
-                className="hover:text-primary cursor-pointer text-sm transition-colors duration-300"
-              >
-                ¿Deseas añadir este gasto a un grupo existente?
-              </Button>
-            ) : null}
-          </div>
+                  ¿Deseas añadir este gasto a un grupo existente?
+                </Button>
+              ) : null}
+            </div>
+          )}
         </div>
       </section>
 

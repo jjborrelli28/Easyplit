@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 
+import { format } from "date-fns";
+import { es } from "date-fns/locale";
+
 import type { Expense } from "@prisma/client";
 
 import { EXPENSE_TYPE } from "@/components/ExpenseTypeSelect/constants";
@@ -10,9 +13,10 @@ import type {
   ExpenseUpdateFieldErrors,
   ServerErrorResponse,
   SuccessResponse,
+  User,
 } from "@/lib/api/types";
 import prisma from "@/lib/prisma";
-import { compareMembers } from "@/lib/utils";
+import { compareMembers, formatAmount } from "@/lib/utils";
 import { parseZodErrors } from "@/lib/validations/helpers";
 import {
   createExpenseSchema,
@@ -422,34 +426,72 @@ export const GET: GetExpenseByIdHandler = async (req) => {
   }
 };
 
-const successMessages = {
-  name: {
-    text: "El nombre del gasto fue actualizado correctamente.",
-  },
-  type: {
-    text: "La categoría del gasto fue actualizada correctamente.",
-  },
-  participantsToAdd: {
-    text: "El/los participantes fueron agregados al gasto correctamente.",
-  },
-  participantToRemove: {
-    text: "El participante fue eliminado del gasto correctamente.",
-  },
-  paidById: {
-    text: "Quien pago el gasto fue actualizado correctamente.",
-  },
-  paymentDate: {
-    text: "La fecha de pago del gasto fue actualizada correctamente.",
-  },
-  paymentData: {
-    text: "Los datos del pago fueron actualizados correctamente.",
-  },
-  groupId: {
-    text: "El gasto fue añadido al grupo correctamente.",
-  },
-  amount: {
-    text: "El monto del gasto fue actualizado correctamente.",
-  },
+const getSuccessMessage = {
+  name: (newName: string) => [
+    {
+      text: `El nombre del gasto fue actualizado a “${newName}”.`,
+    },
+  ],
+  type: (newType: string) => [
+    {
+      text: `La categoría del gasto fue actualizada a “${newType}”.`,
+    },
+  ],
+  participantsToAdd: (participants: string[]) => [
+    {
+      text: `Se agregó${participants.length > 1 ? "n" : ""} ${participants.length} participante${participants.length > 1 ? "s" : ""} al gasto.`,
+    },
+  ],
+  participantToRemove: (participant: User) => [
+    {
+      text: `${participant.name} fue removido del gasto.`,
+    },
+  ],
+  paidById: (participant: User) => [
+    {
+      text: `Ahora ${participant.name} figura como quien pagó el gasto.`,
+    },
+  ],
+  paymentDate: (date: Date) => [
+    {
+      text: `La fecha de pago fue actualizada al ${format(
+        date,
+        "dd 'de' MMMM 'del' yyyy",
+        {
+          locale: es,
+        },
+      )}.`,
+    },
+  ],
+  paymentData: (participant: User, date: Date) => [
+    {
+      text: "Los detalles del pago fueron actualizados correctamente.",
+    },
+    {
+      text: `Ahora ${participant.name} figura como quien pagó el gasto.`,
+      style: "muted",
+    },
+    {
+      text: `La fecha de pago fue actualizada al ${format(
+        date,
+        "dd 'de' MMMM 'del' yyyy",
+        {
+          locale: es,
+        },
+      )}.`,
+      style: "muted",
+    },
+  ],
+  groupId: (groupName: string) => [
+    {
+      text: `El gasto fue asignado al grupo “${groupName}”.`,
+    },
+  ],
+  amount: (amount: number) => [
+    {
+      text: `El monto del gasto fue actualizado a $${formatAmount(amount)}.`,
+    },
+  ],
 };
 
 // Update expense
@@ -520,7 +562,18 @@ export const PATCH = async (
             },
           },
         },
-        participants: true,
+        participants: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                image: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -645,6 +698,42 @@ export const PATCH = async (
       });
     }
 
+    let group = null;
+
+    if (groupId) {
+      group = await prisma.group.findUnique({
+        where: { id: groupId },
+        include: {
+          members: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  image: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      if (!group) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: API_RESPONSE_CODE.NOT_FOUND,
+              message: ["No se encontró el grupo seleccionado."],
+              statusCode: 404,
+            },
+          },
+          { status: 404 },
+        );
+      }
+    }
+
     const updatedExpense = await prisma.expense.update({
       where: { id },
       data: {
@@ -675,19 +764,34 @@ export const PATCH = async (
         icon: "CheckCircle",
         title: "¡Gasto actualizado con éxito!",
         content: [
-          ...(name ? [successMessages.name] : []),
-          ...(type ? [successMessages.type] : []),
-          ...(participantsToAdd ? [successMessages.participantsToAdd] : []),
-          ...(participantToRemove ? [successMessages.participantToRemove] : []),
+          ...(name ? getSuccessMessage.name(name) : []),
+          ...(type ? getSuccessMessage.type(type) : []),
+          ...(participantsToAdd
+            ? getSuccessMessage.participantsToAdd(participantsToAdd)
+            : []),
+          ...(participantToRemove
+            ? getSuccessMessage.participantToRemove(
+              expense.participants.find(
+                (p) => p.userId === participantToRemove,
+              )?.user as User,
+            )
+            : []),
           ...(paidById && paymentDate
-            ? [successMessages.paymentData]
+            ? getSuccessMessage.paymentData(
+              expense.participants.find((p) => p.userId === paidById)
+                ?.user as User,
+              paymentDate,
+            )
             : paidById
-              ? [successMessages.paidById]
+              ? getSuccessMessage.paidById(
+                expense.participants.find((p) => p.userId === paidById)
+                  ?.user as User,
+              )
               : paymentDate
-                ? [successMessages.paymentDate]
+                ? getSuccessMessage.paymentDate(paymentDate)
                 : []),
-          ...(groupId ? [successMessages.groupId] : []),
-          ...(amount ? [successMessages.amount] : []),
+          ...(groupId && group ? getSuccessMessage.groupId(group?.name) : []),
+          ...(amount ? getSuccessMessage.amount(amount) : []),
         ],
       },
       data: updatedExpense,

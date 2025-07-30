@@ -36,6 +36,9 @@ const BalanceSection = ({ expense, loggedUser }: BalanceSectionProps) => {
     expense?.paidById,
   );
   const allDebtsSettled = areAllDebtsSettled(expense);
+  const isUserEditor =
+    loggedUser?.id === expense?.createdById ||
+    loggedUser?.id === expense?.paidById;
 
   return (
     <>
@@ -78,7 +81,7 @@ const BalanceSection = ({ expense, loggedUser }: BalanceSectionProps) => {
           ))}
         </ul>
 
-        {!allDebtsSettled && (
+        {isUserEditor && !allDebtsSettled && (
           <div className="flex justify-end">
             <Button
               aria-label="Add participant"

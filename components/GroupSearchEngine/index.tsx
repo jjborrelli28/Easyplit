@@ -125,7 +125,7 @@ const GroupSearchEngine = ({
       </div>
 
       {filteredGroups.length > 0 && (
-        <ul className="bg-h-background border-primary absolute top-full right-0 left-0 z-20 max-h-60 overflow-y-auto border !border-t-0 shadow-xl">
+        <ul className="bg-h-background border-primary absolute top-full right-0 left-0 z-20 max-h-120 overflow-y-auto border !border-t-0 shadow-xl">
           {filteredGroups.map((group, i) => {
             const type = group?.type ?? GROUP_TYPE.OTHER;
             const Icon = GROUP_TYPES[type].icon;
