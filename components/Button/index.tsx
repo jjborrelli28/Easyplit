@@ -106,7 +106,9 @@ const Button = ({
       COLORS[color][variant],
       fullWidth ? "w-full" : "max-w-fit",
       loading && "pointer-events-none text-transparent",
-      disabled ? "cursor-not-allowed" : "cursor-pointer",
+      disabled
+        ? "cursor-not-allowed !bg-gray-600 dark:!bg-gray-200"
+        : "cursor-pointer",
     ],
     className,
   );

@@ -1,10 +1,11 @@
-import { type Dispatch, type SetStateAction, useState } from "react";
+import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
 
 import Image from "next/image";
 
 import type { Session } from "next-auth";
 
 import { useForm } from "@tanstack/react-form";
+import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
 import { isEqual } from "date-fns";
 import { X } from "lucide-react";
@@ -39,7 +40,6 @@ import Modal from "../Modal";
 import Select from "../Select";
 import Tooltip from "../Tooltip";
 import UserSearchEngine from "../UserSearchEngine";
-import { useQueryClient } from "@tanstack/react-query";
 
 const modalTitles = {
   name: "Modificar nombre",
@@ -99,6 +99,7 @@ const UpdateExpenseForm = ({
 
   const [newParticipants, setNewParticipants] = useState<User[]>([]);
   const [message, setMessage] = useState<ResponseMessage | null>(null);
+  const [isSendeable, setIsSendeable] = useState(false);
 
   const editName = fieldsToUpdate.includes("name");
   const editType = fieldsToUpdate.includes("type");
@@ -209,12 +210,43 @@ const UpdateExpenseForm = ({
     },
   });
 
+  const toggleIsSendeable = (
+    currentValue: unknown,
+    initialValue: unknown,
+    isValid?: boolean,
+  ) => {
+    if (isValid === false) {
+      setIsSendeable(false);
+    }
+
+    if (currentValue !== initialValue && !isSendeable && isValid) {
+      setIsSendeable(true);
+    } else if (currentValue === initialValue && isSendeable) {
+      setIsSendeable(false);
+    }
+  };
+
+  useEffect(() => {
+    if (addParticipants) {
+      toggleIsSendeable(newParticipantIds.length, 0);
+    }
+
+    if (removeParticipant) {
+      setIsSendeable(true);
+    }
+
+    if (addParticipantPayment) {
+      setIsSendeable(true);
+    }
+  }, [newParticipantIds, form.state.isFormValid]);
+
   if (!fieldsToUpdate) return null;
 
   const handleClose = () => {
     setIsOpen(false);
     setNewParticipants([]);
     setMessage(null);
+    setIsSendeable(false);
     form.reset();
   };
 
@@ -263,6 +295,7 @@ const UpdateExpenseForm = ({
               <form.Field
                 name="name"
                 validators={{
+                  onChange: updateExpenseSchema.shape.name,
                   onBlur: updateExpenseSchema.shape.name,
                 }}
               >
@@ -272,7 +305,15 @@ const UpdateExpenseForm = ({
                     label="Nombre del gasto"
                     placeholder="Nombre del gasto"
                     value={field.state.value}
-                    onChange={(e) => field.handleChange(e.target.value)}
+                    onChange={(e) => {
+                      field.handleChange(e.target.value);
+
+                      toggleIsSendeable(
+                        e.target.value,
+                        expense.name,
+                        field.state.meta.isValid,
+                      );
+                    }}
                     onBlur={field.handleBlur}
                     autoComplete="name"
                     required
@@ -296,7 +337,11 @@ const UpdateExpenseForm = ({
                   <ExpenseTypeSelect
                     label="Tipo de gasto:"
                     value={field.state.value}
-                    onChange={(e) => field.handleChange(e)}
+                    onChange={(e) => {
+                      field.handleChange(e);
+
+                      toggleIsSendeable(e, expense.type);
+                    }}
                     error={
                       field.state.meta.errors[0]?.message ||
                       field.state.meta.errorMap.onSubmit
@@ -414,7 +459,11 @@ const UpdateExpenseForm = ({
                     <Select
                       options={getParticipantOptions(participants)}
                       value={field.state.value}
-                      onChange={field.handleChange}
+                      onChange={(e) => {
+                        field.handleChange(e);
+
+                        toggleIsSendeable(e, expense.paidById);
+                      }}
                       label="Pagado por:"
                       placeholder="Selecciona un participante"
                     />
@@ -440,7 +489,11 @@ const UpdateExpenseForm = ({
                 {(field) => (
                   <DatePicker
                     value={field.state.value}
-                    onChange={field.handleChange}
+                    onChange={(e) => {
+                      field.handleChange(e);
+
+                      toggleIsSendeable(e.toISOString(), expense.paymentDate);
+                    }}
                     error={
                       field.state.meta.errors[0]?.message ||
                       field.state.meta.errorMap.onSubmit
@@ -463,7 +516,11 @@ const UpdateExpenseForm = ({
                     version="v2"
                     user={user}
                     value={field.state.value}
-                    onChange={field.handleChange}
+                    onChange={(e) => {
+                      field.handleChange(e);
+
+                      toggleIsSendeable(e, "");
+                    }}
                     pickedParticipants={participants}
                     onBlur={field.handleBlur}
                     error={
@@ -487,7 +544,17 @@ const UpdateExpenseForm = ({
                   <AmountInput
                     label="Monto"
                     value={field.state.value}
-                    onChange={field.handleChange}
+                    onChange={(e) => {
+                      field.handleChange(e);
+
+                      toggleIsSendeable(
+                        e,
+                        Number.isInteger(expense.amount)
+                          ? Number(expense.amount.toFixed(2))
+                          : expense.amount,
+                        field.state.meta.isValid,
+                      );
+                    }}
                     onBlur={field.handleBlur}
                     error={
                       field.state.meta.errors[0]?.message ||
@@ -542,6 +609,7 @@ const UpdateExpenseForm = ({
               type="submit"
               className="mt-4 lg:mt-7"
               loading={isPending}
+              disabled={!isSendeable}
               fullWidth
             >
               {fieldsToUpdate.length > 1

@@ -143,7 +143,7 @@ const Select = ({
             "bg-h-background absolute z-10 mt-0 w-full border !border-t-0 shadow-xl",
             COLORS.border[color],
           )}
-          contentClassName="max-h-30 overflow-y-scroll"
+          contentClassName="max-h-60 overflow-y-scroll"
         >
           {options.map((option, i) => (
             <Button

@@ -216,7 +216,7 @@ const HeaderSection = ({ expense, loggedUser }: HeaderSectionProps) => {
             )}
           </div>
 
-          {(hasGroup || isUserEditor) && (
+          {(hasGroup || (isUserEditor && !allDebtsSettled)) && (
             <div className="text-foreground/75 flex items-center gap-x-2">
               <Group className="h-5 w-5" />
 

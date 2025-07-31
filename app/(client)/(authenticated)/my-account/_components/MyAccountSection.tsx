@@ -6,7 +6,6 @@ import type { Session } from "next-auth";
 import { useSession } from "next-auth/react";
 
 import { useForm } from "@tanstack/react-form";
-import clsx from "clsx";
 
 import useUpdateUser from "@/hooks/data/user/useUpdateUser";
 
@@ -204,10 +203,7 @@ const MyAccountSection = ({ user }: MyAccountSectionProps) => {
               return (
                 <Button
                   onClick={() => setModalIsOpen(true)}
-                  className={clsx(
-                    "col-span-full min-w-40 justify-self-end",
-                    !isSendable && "!bg-gray-600 dark:!bg-gray-200",
-                  )}
+                  className="col-span-full min-w-40 justify-self-end"
                   disabled={!isSendable}
                 >
                   Aplicar cambios

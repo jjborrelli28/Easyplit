@@ -32,7 +32,7 @@ const Input = ({
   label,
   error,
   type,
-  value: rawValue,
+  value: rawValue = "",
   onChange,
   onFocus: rawOnFocus,
   onBlur,
