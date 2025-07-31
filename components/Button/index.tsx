@@ -42,7 +42,7 @@ interface ButtonAsButton
 export type ButtonProps = PropsWithChildren<ButtonAsButton | ButtonAsLink>;
 
 const BASE_STYLES =
-  "relative box-border flex min-w-30 items-center justify-center gap-3 px-4 py-2 font-semibold transition-colors duration-300";
+  "relative box-border flex min-w-30 items-center justify-center gap-3 px-4 py-2 font-semibold transition-colors duration-300 cursor-pointer";
 
 const COLORS: Record<Colors, Record<Variant, string>> = {
   primary: {
@@ -89,6 +89,12 @@ const COLORS: Record<Colors, Record<Variant, string>> = {
   },
 };
 
+const DISABLED_COLOR = {
+  contained: "bg-disabled text-background  border-disabled !cursor-not-allowed",
+  outlined: "border border-disabled text-disabled !cursor-not-allowed",
+  text: "text-disabled !cursor-not-allowed",
+};
+
 const Button = ({
   variant = "contained",
   color = "primary",
@@ -103,12 +109,9 @@ const Button = ({
   const combinedClass = clsx(
     !unstyled && [
       BASE_STYLES,
-      COLORS[color][variant],
+      disabled ? DISABLED_COLOR[variant] : COLORS[color][variant],
       fullWidth ? "w-full" : "max-w-fit",
       loading && "pointer-events-none text-transparent",
-      disabled
-        ? "cursor-not-allowed !bg-gray-600 dark:!bg-gray-200"
-        : "cursor-pointer",
     ],
     className,
   );

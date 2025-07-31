@@ -19,6 +19,7 @@
     --success: #19944a;
     --warning: #d4a900;
     --danger: #c13232;
+    --disabled: #4b5563;
     --yellow: #b38600;
     --green: #059669;
     --purple: #7e22ce;
@@ -44,6 +45,7 @@
     --success: #22c55e;
     --warning: #facc15;
     --danger: #ef4444;
+    --disabled: #e5e7eb;
     --yellow: #ffcc33;
     --green: #6ee7b7;
     --purple: #c084fc;
@@ -69,6 +71,7 @@
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
+  --color-disabled: var(--disabled);
   --color-yellow: var(--yellow);
   --color-green: var(--green);
   --color-purple: var(--purple);

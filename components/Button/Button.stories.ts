@@ -82,3 +82,10 @@ export const Danger: Story = {
     color: "danger",
   },
 };
+
+export const Disabled: Story = {
+  args: {
+    children: "Button",
+    disabled: true
+  },
+};
