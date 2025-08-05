@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 
 import type { Session } from "next-auth";
 
+import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
@@ -27,7 +28,6 @@ import { GROUP_TYPE, GROUP_TYPES } from "../GroupTypeSelect/constants";
 import MessageCard from "../MessageCard";
 import Modal from "../Modal";
 import Tooltip from "../Tooltip";
-import { useQueryClient } from "@tanstack/react-query";
 
 export enum CARD_TYPE {
   EXPENSE = "EXPENSE",
@@ -45,7 +45,7 @@ const Card = ({ type, data, loggedInUser }: CardProps) => {
   const queryClient = useQueryClient();
 
   const { mutate: deleteExpense, isPending: expenseIsPending } =
-    useDeleteExpense();
+    useDeleteExpense(data.id);
   const { mutate: deleteGroup, isPending: groupIsPending } = useDeleteGroup();
 
   const [deleteModalIsOpen, setDeleteModalIsOpen] = useState(false);
@@ -71,13 +71,14 @@ const Card = ({ type, data, loggedInUser }: CardProps) => {
     e.preventDefault();
 
     const body = {
+      // TODO: Delete
       data: {
         id: data.id,
       },
     };
 
     if (type === CARD_TYPE.EXPENSE) {
-      deleteExpense(body, {
+      deleteExpense(undefined, {
         onSuccess: (res) => {
           queryClient.invalidateQueries({
             queryKey: ["my-expenses-and-groups", loggedInUser.id!],

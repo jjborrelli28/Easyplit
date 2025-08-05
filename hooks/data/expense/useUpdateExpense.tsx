@@ -10,7 +10,7 @@ import type {
 } from "@/lib/api/types";
 import axios from "@/lib/axios";
 
-const useUpdateExpense = () => {
+const useUpdateExpense = (expenseId?: string | null) => {
   return useMutation<
     SuccessResponse<Expense>,
     ErrorResponse<ExpenseUpdateFieldErrors>,
@@ -18,7 +18,7 @@ const useUpdateExpense = () => {
   >({
     mutationFn: async (body) => {
       const { data } = await axios.patch<SuccessResponse<Expense>>(
-        "/expense",
+        `/expense/${expenseId}`,
         body,
       );
 

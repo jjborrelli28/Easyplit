@@ -136,13 +136,8 @@ export interface ExpenseCreationFieldErrors {
     createdById?: string;
 }
 
-export interface DeleteExpenseGroupFields {
-    data: { id?: string };
-}
-
 export interface UpdateExpenseFields {
-    id: string;
-    userId: string;
+    updatedById: string;
     name?: string;
     type?: EXPENSE_TYPE;
     amount?: number;
@@ -158,8 +153,7 @@ export interface UpdateExpenseFields {
 }
 
 export interface ExpenseUpdateFieldErrors {
-    id?: string;
-    userId?: string;
+    updatedById?: string;
     name?: string;
     type?: string;
     amount?: string;
@@ -204,5 +198,9 @@ export interface GroupCreationFieldErrors {
     memberIds?: string;
     expenses?: string;
     createdById?: string;
+}
+
+export interface DeleteExpenseGroupFields {
+    data: { id?: string };
 }
 /* End group types */

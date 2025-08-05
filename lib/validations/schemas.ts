@@ -158,8 +158,7 @@ export const createExpenseSchema = z.object({
 });
 
 export const updateExpenseSchema = z.object({
-    id,
-    userId: id,
+    updatedById: id,
     name: name.optional(),
     type: expenseType,
     participantsToAdd: z

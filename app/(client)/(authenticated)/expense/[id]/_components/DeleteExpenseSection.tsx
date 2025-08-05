@@ -17,7 +17,7 @@ interface DeleteAccountSectionProps {
 
 const DeleteExpenseSection = ({ expenseId }: DeleteAccountSectionProps) => {
   const router = useRouter();
-  const { mutate: deleteExpense, isPending } = useDeleteExpense();
+  const { mutate: deleteExpense, isPending } = useDeleteExpense(expenseId);
 
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [message, setMessage] = useState<ResponseMessage | null>(null);
@@ -25,13 +25,7 @@ const DeleteExpenseSection = ({ expenseId }: DeleteAccountSectionProps) => {
   const handleDelete = (e: FormEvent) => {
     e.preventDefault();
 
-    const body = {
-      data: {
-        id: expenseId,
-      },
-    };
-
-    deleteExpense(body, {
+    deleteExpense(undefined, {
       onSuccess: (res) => {
         res?.message && setMessage(res.message);
       },

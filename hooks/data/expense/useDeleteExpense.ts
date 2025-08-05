@@ -1,23 +1,15 @@
 import { useMutation } from "@tanstack/react-query";
 
-import type {
-    DeleteExpenseGroupFields,
-    ErrorResponse,
-    Expense,
-    SuccessResponse,
-} from "@/lib/api/types";
+import type { Expense } from "@prisma/client";
+
+import type { ErrorResponse, SuccessResponse } from "@/lib/api/types";
 import api from "@/lib/axios";
 
-const useDeleteExpense = () => {
-    return useMutation<
-        SuccessResponse<Expense>,
-        ErrorResponse<DeleteExpenseGroupFields>,
-        DeleteExpenseGroupFields
-    >({
-        mutationFn: async (body) => {
+const useDeleteExpense = (expenseId?: string | null) => {
+    return useMutation<SuccessResponse<Expense>, ErrorResponse>({
+        mutationFn: async () => {
             const { data } = await api.delete<SuccessResponse<Expense>>(
-                "/expense",
-                body,
+                `/expense/${expenseId}`,
             );
 
             return data;

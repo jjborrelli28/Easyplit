@@ -1,4 +1,10 @@
-import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
+import {
+  type Dispatch,
+  type SetStateAction,
+  useCallback,
+  useEffect,
+  useState,
+} from "react";
 
 import Image from "next/image";
 
@@ -71,7 +77,7 @@ const buttonLabels = {
 
 export type UpdateExpenseFieldKeys = (keyof Omit<
   UpdateExpenseFields,
-  "id" | "userId"
+  "id" | "updatedById"
 >)[];
 
 interface UpdateExpenseFormProps {
@@ -94,7 +100,7 @@ const UpdateExpenseForm = ({
   selectedParticipant,
   amountToBeSettled,
 }: UpdateExpenseFormProps) => {
-  const { mutate: updateExpense, isPending } = useUpdateExpense();
+  const { mutate: updateExpense, isPending } = useUpdateExpense(expense.id);
   const queryClient = useQueryClient();
 
   const [newParticipants, setNewParticipants] = useState<User[]>([]);
@@ -153,8 +159,7 @@ const UpdateExpenseForm = ({
     undefined
   >({
     defaultValues: {
-      id: expense.id,
-      userId: user.id!,
+      updatedById: user.id!,
       ...(editName && { name: expense.name }),
       ...(editType && { type: expense.type as EXPENSE_TYPE }),
       ...(addParticipants && { participantsToAdd: [] }),
@@ -210,21 +215,20 @@ const UpdateExpenseForm = ({
     },
   });
 
-  const toggleIsSendeable = (
-    currentValue: unknown,
-    initialValue: unknown,
-    isValid?: boolean,
-  ) => {
-    if (isValid === false) {
-      setIsSendeable(false);
-    }
+  const toggleIsSendeable = useCallback(
+    (currentValue: unknown, initialValue: unknown, isValid?: boolean) => {
+      if (isValid === false) {
+        setIsSendeable(false);
+      }
 
-    if (currentValue !== initialValue && !isSendeable && isValid) {
-      setIsSendeable(true);
-    } else if (currentValue === initialValue && isSendeable) {
-      setIsSendeable(false);
-    }
-  };
+      if (currentValue !== initialValue && !isSendeable && isValid) {
+        setIsSendeable(true);
+      } else if (currentValue === initialValue && isSendeable) {
+        setIsSendeable(false);
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     if (addParticipants) {
@@ -238,7 +242,14 @@ const UpdateExpenseForm = ({
     if (addParticipantPayment) {
       setIsSendeable(true);
     }
-  }, [newParticipantIds, form.state.isFormValid]);
+  }, [
+    newParticipantIds,
+    addParticipants,
+    removeParticipant,
+    addParticipantPayment,
+    toggleIsSendeable,
+    form.state.isFormValid,
+  ]);
 
   if (!fieldsToUpdate) return null;
 

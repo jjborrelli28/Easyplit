@@ -6,8 +6,11 @@ import { useSession } from "next-auth/react";
 
 import useGetExpenseById from "@/hooks/data/expense/useGetExpenseById";
 
+import type { Expense } from "@/lib/api/types";
+
 import PageContainer from "@/components/PageContainer";
 import Spinner from "@/components/Spinner";
+import useGetExpenseHistoryById from "@/hooks/data/expense/useGetExpenseHistoryById";
 import BalanceSection from "./_components/BalanceSection";
 import DeleteExpenseSection from "./_components/DeleteExpenseSection";
 import HeaderSection from "./_components/HeaderSection";
@@ -29,7 +32,8 @@ const ExpensePage = () => {
   const isUserEditor =
     loggedUser?.id === expense?.createdById ||
     loggedUser?.id === expense?.paidById;
-
+  const { data: res } = useGetExpenseHistoryById(expenseId);
+  console.log(res);
   return (
     <PageContainer className="border-h-background !px-0 md:border-r">
       <div className="border-h-background flex flex-1 flex-col border-t px-4 py-8 lg:px-8">
@@ -40,11 +44,17 @@ const ExpensePage = () => {
             </div>
           ) : expense ? (
             <>
-              <HeaderSection expense={expense} loggedUser={loggedUser} />
+              <HeaderSection
+                expense={expense as Expense}
+                loggedUser={loggedUser}
+              />
 
               <hr className="border-h-background" />
 
-              <BalanceSection expense={expense} loggedUser={loggedUser} />
+              <BalanceSection
+                expense={expense as Expense}
+                loggedUser={loggedUser}
+              />
 
               {isUserEditor && (
                 <>
