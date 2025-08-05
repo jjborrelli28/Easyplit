@@ -16,15 +16,18 @@ import { parseZodErrors } from "@/lib/validations/helpers";
 import { deleteUserSchema, updateUserSchema } from "@/lib/validations/schemas";
 import { isExpenseComplete } from "@/lib/utils";
 
+// Update user
 type UpdateUserHandler = (
     req: Request,
+    context: { params: Promise<{ id: string }> },
 ) => Promise<
     NextResponse<SuccessResponse<User> | ServerErrorResponse<UpdateUserFields>>
 >;
 
-// Update user
-export const PATCH: UpdateUserHandler = async (req: Request) => {
+export const PATCH: UpdateUserHandler = async (req, context) => {
     try {
+        const params = await context.params;
+        const id = params.id;
         const body = await req.json();
 
         const res = updateUserSchema.safeParse(body);
@@ -46,7 +49,7 @@ export const PATCH: UpdateUserHandler = async (req: Request) => {
             );
         }
 
-        const { id, name, password, currentPassword } = res.data;
+        const { name, password, currentPassword } = res.data;
 
         let user = await prisma.user.findFirst({
             where: {
@@ -177,15 +180,18 @@ export const PATCH: UpdateUserHandler = async (req: Request) => {
     }
 };
 
+// Delete user
 type DeleteUserHandler = (
     req: Request,
+    context: { params: Promise<{ id: string }> },
 ) => Promise<
     NextResponse<SuccessResponse<User> | ServerErrorResponse<DeleteUserFields>>
 >;
 
-// Delete user
-export const DELETE: DeleteUserHandler = async (req) => {
+export const DELETE: DeleteUserHandler = async (req, context) => {
     try {
+        const params = await context.params;
+        const id = params.id;
         const body = await req.json();
 
         const res = deleteUserSchema.safeParse(body);
@@ -207,7 +213,7 @@ export const DELETE: DeleteUserHandler = async (req) => {
             );
         }
 
-        const { id, password } = res.data;
+        const { password } = res.data;
 
         const user = await prisma.user.findFirst({ where: { id } });
 

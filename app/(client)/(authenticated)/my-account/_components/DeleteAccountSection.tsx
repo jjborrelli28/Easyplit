@@ -26,7 +26,7 @@ interface DeleteAccountSectionProps {
 }
 
 const DeleteAccountSection = ({ user }: DeleteAccountSectionProps) => {
-  const { mutate: deleteUser, isPending } = useDeleteUser();
+  const { mutate: deleteUser, isPending } = useDeleteUser(user.id);
 
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [message, setMessage] = useState<ResponseMessage | null>(null);
@@ -44,7 +44,6 @@ const DeleteAccountSection = ({ user }: DeleteAccountSectionProps) => {
     undefined
   >({
     defaultValues: {
-      id: user.id!,
       password: "",
     },
     onSubmit: async ({ value }) => {

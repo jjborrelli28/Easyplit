@@ -30,7 +30,7 @@ interface MyAccountSectionProps {
 const MyAccountSection = ({ user }: MyAccountSectionProps) => {
   const { update } = useSession();
 
-  const { mutate: updateUser, isPending } = useUpdateUser();
+  const { mutate: updateUser, isPending } = useUpdateUser(user.id);
 
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [message, setMessage] = useState<ResponseMessage | null>(null);
@@ -48,19 +48,17 @@ const MyAccountSection = ({ user }: MyAccountSectionProps) => {
     undefined
   >({
     defaultValues: {
-      id: user.id!,
       name: user.name!,
       password: "",
       currentPassword: "",
     },
     onSubmit: async ({ value }) => {
-      const { id, name, password, currentPassword } = value;
+      const { name, password, currentPassword } = value;
 
       const nameUpdated = name !== "" && name !== currentUser.name;
       const passwordUpdated = password !== "";
 
       const body = {
-        id,
         ...(nameUpdated && { name }),
         ...(passwordUpdated && { password, currentPassword }),
       };

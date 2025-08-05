@@ -5,7 +5,7 @@ import type { Expense } from "@prisma/client";
 import type { SuccessResponse } from "@/lib/api/types";
 import api from "@/lib/axios";
 
-const getExpenseById = async (expenseId?: string | null) => {
+const getExpense = async (expenseId?: string | null) => {
   const { data } = await api.get<SuccessResponse<Expense>>(
     `/expense/${expenseId}`,
   );
@@ -13,14 +13,14 @@ const getExpenseById = async (expenseId?: string | null) => {
   return data.data;
 };
 
-const useGetExpenseById = (expenseId?: string | null) => {
+const useGetExpense = (expenseId?: string | null) => {
   return useQuery({
     queryKey: ["linked-expense", expenseId],
-    queryFn: () => getExpenseById(expenseId),
+    queryFn: () => getExpense(expenseId),
     enabled: !!expenseId,
     staleTime: 1000 * 10,
     refetchInterval: 10000,
   });
 };
 
-export default useGetExpenseById;
+export default useGetExpense;

@@ -8,14 +8,14 @@ import type {
 } from "@/lib/api/types";
 import api from "@/lib/axios";
 
-const useUpdateUser = () => {
+const useUpdateUser = (userId?: string | null) => {
     return useMutation<
         SuccessResponse<User>,
         ErrorResponse<UpdateUserFields>,
         UpdateUserFields
     >({
         mutationFn: async (body) => {
-            const { data } = await api.patch<SuccessResponse<User>>("/user", body);
+            const { data } = await api.patch<SuccessResponse<User>>(`/user/${userId}`, body);
 
             return data;
         },

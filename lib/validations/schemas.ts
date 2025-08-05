@@ -102,12 +102,7 @@ export const resetPasswordSchema = z.object({
 /* End of form schemes without authentication */
 
 /* User form schemas */
-export const getUserSchema = z.object({
-    id,
-});
-
 export const updateUserSchema = z.object({
-    id,
     name: name.optional(),
     password: z
         .union([
@@ -128,7 +123,6 @@ export const updateUserSchema = z.object({
 });
 
 export const deleteUserSchema = z.object({
-    id,
     password,
 });
 

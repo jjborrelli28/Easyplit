@@ -8,7 +8,7 @@ import type {
 } from "@/lib/api/types";
 import api from "@/lib/axios";
 
-const useDeleteUser = () => {
+const useDeleteUser = (userId?: string | null) => {
     return useMutation<
         SuccessResponse<User>,
         ErrorResponse<DeleteUserFields>,
@@ -16,7 +16,7 @@ const useDeleteUser = () => {
     >({
         mutationFn: async (body) => {
             const { data } = await api.delete<SuccessResponse<User>>(
-                "/user",
+                `/user/${userId}`,
                 { data: body }
             );
 
