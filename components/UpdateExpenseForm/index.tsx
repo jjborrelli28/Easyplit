@@ -75,10 +75,7 @@ const buttonLabels = {
   participantPayment: "Agregar pago",
 };
 
-export type UpdateExpenseFieldKeys = (keyof Omit<
-  UpdateExpenseFields,
-  "id" | "updatedById"
->)[];
+export type UpdateExpenseFieldKeys = (keyof Omit<UpdateExpenseFields, "id">)[];
 
 interface UpdateExpenseFormProps {
   isOpen: boolean;
@@ -159,7 +156,6 @@ const UpdateExpenseForm = ({
     undefined
   >({
     defaultValues: {
-      updatedById: user.id!,
       ...(editName && { name: expense.name }),
       ...(editType && { type: expense.type as EXPENSE_TYPE }),
       ...(addParticipants && { participantsToAdd: [] }),
@@ -216,7 +212,7 @@ const UpdateExpenseForm = ({
   });
 
   const toggleIsSendeable = useCallback(
-    (currentValue: unknown, initialValue: unknown, isValid?: boolean) => {
+    (currentValue: unknown, initialValue: unknown, isValid: boolean) => {
       if (isValid === false) {
         setIsSendeable(false);
       }
@@ -232,7 +228,7 @@ const UpdateExpenseForm = ({
 
   useEffect(() => {
     if (addParticipants) {
-      toggleIsSendeable(newParticipantIds.length, 0);
+      toggleIsSendeable(newParticipantIds.length, 0, true);
     }
 
     if (removeParticipant) {
@@ -351,7 +347,11 @@ const UpdateExpenseForm = ({
                     onChange={(e) => {
                       field.handleChange(e);
 
-                      toggleIsSendeable(e, expense.type);
+                      toggleIsSendeable(
+                        e,
+                        expense.type,
+                        field.state.meta.isValid,
+                      );
                     }}
                     error={
                       field.state.meta.errors[0]?.message ||
@@ -473,7 +473,11 @@ const UpdateExpenseForm = ({
                       onChange={(e) => {
                         field.handleChange(e);
 
-                        toggleIsSendeable(e, expense.paidById);
+                        toggleIsSendeable(
+                          e,
+                          expense.paidById,
+                          field.state.meta.isValid,
+                        );
                       }}
                       label="Pagado por:"
                       placeholder="Selecciona un participante"
@@ -503,7 +507,11 @@ const UpdateExpenseForm = ({
                     onChange={(e) => {
                       field.handleChange(e);
 
-                      toggleIsSendeable(e.toISOString(), expense.paymentDate);
+                      toggleIsSendeable(
+                        e.toISOString(),
+                        expense.paymentDate,
+                        field.state.meta.isValid,
+                      );
                     }}
                     error={
                       field.state.meta.errors[0]?.message ||
@@ -525,12 +533,11 @@ const UpdateExpenseForm = ({
                 {(field) => (
                   <GroupPicker
                     version="v2"
-                    user={user}
                     value={field.state.value}
                     onChange={(e) => {
                       field.handleChange(e);
 
-                      toggleIsSendeable(e, "");
+                      toggleIsSendeable(e, "", field.state.meta.isValid);
                     }}
                     pickedParticipants={participants}
                     onBlur={field.handleBlur}

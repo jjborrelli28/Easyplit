@@ -1,16 +1,40 @@
 import { NextResponse } from "next/server";
 
+import { getServerSession } from "next-auth";
+
 import API_RESPONSE_CODE from "@/lib/api/API_RESPONSE_CODE";
-import type { ServerErrorResponse, SuccessResponse, User } from "@/lib/api/types";
+import type {
+    ServerErrorResponse,
+    SuccessResponse,
+    User,
+} from "@/lib/api/types";
+import AuthOptions from "@/lib/auth/options";
 import prisma from "@/lib/prisma";
 
+// Search users by name or email
 type GetSearchUsersHandler = (
     req: Request,
 ) => Promise<NextResponse<SuccessResponse<User[]> | ServerErrorResponse>>;
 
-// Search users by name or email
 export const GET: GetSearchUsersHandler = async (req: Request) => {
     try {
+        const session = await getServerSession(AuthOptions);
+        const userId = session?.user?.id;
+
+        if (!userId) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: {
+                        code: API_RESPONSE_CODE.UNAUTHORIZED,
+                        message: ["No se registro una sesión inicia."],
+                        statusCode: 401,
+                    },
+                },
+                { status: 401 },
+            );
+        }
+
         const { searchParams } = new URL(req.url);
         const q = searchParams.get("q");
         const excludeUserIdsParam = searchParams.get("excludeUserIds");
@@ -75,4 +99,4 @@ export const GET: GetSearchUsersHandler = async (req: Request) => {
             { status: 500 },
         );
     }
-}
+};

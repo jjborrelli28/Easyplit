@@ -1,7 +1,5 @@
 import { useState } from "react";
 
-import type { Session } from "next-auth";
-
 import clsx from "clsx";
 
 import useGetMyExpensesAndGroups from "@/hooks/data/user/useGetMyExpensesAndGroups";
@@ -10,12 +8,8 @@ import { CARD_TYPE } from "@/components/Card";
 import PanelList from "@/components/PanelList";
 import Spinner from "@/components/Spinner";
 
-interface GroupAndExpenseListProps {
-  user?: Session["user"];
-}
-
-const GroupAndExpenseList = ({ user }: GroupAndExpenseListProps) => {
-  const { data, isPending } = useGetMyExpensesAndGroups(user?.id);
+const GroupAndExpenseList = () => {
+  const { data, isPending } = useGetMyExpensesAndGroups();
 
   const [activePanel, setActivePanel] = useState<CARD_TYPE>(CARD_TYPE.EXPENSE);
 

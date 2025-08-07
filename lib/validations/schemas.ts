@@ -148,11 +148,9 @@ export const createExpenseSchema = z.object({
     paymentDate,
     groupId: id.optional(),
     amount,
-    createdById: id,
 });
 
 export const updateExpenseSchema = z.object({
-    updatedById: id,
     name: name.optional(),
     type: expenseType,
     participantsToAdd: z
@@ -179,9 +177,6 @@ export const createGroupSchema = z.object({
         })
         .min(3, "El nombre del grupo debe tener al menos 3 caracteres."),
     type: groupType,
-    createdById: z.string({
-        required_error: "El ID del creador es obligatorio.",
-    }),
     memberIds: z
         .array(z.string(), {
             required_error: "Debes agregar al menos 2 miembros al grupo.",

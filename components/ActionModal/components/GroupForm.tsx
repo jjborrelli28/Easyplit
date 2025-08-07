@@ -56,7 +56,6 @@ const GroupForm = ({
       name: "",
       type: GROUP_TYPE.OTHER,
       memberIds: [user.id!],
-      createdById: user.id!,
     },
     onSubmit: async ({ value }) => {
       createGroup(value, {

@@ -30,7 +30,6 @@ interface GroupPickerProps
 
 const GroupPicker = ({
   version = "v1",
-  user,
   value,
   onChange,
   pickedParticipants,
@@ -46,8 +45,6 @@ const GroupPicker = ({
       setSelectedGroup(null);
     }
   }, [value]);
-
-  if (!user) return null;
 
   const handleSelect = (group: Group) => {
     const { haveDifferences, differences } = compareMembers(
@@ -83,7 +80,6 @@ const GroupPicker = ({
   const content = (
     <>
       <GroupSearchEngine
-        user={user}
         onSelect={handleSelect}
         excludeGroupIds={excludeGroupIds}
       />

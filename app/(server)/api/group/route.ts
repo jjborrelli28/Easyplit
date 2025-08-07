@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import type { Group } from "@prisma/client";
+import { getServerSession } from "next-auth";
 
 import API_RESPONSE_CODE from "@/lib/api/API_RESPONSE_CODE";
 import type {
@@ -9,6 +10,7 @@ import type {
   ServerErrorResponse,
   SuccessResponse
 } from "@/lib/api/types";
+import AuthOptions from "@/lib/auth/options";
 import prisma from "@/lib/prisma";
 import { parseZodErrors } from "@/lib/validations/helpers";
 import { createGroupSchema } from "@/lib/validations/schemas";
@@ -23,30 +25,47 @@ type CreateGroupHandler = (
 
 // Create group
 export const POST: CreateGroupHandler = async (req: Request) => {
-  const body = await req.json();
-
-  const res = createGroupSchema.safeParse(body);
-
-  if (!res.success) {
-    const fields = parseZodErrors(res.error) as GroupCreationFieldErrors;
-
-    return NextResponse.json(
-      {
-        success: false,
-        error: {
-          code: API_RESPONSE_CODE.INVALID_FIELD_FORMAT,
-          message: ["Revisá los datos ingresados."],
-          fields,
-          statusCode: 400,
-        },
-      },
-      { status: 400 },
-    );
-  }
-
-  const { name, type, memberIds, createdById, } = res.data;
-
   try {
+    const session = await getServerSession(AuthOptions);
+    const createdById = session?.user?.id;
+
+    if (!createdById) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: API_RESPONSE_CODE.UNAUTHORIZED,
+            message: ["No se registro una sesión inicia."],
+            statusCode: 401,
+          },
+        },
+        { status: 401 },
+      );
+    }
+
+    const body = await req.json();
+
+    const res = createGroupSchema.safeParse(body);
+
+    if (!res.success) {
+      const fields = parseZodErrors(res.error) as GroupCreationFieldErrors;
+
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: API_RESPONSE_CODE.INVALID_FIELD_FORMAT,
+            message: ["Revisá los datos ingresados."],
+            fields,
+            statusCode: 400,
+          },
+        },
+        { status: 400 },
+      );
+    }
+
+    const { name, type, memberIds } = res.data;
+
     const group = await prisma.group.create({
       data: {
         name,
@@ -126,6 +145,23 @@ type DeleteGroupHandler = (
 // Delete group
 export const DELETE: DeleteGroupHandler = async (req) => {
   try {
+    const session = await getServerSession(AuthOptions);
+    const createdById = session?.user?.id;
+
+    if (!createdById) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: API_RESPONSE_CODE.UNAUTHORIZED,
+            message: ["No se registro una sesión inicia."],
+            statusCode: 401,
+          },
+        },
+        { status: 401 },
+      );
+    }
+
     const { id } = await req.json();
 
     if (!id || typeof id !== "string" || id.length <= 1) {

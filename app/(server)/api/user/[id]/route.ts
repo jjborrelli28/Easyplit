@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { compare } from "bcryptjs";
+import { getServerSession } from "next-auth";
 
 import API_RESPONSE_CODE from "@/lib/api/API_RESPONSE_CODE";
 import type {
@@ -11,10 +12,11 @@ import type {
     User,
 } from "@/lib/api/types";
 import { hashPassword } from "@/lib/auth/helpers";
+import AuthOptions from "@/lib/auth/options";
 import prisma from "@/lib/prisma";
+import { isExpenseComplete } from "@/lib/utils";
 import { parseZodErrors } from "@/lib/validations/helpers";
 import { deleteUserSchema, updateUserSchema } from "@/lib/validations/schemas";
-import { isExpenseComplete } from "@/lib/utils";
 
 // Update user
 type UpdateUserHandler = (
@@ -26,8 +28,40 @@ type UpdateUserHandler = (
 
 export const PATCH: UpdateUserHandler = async (req, context) => {
     try {
+        const session = await getServerSession(AuthOptions);
+        const loggedUserId = session?.user?.id;
+
+        if (!loggedUserId) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: {
+                        code: API_RESPONSE_CODE.UNAUTHORIZED,
+                        message: ["No se registro una sesión inicia."],
+                        statusCode: 401,
+                    },
+                },
+                { status: 401 },
+            );
+        }
+
         const params = await context.params;
         const id = params.id;
+
+        if (id !== loggedUserId) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: {
+                        code: API_RESPONSE_CODE.UNAUTHORIZED,
+                        message: ["El usuario no tiene permisos para esta acción."],
+                        statusCode: 401,
+                    },
+                },
+                { status: 401 },
+            );
+        }
+
         const body = await req.json();
 
         const res = updateUserSchema.safeParse(body);
@@ -190,8 +224,40 @@ type DeleteUserHandler = (
 
 export const DELETE: DeleteUserHandler = async (req, context) => {
     try {
+        const session = await getServerSession(AuthOptions);
+        const loggedUserId = session?.user?.id;
+
+        if (!loggedUserId) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: {
+                        code: API_RESPONSE_CODE.UNAUTHORIZED,
+                        message: ["No se registro una sesión inicia."],
+                        statusCode: 401,
+                    },
+                },
+                { status: 401 },
+            );
+        }
+
         const params = await context.params;
         const id = params.id;
+
+        if (id !== loggedUserId) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: {
+                        code: API_RESPONSE_CODE.UNAUTHORIZED,
+                        message: ["El usuario no tiene permisos para esta acción."],
+                        statusCode: 401,
+                    },
+                },
+                { status: 401 },
+            );
+        }
+
         const body = await req.json();
 
         const res = deleteUserSchema.safeParse(body);

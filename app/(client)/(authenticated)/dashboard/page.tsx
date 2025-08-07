@@ -50,7 +50,7 @@ const DashboardPage = () => {
               </Button>
             </section>
 
-            <GroupAndExpenseList user={user} />
+            <GroupAndExpenseList />
           </div>
         </div>
       </PageContainer>

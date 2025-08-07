@@ -1,21 +1,39 @@
 import { NextResponse } from "next/server";
 
 import type { Group } from "@prisma/client";
+import { getServerSession } from "next-auth";
 
 import API_RESPONSE_CODE from "@/lib/api/API_RESPONSE_CODE";
 import type { ServerErrorResponse, SuccessResponse } from "@/lib/api/types";
+import AuthOptions from "@/lib/auth/options";
 import prisma from "@/lib/prisma";
 
+// Search groups by user
 type GetSearchGroupsByUserIdHandler = (
     req: Request,
 ) => Promise<NextResponse<SuccessResponse<Group[]> | ServerErrorResponse>>;
 
-// Search groups by user id
 export const GET: GetSearchGroupsByUserIdHandler = async (req: Request) => {
     try {
+        const session = await getServerSession(AuthOptions);
+        const userId = session?.user?.id;
+
+        if (!userId) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: {
+                        code: API_RESPONSE_CODE.UNAUTHORIZED,
+                        message: ["No se registro una sesión inicia."],
+                        statusCode: 401,
+                    },
+                },
+                { status: 401 },
+            );
+        }
+
         const { searchParams } = new URL(req.url);
         const q = searchParams.get("q");
-        const userId = searchParams.get("userId");
 
         if (!userId) {
             return NextResponse.json(

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import type { Expense } from "@prisma/client";
+import { getServerSession } from "next-auth";
 
 import API_RESPONSE_CODE from "@/lib/api/API_RESPONSE_CODE";
 import type {
@@ -9,6 +10,7 @@ import type {
     SuccessResponse,
     User
 } from "@/lib/api/types";
+import AuthOptions from "@/lib/auth/options";
 import prisma from "@/lib/prisma";
 import {
     compareMembers,
@@ -28,6 +30,23 @@ type GetExpenseHandler = (
 
 export const GET: GetExpenseHandler = async (req, context) => {
     try {
+        const session = await getServerSession(AuthOptions);
+        const loggedUserId = session?.user?.id;
+
+        if (!loggedUserId) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: {
+                        code: API_RESPONSE_CODE.UNAUTHORIZED,
+                        message: ["No se registro una sesión inicia."],
+                        statusCode: 401,
+                    },
+                },
+                { status: 401 },
+            );
+        }
+
         const params = await context.params;
         const id = params.id;
 
@@ -132,6 +151,24 @@ type UpdateExpenseHandler = (
 
 export const PATCH: UpdateExpenseHandler = async (req, context) => {
     try {
+        const session = await getServerSession(AuthOptions);
+        const updatedById = session?.user?.id;
+
+        if (!updatedById) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: {
+                        code: API_RESPONSE_CODE.UNAUTHORIZED,
+                        message: ["No se registro una sesión inicia."],
+                        statusCode: 401,
+                    },
+                },
+                { status: 401 },
+            );
+
+        }
+
         const params = await context.params;
         const id = params.id;
         const body = await req.json();
@@ -162,7 +199,6 @@ export const PATCH: UpdateExpenseHandler = async (req, context) => {
         }
 
         const {
-            updatedById,
             name,
             type,
             participantsToAdd,
@@ -222,28 +258,9 @@ export const PATCH: UpdateExpenseHandler = async (req, context) => {
             );
         }
 
-        const userEditor = await prisma.expenseParticipant.findUnique({
-            where: {
-                expenseId_userId: {
-                    expenseId: id,
-                    userId: updatedById,
-                },
-            },
-        });
 
-        if (!userEditor) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    error: {
-                        code: API_RESPONSE_CODE.NOT_FOUND,
-                        message: ["Participante editor no encontrado."],
-                        statusCode: 404,
-                    },
-                },
-                { status: 404 },
-            );
-        }
+
+
 
         if (paidById && paidById !== expense.paidById) {
             const participantsToUpdate = expense.participants.filter(
@@ -503,6 +520,23 @@ type DeleteExpenseHandler = (
 
 export const DELETE: DeleteExpenseHandler = async (req, context) => {
     try {
+        const session = await getServerSession(AuthOptions);
+        const loggedUserId = session?.user?.id;
+
+        if (!loggedUserId) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: {
+                        code: API_RESPONSE_CODE.UNAUTHORIZED,
+                        message: ["No se registro una sesión inicia."],
+                        statusCode: 401,
+                    },
+                },
+                { status: 401 },
+            );
+        }
+
         const params = await context.params;
         const id = params.id;
 

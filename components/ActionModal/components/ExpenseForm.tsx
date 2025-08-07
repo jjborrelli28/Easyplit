@@ -68,7 +68,6 @@ const ExpenseForm = ({
       participantIds: [user.id!],
       paidById: user.id!,
       paymentDate: today,
-      createdById: user.id!,
       groupId: undefined,
     },
     onSubmit: async ({ value }) => {
@@ -255,7 +254,6 @@ const ExpenseForm = ({
           >
             {(field) => (
               <GroupPicker
-                user={user}
                 value={field.state.value}
                 onChange={field.handleChange}
                 pickedParticipants={participants}

@@ -1,14 +1,16 @@
 import { NextResponse } from "next/server";
 
 import type { Expense, Group } from "@prisma/client";
+import { getServerSession } from "next-auth";
 
 import API_RESPONSE_CODE from "@/lib/api/API_RESPONSE_CODE";
 import type { ServerErrorResponse, SuccessResponse } from "@/lib/api/types";
+import AuthOptions from "@/lib/auth/options";
 import prisma from "@/lib/prisma";
 
+// Get expenses and groups by user
 type GetMyExpensesAndGroupsHandler = (
     req: Request,
-    context: { params: Promise<{ id: string }> },
 ) => Promise<
     NextResponse<
         | SuccessResponse<{ groups: Group[]; expenses: Expense[] }>
@@ -16,25 +18,22 @@ type GetMyExpensesAndGroupsHandler = (
     >
 >;
 
-// Get expenses and groups by user id
-export const GET: GetMyExpensesAndGroupsHandler = async (req, context) => {
+export const GET: GetMyExpensesAndGroupsHandler = async () => {
     try {
-        const params = await context.params;
-        const userId = params.id;
+        const session = await getServerSession(AuthOptions);
+        const userId = session?.user?.id;
 
-        const user = await prisma.user.findFirst({ where: { id: userId } });
-
-        if (!user) {
+        if (!userId) {
             return NextResponse.json(
                 {
                     success: false,
                     error: {
-                        code: API_RESPONSE_CODE.INVALID_CREDENTIALS,
-                        message: ["Usuario no encontrado."],
-                        statusCode: 404,
+                        code: API_RESPONSE_CODE.UNAUTHORIZED,
+                        message: ["No se registro una sesión inicia."],
+                        statusCode: 401,
                     },
                 },
-                { status: 404 },
+                { status: 401 },
             );
         }
 

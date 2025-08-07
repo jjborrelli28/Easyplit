@@ -72,19 +72,13 @@ export interface User {
     image: string | null;
 }
 
-export interface GetUserField {
-    id?: string;
-}
-
 export interface UpdateUserFields {
-    id?: string;
     name?: string;
     password?: string;
     currentPassword?: string;
 }
 
 export interface DeleteUserFields {
-    id?: string;
     password?: string;
 }
 /* End user types */
@@ -122,7 +116,6 @@ export interface CreateExpenseFields {
     paidById: string;
     paymentDate: Date;
     groupId?: string;
-    createdById: string;
 }
 
 export interface ExpenseCreationFieldErrors {
@@ -133,11 +126,9 @@ export interface ExpenseCreationFieldErrors {
     paidById?: string;
     paymentDate?: string;
     groupId?: string;
-    createdById?: string;
 }
 
 export interface UpdateExpenseFields {
-    updatedById: string;
     name?: string;
     type?: EXPENSE_TYPE;
     amount?: number;
@@ -153,7 +144,6 @@ export interface UpdateExpenseFields {
 }
 
 export interface ExpenseUpdateFieldErrors {
-    updatedById?: string;
     name?: string;
     type?: string;
     amount?: string;
@@ -189,7 +179,6 @@ export interface CreateGroupFields {
     name: string;
     type?: GROUP_TYPE;
     memberIds: string[];
-    createdById: string;
 }
 
 export interface GroupCreationFieldErrors {
@@ -197,7 +186,6 @@ export interface GroupCreationFieldErrors {
     type?: string;
     memberIds?: string;
     expenses?: string;
-    createdById?: string;
 }
 
 export interface DeleteExpenseGroupFields {

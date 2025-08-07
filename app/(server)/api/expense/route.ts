@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 
 import type { Expense } from "@prisma/client";
+import { getServerSession } from "next-auth";
 
 import API_RESPONSE_CODE from "@/lib/api/API_RESPONSE_CODE";
 import type {
@@ -8,6 +9,7 @@ import type {
   ServerErrorResponse,
   SuccessResponse,
 } from "@/lib/api/types";
+import AuthOptions from "@/lib/auth/options";
 import prisma from "@/lib/prisma";
 import { compareMembers } from "@/lib/utils";
 import { parseZodErrors } from "@/lib/validations/helpers";
@@ -26,6 +28,23 @@ type CreateExpenseHandler = (
 
 export const POST: CreateExpenseHandler = async (req) => {
   try {
+    const session = await getServerSession(AuthOptions);
+    const createdById = session?.user?.id;
+
+    if (!createdById) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: API_RESPONSE_CODE.UNAUTHORIZED,
+            message: ["No se registro una sesión inicia."],
+            statusCode: 401,
+          },
+        },
+        { status: 401 },
+      );
+    }
+
     const body = await req.json();
 
     const parsedPaymentDateString = new Date(body.paymentDate);
@@ -58,7 +77,6 @@ export const POST: CreateExpenseHandler = async (req) => {
       paidById,
       paymentDate,
       groupId,
-      createdById,
     } = res.data;
 
     if (groupId) {

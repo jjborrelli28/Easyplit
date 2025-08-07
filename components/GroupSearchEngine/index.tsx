@@ -2,8 +2,6 @@
 
 import { useMemo, useState } from "react";
 
-import type { Session } from "next-auth";
-
 import clsx from "clsx";
 import debounce from "lodash.debounce";
 import { Search } from "lucide-react";
@@ -18,7 +16,6 @@ import InputErrorMessage from "../InputErrorMessage";
 
 export interface GroupSearchEngineProps
   extends Omit<InputProps, "value" | "onSelect"> {
-  user?: Session["user"];
   onSelect: (group: Group) => void;
   onChange?: VoidFunction;
   onFocus?: VoidFunction;
@@ -27,7 +24,6 @@ export interface GroupSearchEngineProps
 }
 
 const GroupSearchEngine = ({
-  user,
   onSelect,
   onChange,
   onFocus,
@@ -43,7 +39,7 @@ const GroupSearchEngine = ({
     data: groups = [],
     error,
     isFetched,
-  } = useSearchGroups(debouncedQuery, user?.id);
+  } = useSearchGroups(debouncedQuery);
 
   const filteredGroups = useMemo(
     () => groups.filter((group) => !excludeGroupIds.includes(group.id)),

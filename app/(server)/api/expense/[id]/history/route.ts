@@ -1,9 +1,11 @@
 import { NextResponse } from "next/server";
 
 import type { ExpenseHistory } from "@prisma/client";
+import { getServerSession } from "next-auth";
 
 import API_RESPONSE_CODE from "@/lib/api/API_RESPONSE_CODE";
-import { ServerErrorResponse, SuccessResponse } from "@/lib/api/types";
+import type { ServerErrorResponse, SuccessResponse } from "@/lib/api/types";
+import AuthOptions from "@/lib/auth/options";
 import prisma from "@/lib/prisma";
 
 type GetExpenseHistoryHandler = (
@@ -14,6 +16,23 @@ type GetExpenseHistoryHandler = (
 >;
 export const GET: GetExpenseHistoryHandler = async (req, context) => {
     try {
+        const session = await getServerSession(AuthOptions);
+        const loggedUserId = session?.user?.id;
+
+        if (!loggedUserId) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: {
+                        code: API_RESPONSE_CODE.UNAUTHORIZED,
+                        message: ["No se registro una sesión inicia."],
+                        statusCode: 401,
+                    },
+                },
+                { status: 401 },
+            );
+        }
+
         const params = await context.params;
         const expenseId = params.id;
 
