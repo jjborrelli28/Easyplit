@@ -35,8 +35,8 @@ const GroupForm = ({
   onClose,
   handleShowModalHeader,
 }: ExpenseFromProps) => {
-  const queryClient = useQueryClient();
   const { mutate: createGroup, isPending } = useCreateGroup();
+  const queryClient = useQueryClient();
 
   const [message, setMessage] = useState<ResponseMessage | null>(null);
 
@@ -60,14 +60,13 @@ const GroupForm = ({
     onSubmit: async ({ value }) => {
       createGroup(value, {
         onSuccess: (res) => {
+          queryClient.invalidateQueries({
+            queryKey: ["my-expenses-and-groups", user.id!],
+          });
+
           handleShowModalHeader(false);
 
           res?.message && setMessage(res.message);
-          queryClient.invalidateQueries({
-            predicate: (query) =>
-              query.queryKey[0] === "my-groups-and-expenses" &&
-              query.queryKey[1] === user.id!,
-          });
         },
         onError: (res) => {
           const {

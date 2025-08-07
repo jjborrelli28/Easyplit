@@ -6,6 +6,7 @@ import Image from "next/image";
 
 import type { Session } from "next-auth";
 
+import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import clsx from "clsx";
 import debounce from "lodash.debounce";
 import { UserRoundSearch } from "lucide-react";
@@ -103,6 +104,13 @@ const UserSearchEngine = ({
     onBlur?.();
   };
 
+  const virtualizer = useWindowVirtualizer({
+    count: users.length,
+    estimateSize: () => 80,
+    overscan: 5,
+    enabled: true,
+  });
+
   return (
     <div className="relative w-full max-w-md">
       <Input
@@ -132,44 +140,60 @@ const UserSearchEngine = ({
       />
 
       {users.length > 0 && (
-        <ul className="bg-h-background border-primary absolute top-full right-0 left-0 z-20 max-h-120 overflow-y-auto border !border-t-0 shadow-xl">
-          {users.map((user, i) => (
-            <li
-              key={user.id}
-              onMouseDown={() => handleSelect(user)}
-              className={clsx(
-                "hover:bg-primary hover:text-background group flex cursor-pointer gap-x-4 p-4 transition-colors duration-300",
-                highlightedIndex === i
-                  ? "bg-primary text-background"
-                  : i % 2 === 0
-                    ? "bg-background/50"
-                    : "bg-h-background",
-              )}
-            >
-              {user.image && (
-                <Image
-                  alt={`${user.name}'s avatar`}
-                  src={user.image}
-                  height={40}
-                  width={40}
-                  className="h-12 w-12 rounded-full transition-colors duration-300"
-                />
-              )}
+        <ul
+          className="bg-h-background border-primary absolute top-full right-0 left-0 z-20 max-h-120 overflow-y-auto border !border-t-0 shadow-xl"
+          style={{
+            height: `${virtualizer.getTotalSize()}px`,
+          }}
+        >
+          {virtualizer.getVirtualItems().map((virtualItem, i) => {
+            const user = users[virtualItem.index];
 
-              <div
+            if (!user) return null;
+
+            return (
+              <li
+                ref={virtualizer.measureElement}
+                key={virtualItem.key}
+                data-index={virtualItem.index}
+                onMouseDown={() => handleSelect(user)}
                 className={clsx(
-                  "group-hover:bg-background h-12 w-[1px] transition-colors duration-300",
-                  highlightedIndex === i ? "bg-background" : "bg-foreground",
+                  "hover:bg-primary hover:text-background group absolute top-0 flex w-full cursor-pointer gap-x-4 p-4 transition-colors duration-300",
+                  highlightedIndex === i
+                    ? "bg-primary text-background"
+                    : i % 2 === 0
+                      ? "bg-background/50"
+                      : "bg-h-background",
                 )}
-              />
+                style={{
+                  transform: `translateY(${virtualItem.start}px)`,
+                }}
+              >
+                {user.image && (
+                  <Image
+                    alt={`${user.name}'s avatar`}
+                    src={user.image}
+                    height={40}
+                    width={40}
+                    className="h-12 w-12 rounded-full transition-colors duration-300"
+                  />
+                )}
 
-              <div className="flex w-full flex-col justify-center overflow-hidden">
-                <p className="truncate font-semibold">{user.name}</p>
+                <div
+                  className={clsx(
+                    "group-hover:bg-background h-12 w-[1px] transition-colors duration-300",
+                    highlightedIndex === i ? "bg-background" : "bg-foreground",
+                  )}
+                />
 
-                <p className="truncate text-sm">{user.email}</p>
-              </div>
-            </li>
-          ))}
+                <div className="flex w-full flex-col justify-center overflow-hidden">
+                  <p className="truncate font-semibold">{user.name}</p>
+
+                  <p className="truncate text-sm">{user.email}</p>
+                </div>
+              </li>
+            );
+          })}
         </ul>
       )}
 

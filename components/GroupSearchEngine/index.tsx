@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 
+import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import clsx from "clsx";
 import debounce from "lodash.debounce";
 import { Search } from "lucide-react";
@@ -94,6 +95,13 @@ const GroupSearchEngine = ({
     onBlur?.();
   };
 
+  const virtualizer = useWindowVirtualizer({
+    count: filteredGroups.length,
+    estimateSize: () => 80,
+    overscan: 5,
+    enabled: true,
+  });
+
   return (
     <div className="relative w-full max-w-md">
       <Input
@@ -121,8 +129,17 @@ const GroupSearchEngine = ({
       </div>
 
       {filteredGroups.length > 0 && (
-        <ul className="bg-h-background border-primary absolute top-full right-0 left-0 z-20 max-h-120 overflow-y-auto border !border-t-0 shadow-xl">
-          {filteredGroups.map((group, i) => {
+        <ul
+          className="bg-h-background border-primary absolute top-full right-0 left-0 z-20 max-h-120 overflow-y-auto border !border-t-0 shadow-xl"
+          style={{
+            height: `${virtualizer.getTotalSize()}px`,
+          }}
+        >
+          {virtualizer.getVirtualItems().map((virtualItem, i) => {
+            const group = filteredGroups[virtualItem.index];
+
+            if (!group) return null;
+
             const type = group?.type ?? GROUP_TYPE.OTHER;
             const Icon = GROUP_TYPES[type].icon;
             const expenses = group.expenses;
@@ -133,16 +150,21 @@ const GroupSearchEngine = ({
 
             return (
               <li
-                key={group.id}
+                ref={virtualizer.measureElement}
+                key={virtualItem.key}
+                data-index={virtualItem.index}
                 onMouseDown={() => handleSelect(group)}
                 className={clsx(
-                  "hover:bg-primary hover:text-background group flex cursor-pointer gap-x-4 p-4 transition-colors duration-300",
+                  "hover:bg-primary hover:text-background group absolute top-0 flex w-full cursor-pointer gap-x-4 p-4 transition-colors duration-300",
                   highlightedIndex === i
                     ? "bg-primary text-background"
                     : i % 2 === 0
                       ? "bg-background/50"
                       : "bg-h-background",
                 )}
+                style={{
+                  transform: `translateY(${virtualItem.start}px)`,
+                }}
               >
                 <div
                   className={clsx(
