@@ -39,7 +39,7 @@ export const GET: GetExpenseHandler = async (req, context) => {
                     success: false,
                     error: {
                         code: API_RESPONSE_CODE.UNAUTHORIZED,
-                        message: ["No se registro una sesión inicia."],
+                        message: ["No se registró una sesión iniciada."],
                         statusCode: 401,
                     },
                 },
@@ -79,7 +79,14 @@ export const GET: GetExpenseHandler = async (req, context) => {
                         },
                     },
                 },
-                paidBy: true,
+                paidBy: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        image: true,
+                    },
+                },
                 group: true,
                 createdBy: {
                     select: {
@@ -160,7 +167,7 @@ export const PATCH: UpdateExpenseHandler = async (req, context) => {
                     success: false,
                     error: {
                         code: API_RESPONSE_CODE.UNAUTHORIZED,
-                        message: ["No se registro una sesión inicia."],
+                        message: ["No se registró una sesión iniciada."],
                         statusCode: 401,
                     },
                 },
@@ -529,7 +536,7 @@ export const DELETE: DeleteExpenseHandler = async (req, context) => {
                     success: false,
                     error: {
                         code: API_RESPONSE_CODE.UNAUTHORIZED,
-                        message: ["No se registro una sesión inicia."],
+                        message: ["No se registró una sesión iniciada."],
                         statusCode: 401,
                     },
                 },

@@ -10,7 +10,6 @@ import type { Expense } from "@/lib/api/types";
 
 import PageContainer from "@/components/PageContainer";
 import Spinner from "@/components/Spinner";
-import useGetExpenseHistory from "@/hooks/data/expense/useGetExpenseHistory";
 import BalanceSection from "./_components/BalanceSection";
 import DeleteExpenseSection from "./_components/DeleteExpenseSection";
 import HeaderSection from "./_components/HeaderSection";
@@ -32,8 +31,7 @@ const ExpensePage = () => {
   const isUserEditor =
     loggedUser?.id === expense?.createdById ||
     loggedUser?.id === expense?.paidById;
-  const { data: res } = useGetExpenseHistory(expenseId);
-  console.log(res);
+
   return (
     <PageContainer className="border-h-background !px-0 md:border-r">
       <div className="border-h-background flex flex-1 flex-col border-t px-4 py-8 lg:px-8">

@@ -8,18 +8,19 @@ import type { ServerErrorResponse, SuccessResponse } from "@/lib/api/types";
 import AuthOptions from "@/lib/auth/options";
 import prisma from "@/lib/prisma";
 
-type GetExpenseHistoryHandler = (
-    req: Request,
-    context: { params: Promise<{ id: string }> },
+// Get a complete history of all user expenses
+type GetAllUserExpenseHistoryHandler = (
+    req: Request
 ) => Promise<
     NextResponse<SuccessResponse<ExpenseHistory[]> | ServerErrorResponse>
 >;
-export const GET: GetExpenseHistoryHandler = async (req, context) => {
+
+export const GET: GetAllUserExpenseHistoryHandler = async () => {
     try {
         const session = await getServerSession(AuthOptions);
-        const loggedUserId = session?.user?.id;
+        const userId = session?.user?.id;
 
-        if (!loggedUserId) {
+        if (!userId) {
             return NextResponse.json(
                 {
                     success: false,
@@ -29,16 +30,23 @@ export const GET: GetExpenseHistoryHandler = async (req, context) => {
                         statusCode: 401,
                     },
                 },
-                { status: 401 },
+                { status: 401 }
             );
         }
 
-        const params = await context.params;
-        const expenseId = params.id;
-
-        const history = await prisma.expenseHistory.findMany({
-            where: { expenseId },
-            orderBy: { createdAt: "desc" },
+        const histories = await prisma.expenseHistory.findMany({
+            where: {
+                expense: {
+                    participants: {
+                        some: {
+                            userId,
+                        },
+                    },
+                },
+            },
+            orderBy: {
+                createdAt: "desc",
+            },
             include: {
                 updatedBy: {
                     select: {
@@ -46,6 +54,12 @@ export const GET: GetExpenseHistoryHandler = async (req, context) => {
                         name: true,
                         email: true,
                         image: true,
+                    },
+                },
+                expense: {
+                    select: {
+                        id: true,
+                        name: true,
                     },
                 },
             },
@@ -57,14 +71,14 @@ export const GET: GetExpenseHistoryHandler = async (req, context) => {
             message: {
                 color: "success",
                 icon: "CheckCircle",
-                title: "¡Historial de gasto obtenido con éxito!",
+                title: "Historiales de gastos obtenidos con éxito",
                 content: [
                     {
-                        text: "El historial del gasto fue obtenido correctamente.",
+                        text: "Se obtuvieron los historiales de los gastos en los que participás.",
                     },
                 ],
             },
-            data: history ?? [],
+            data: histories ?? [],
         });
     } catch (error) {
         console.error(error);
@@ -79,7 +93,8 @@ export const GET: GetExpenseHistoryHandler = async (req, context) => {
                     statusCode: 500,
                 },
             },
-            { status: 500 },
+            { status: 500 }
         );
     }
 };
+

@@ -13,7 +13,7 @@ type GetSearchGroupsByUserIdHandler = (
     req: Request,
 ) => Promise<NextResponse<SuccessResponse<Group[]> | ServerErrorResponse>>;
 
-export const GET: GetSearchGroupsByUserIdHandler = async (req: Request) => {
+export const GET: GetSearchGroupsByUserIdHandler = async (req) => {
     try {
         const session = await getServerSession(AuthOptions);
         const userId = session?.user?.id;
@@ -24,7 +24,7 @@ export const GET: GetSearchGroupsByUserIdHandler = async (req: Request) => {
                     success: false,
                     error: {
                         code: API_RESPONSE_CODE.UNAUTHORIZED,
-                        message: ["No se registro una sesión inicia."],
+                        message: ["No se registró una sesión iniciada."],
                         statusCode: 401,
                     },
                 },

@@ -37,7 +37,7 @@ export const PATCH: UpdateUserHandler = async (req, context) => {
                     success: false,
                     error: {
                         code: API_RESPONSE_CODE.UNAUTHORIZED,
-                        message: ["No se registro una sesión inicia."],
+                        message: ["No se registró una sesión iniciada."],
                         statusCode: 401,
                     },
                 },
@@ -233,7 +233,7 @@ export const DELETE: DeleteUserHandler = async (req, context) => {
                     success: false,
                     error: {
                         code: API_RESPONSE_CODE.UNAUTHORIZED,
-                        message: ["No se registro una sesión inicia."],
+                        message: ["No se registró una sesión iniciada."],
                         statusCode: 401,
                     },
                 },

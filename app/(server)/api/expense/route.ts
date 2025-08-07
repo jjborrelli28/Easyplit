@@ -37,7 +37,7 @@ export const POST: CreateExpenseHandler = async (req) => {
           success: false,
           error: {
             code: API_RESPONSE_CODE.UNAUTHORIZED,
-            message: ["No se registro una sesión inicia."],
+            message: ["No se registró una sesión iniciada."],
             statusCode: 401,
           },
         },
@@ -158,6 +158,28 @@ export const POST: CreateExpenseHandler = async (req) => {
         }),
         createdBy: {
           connect: { id: createdById },
+        },
+      },
+      include: {
+        participants: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                image: true,
+              },
+            },
+          },
+        },
+        paidBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
+          },
         },
       },
     });

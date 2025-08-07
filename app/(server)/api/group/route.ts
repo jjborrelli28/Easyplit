@@ -24,7 +24,7 @@ type CreateGroupHandler = (
 >;
 
 // Create group
-export const POST: CreateGroupHandler = async (req: Request) => {
+export const POST: CreateGroupHandler = async (req) => {
   try {
     const session = await getServerSession(AuthOptions);
     const createdById = session?.user?.id;
@@ -35,7 +35,7 @@ export const POST: CreateGroupHandler = async (req: Request) => {
           success: false,
           error: {
             code: API_RESPONSE_CODE.UNAUTHORIZED,
-            message: ["No se registro una sesión inicia."],
+            message: ["No se registró una sesión iniciada."],
             statusCode: 401,
           },
         },
@@ -154,7 +154,7 @@ export const DELETE: DeleteGroupHandler = async (req) => {
           success: false,
           error: {
             code: API_RESPONSE_CODE.UNAUTHORIZED,
-            message: ["No se registro una sesión inicia."],
+            message: ["No se registró una sesión iniciada."],
             statusCode: 401,
           },
         },

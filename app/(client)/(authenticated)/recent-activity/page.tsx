@@ -4,9 +4,11 @@
 
 import PageContainer from "@/components/PageContainer";
 import PageUnderConstructionMessage from "@/components/PageUnderConstructionMessage";
+import useGetMyExpenseHistories from "@/hooks/data/user/useGetMyExpenseHistories";
 
 const RecentActivityPage = () => {
-  //  const { data } = useSession();
+  const { data: expenseHistories } = useGetMyExpenseHistories();
+  console.log(expenseHistories);
 
   return (
     <PageContainer className="border-h-background !px-0 md:border-r">
