@@ -7,7 +7,7 @@ import { useSession } from "next-auth/react";
 import ActionModal, { ACTION_TYPE } from "@/components/ActionModal";
 import Button from "@/components/Button";
 import PageContainer from "@/components/PageContainer";
-import GroupAndExpenseList from "./_components/GroupAndExpenseList";
+import ExpenseAndGroupList from "./_components/GroupAndExpenseList";
 
 const DashboardPage = () => {
   const { data } = useSession();
@@ -50,7 +50,7 @@ const DashboardPage = () => {
               </Button>
             </section>
 
-            <GroupAndExpenseList />
+            <ExpenseAndGroupList />
           </div>
         </div>
       </PageContainer>

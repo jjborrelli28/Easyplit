@@ -21,9 +21,10 @@ import {
   EXPENSE_TYPE,
   EXPENSE_TYPES,
 } from "@/components/ExpenseTypeSelect/constants";
+import { GROUP_TYPES } from "@/components/GroupTypeSelect/constants";
 import Tooltip from "@/components/Tooltip";
 import UpdateExpenseForm, {
-  UpdateExpenseFieldKeys,
+  type UpdateExpenseFieldKeys,
 } from "@/components/UpdateExpenseForm";
 
 interface HeaderSectionProps {
@@ -218,7 +219,18 @@ const HeaderSection = ({ expense, loggedUser }: HeaderSectionProps) => {
 
           {(hasGroup || (isUserEditor && !allDebtsSettled)) && (
             <div className="text-foreground/75 flex items-center gap-x-2">
-              <Group className="h-5 w-5" />
+              {hasGroup ? (
+                <div
+                  className={clsx(
+                    "flex h-5 w-5 min-w-5 items-center justify-center rounded-full",
+                    GROUP_TYPES[expense.group?.type ?? "OTHER"].color,
+                  )}
+                >
+                  <Icon className="text-background h-3 w-3" />
+                </div>
+              ) : (
+                <Group className="h-5 w-5" />
+              )}
 
               {hasGroup ? (
                 <p className="text-sm">

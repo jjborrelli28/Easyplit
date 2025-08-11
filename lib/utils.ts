@@ -276,3 +276,24 @@ export const getSuccessMessage = {
         },
     ],
 };
+
+export const getTotalAmountOfExpenses = (expenses?: Expense[]) =>
+    expenses?.reduce((total, expense) => total + expense.amount, 0);
+
+export const getTotalPaidByParticipants = (expenses?: Expense[]) => {
+
+    return (
+        expenses?.reduce((totalPaid, expense) => {
+            const paidInThisExpense = expense.participants.reduce(
+                (sum, participant) => {
+                    if (participant.userId === expense.paidById) return sum + expense.amount / expense.participants.length;
+
+                    return sum + participant.amount;
+                },
+                0,
+            );
+
+            return totalPaid + paidInThisExpense;
+        }, 0) ?? 0
+    );
+};

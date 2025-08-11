@@ -1,8 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 
-import type { Expense } from "@prisma/client";
-
-import type { SuccessResponse } from "@/lib/api/types";
+import type { Expense, SuccessResponse } from "@/lib/api/types";
 import api from "@/lib/axios";
 
 const getExpense = async (expenseId?: string | null) => {
@@ -15,7 +13,7 @@ const getExpense = async (expenseId?: string | null) => {
 
 const useGetExpense = (expenseId?: string | null) => {
   return useQuery({
-    queryKey: ["linked-expense", expenseId],
+    queryKey: ["expense", expenseId],
     queryFn: () => getExpense(expenseId),
     enabled: !!expenseId,
     staleTime: 1000 * 10,

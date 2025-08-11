@@ -188,7 +188,7 @@ const UpdateExpenseForm = ({
       updateExpense(body, {
         onSuccess: (res) => {
           queryClient.invalidateQueries({
-            queryKey: ["linked-expense", expense.id],
+            queryKey: ["expense", expense.id],
           });
 
           res?.message && setMessage(res.message);
@@ -223,7 +223,7 @@ const UpdateExpenseForm = ({
         setIsSendeable(false);
       }
     },
-    [],
+    [isSendeable],
   );
 
   useEffect(() => {

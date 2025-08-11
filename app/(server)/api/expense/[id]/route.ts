@@ -412,6 +412,20 @@ export const PATCH: UpdateExpenseHandler = async (req, context) => {
             }
         }
 
+        if (amount) {
+            await prisma.expenseParticipant.update({
+                where: {
+                    expenseId_userId: {
+                        expenseId: id,
+                        userId: expense.paidById,
+                    },
+                },
+                data: {
+                    amount: amount,
+                },
+            });
+        }
+
         const changedFields = getUpdatedFields(expense, {
             ...(name && { name }),
             ...(type && { type }),

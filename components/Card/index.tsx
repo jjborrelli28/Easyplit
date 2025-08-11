@@ -1,6 +1,12 @@
 "use client";
 
-import { type FormEvent, type MouseEvent, useState } from "react";
+import {
+  type CSSProperties,
+  type FormEvent,
+  type MouseEvent,
+  Ref,
+  useState,
+} from "react";
 
 import { useRouter } from "next/navigation";
 
@@ -10,14 +16,14 @@ import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { CircleChevronDown, Trash } from "lucide-react";
+import { CheckCircle, CircleChevronDown, Clock, Trash } from "lucide-react";
 
 import useDeleteExpense from "@/hooks/data/expense/useDeleteExpense";
 import useDeleteGroup from "@/hooks/data/group/useDeleteGroup";
 
 import type { Expense, Group, ResponseMessage } from "@/lib/api/types";
 import ICON_MAP from "@/lib/icons";
-import { formatAmount } from "@/lib/utils";
+import { areAllDebtsSettled, formatAmount } from "@/lib/utils";
 
 import AmountNumber from "../AmountNumber";
 import Badge from "../Badge";
@@ -35,12 +41,22 @@ export enum CARD_TYPE {
 }
 
 interface CardProps {
+  ref?: Ref<HTMLDivElement>;
   type: CARD_TYPE;
   data: Expense | Group;
   loggedInUser?: Session["user"];
+  containerClassName?: string;
+  containerStyle?: CSSProperties;
 }
 
-const Card = ({ type, data, loggedInUser }: CardProps) => {
+const Card = ({
+  ref,
+  type,
+  data,
+  loggedInUser,
+  containerClassName,
+  containerStyle,
+}: CardProps) => {
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -61,7 +77,9 @@ const Card = ({ type, data, loggedInUser }: CardProps) => {
     const tagName = (e.target as HTMLElement).tagName.toLowerCase();
 
     if (tagId === "icon" || tagId === "name" || tagName === "div")
-      router.push(`/expense/${data.id}`);
+      type === CARD_TYPE.EXPENSE
+        ? router.push(`/expense/${data.id}`)
+        : router.push(`/group/${data.id}`);
   };
 
   const handleToggleCard = () =>
@@ -69,13 +87,6 @@ const Card = ({ type, data, loggedInUser }: CardProps) => {
 
   const handleDelete = (e: FormEvent) => {
     e.preventDefault();
-
-    const body = {
-      // TODO: Delete
-      data: {
-        id: data.id,
-      },
-    };
 
     if (type === CARD_TYPE.EXPENSE) {
       deleteExpense(undefined, {
@@ -102,29 +113,36 @@ const Card = ({ type, data, loggedInUser }: CardProps) => {
         },
       });
     } else {
-      deleteGroup(body, {
-        onSuccess: (res) => {
-          queryClient.invalidateQueries({
-            queryKey: ["my-expenses-and-groups", loggedInUser.id!],
-          });
-
-          res?.message && setMessage(res.message);
+      deleteGroup(
+        {
+          data: {
+            id: data.id,
+          },
         },
-        onError: (res) => {
-          const {
-            error: { message },
-          } = res.response.data;
+        {
+          onSuccess: (res) => {
+            queryClient.invalidateQueries({
+              queryKey: ["my-expenses-and-groups", loggedInUser.id!],
+            });
 
-          setMessage({
-            color: "danger",
-            icon: "CircleX",
-            title: "No se puedo eliminar el grupo",
-            content: message.map((paragraph) => ({
-              text: paragraph,
-            })),
-          });
+            res?.message && setMessage(res.message);
+          },
+          onError: (res) => {
+            const {
+              error: { message },
+            } = res.response.data;
+
+            setMessage({
+              color: "danger",
+              icon: "CircleX",
+              title: "No se puedo eliminar el grupo",
+              content: message.map((paragraph) => ({
+                text: paragraph,
+              })),
+            });
+          },
         },
-      });
+      );
     }
   };
 
@@ -151,12 +169,19 @@ const Card = ({ type, data, loggedInUser }: CardProps) => {
       ? (data as Expense).createdBy?.name
       : (data as Group).createdBy.name;
   const isDeleting = expenseIsPending || groupIsPending;
+  const allDebtsSettled =
+    type === CARD_TYPE.EXPENSE && areAllDebtsSettled(data as Expense);
 
   return (
     <>
       <div
+        ref={ref}
         onClick={handleClickCard}
-        className="border-h-background group hover:border-primary flex cursor-pointer items-center gap-x-4 border p-4 transition-colors duration-300"
+        className={clsx(
+          "border-h-background group hover:border-primary flex cursor-pointer items-center gap-x-4 border p-4 transition-colors duration-300",
+          containerClassName,
+        )}
+        style={containerStyle}
       >
         <div
           className={clsx(
@@ -177,23 +202,47 @@ const Card = ({ type, data, loggedInUser }: CardProps) => {
         <div className="flex min-w-0 flex-1 flex-col gap-y-2">
           <div className="flex flex-col gap-y-0.5">
             <div className="grid-rows-auto grid grid-cols-1 gap-x-4 lg:grid-cols-[1fr_auto] lg:grid-rows-1 lg:items-center">
-              <Tooltip
-                content={data.name}
-                color="info"
-                containerClassName="truncate max-w-full"
-              >
-                <span
-                  id="name"
-                  className="group-hover:text-primary truncate text-lg font-semibold transition-colors duration-300"
+              <div className="flex items-center gap-x-2 truncate">
+                <Tooltip
+                  content={data.name}
+                  color="info"
+                  containerClassName="truncate max-w-full"
                 >
-                  {data.name}
-                </span>
-              </Tooltip>
+                  <span
+                    id="name"
+                    className="group-hover:text-primary truncate text-lg font-semibold transition-colors duration-300"
+                  >
+                    {data.name}
+                  </span>
+                </Tooltip>
+
+                {type === CARD_TYPE.EXPENSE && (
+                  <Tooltip
+                    color="info"
+                    content={allDebtsSettled ? "Gasto completo" : "Incompleto"}
+                  >
+                    <Badge
+                      color={allDebtsSettled ? "success" : "warning"}
+                      className="!px-1"
+                    >
+                      {allDebtsSettled ? (
+                        <CheckCircle className="h-3.5 w-3.5" />
+                      ) : (
+                        <Clock className="h-3.5 w-3.5" />
+                      )}
+                    </Badge>
+                  </Tooltip>
+                )}
+              </div>
 
               {type === CARD_TYPE.EXPENSE && (
                 <div className="flex justify-end">
                   <Tooltip
-                    content={`$${formatAmount((data as Expense).amount)}`}
+                    content={
+                      <AmountNumber size="xs">
+                        {formatAmount((data as Expense).amount)}
+                      </AmountNumber>
+                    }
                     color="info"
                     containerClassName="lg:justify-end"
                   >

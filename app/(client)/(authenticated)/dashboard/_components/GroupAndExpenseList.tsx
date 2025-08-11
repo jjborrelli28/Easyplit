@@ -8,7 +8,7 @@ import { CARD_TYPE } from "@/components/Card";
 import PanelList from "@/components/PanelList";
 import Spinner from "@/components/Spinner";
 
-const GroupAndExpenseList = () => {
+const ExpenseAndGroupList = () => {
   const { data, isPending } = useGetMyExpensesAndGroups();
 
   const [activePanel, setActivePanel] = useState<CARD_TYPE>(CARD_TYPE.EXPENSE);
@@ -51,4 +51,4 @@ const GroupAndExpenseList = () => {
   );
 };
 
-export default GroupAndExpenseList;
+export default ExpenseAndGroupList;

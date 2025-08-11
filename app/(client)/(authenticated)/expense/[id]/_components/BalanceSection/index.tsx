@@ -12,6 +12,7 @@ import Button from "@/components/Button";
 import UpdateExpenseForm, {
   type UpdateExpenseFieldKeys,
 } from "@/components/UpdateExpenseForm";
+import clsx from "clsx";
 import { Card } from "./Card";
 
 interface BalanceSectionProps {
@@ -75,7 +76,13 @@ const BalanceSection = ({ expense, loggedUser }: BalanceSectionProps) => {
                 setSelectedParticipant,
                 setAmountToBeSettled,
                 setIsOpen,
-                containerClassName: i % 2 ? "bg-background" : "bg-h-background",
+                containerClassName:
+                  i === 0
+                    ? "bg-h-background"
+                    : clsx(
+                        "bg-background border-b border-h-background",
+                        i + 1 === sortedParticipants.length && "border-b-0",
+                      ),
               }}
             />
           ))}

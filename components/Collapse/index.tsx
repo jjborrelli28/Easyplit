@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 import clsx from "clsx";
 
@@ -7,6 +7,7 @@ interface CollapseProps {
   isOpen: boolean;
   className?: string;
   contentClassName?: string;
+  contentStyle?: CSSProperties;
 }
 
 const Collapse = ({
@@ -14,6 +15,7 @@ const Collapse = ({
   isOpen,
   className,
   contentClassName,
+  contentStyle,
 }: CollapseProps) => {
   return (
     <div
@@ -23,7 +25,10 @@ const Collapse = ({
         isOpen && "grid-rows-[1fr] opacity-100",
       )}
     >
-      <div className={clsx("overflow-hidden", contentClassName)}>
+      <div
+        className={clsx("overflow-hidden", contentClassName)}
+        style={contentStyle}
+      >
         {children}
       </div>
     </div>

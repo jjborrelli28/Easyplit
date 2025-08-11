@@ -24,7 +24,7 @@ const COLOR_MAP: Record<Colors, string> = {
 
 interface TooltipProps {
   children: ReactNode;
-  content?: string | null;
+  content?: ReactNode | null;
   color?: Colors;
   placement?: "top" | "bottom" | "left" | "right";
   className?: string;
