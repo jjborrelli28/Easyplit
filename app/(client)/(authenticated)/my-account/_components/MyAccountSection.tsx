@@ -194,9 +194,8 @@ const MyAccountSection = ({ user }: MyAccountSectionProps) => {
               const nameUpdated = values.name !== currentUser.name;
               const passwordUpdated = values.password !== "";
               const isSendable =
-                (nameUpdated || passwordUpdated) &&
-                fieldMeta.name.isValid &&
-                fieldMeta.password.isValid;
+                (nameUpdated && fieldMeta.name.isValid) ||
+                (passwordUpdated && fieldMeta.password.isValid);
 
               return (
                 <Button

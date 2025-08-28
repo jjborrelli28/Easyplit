@@ -191,4 +191,22 @@ export interface GroupCreationFieldErrors {
 export interface DeleteExpenseGroupFields {
     data: { id?: string };
 }
+
+export interface UpdateGroupFields {
+    name?: string;
+    type?: GROUP_TYPE;
+    membersToAdd?: string[];
+    memberToRemove?: string;
+    expensesToAdd?: string[];
+    expenseToRemove?: string;
+}
+
+export interface GroupUpdateFieldErrors {
+    name?: string;
+    type?: string;
+    membersToAdd?: string;
+    memberToRemove?: string;
+    expensesToAdd?: string;
+    expenseToRemove?: string;
+}
 /* End group types */

@@ -75,9 +75,9 @@ const HeaderSection = ({ expense, loggedUser }: HeaderSectionProps) => {
                   setIsOpen(true);
                 }}
                 unstyled
-                className="absolute inset-0 flex cursor-pointer items-center justify-center bg-black/75 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                className="absolute inset-0 flex cursor-pointer items-center justify-center rounded-full bg-black/75 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
               >
-                <Repeat className="group-hover:text-primary h-8 w-8 text-transparent transition-colors duration-300" />
+                <Repeat className="group-hover:text-background dark:group-hover:text-primary h-8 w-8 text-transparent transition-colors duration-300" />
               </Button>
             )}
           </div>

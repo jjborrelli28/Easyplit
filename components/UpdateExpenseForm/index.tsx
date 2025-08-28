@@ -17,6 +17,7 @@ import { isEqual } from "date-fns";
 import { X } from "lucide-react";
 
 import useUpdateExpense from "@/hooks/data/expense/useUpdateExpense";
+
 import type {
   Expense,
   ExpenseUpdateFieldErrors,
@@ -75,7 +76,7 @@ const buttonLabels = {
   participantPayment: "Agregar pago",
 };
 
-export type UpdateExpenseFieldKeys = (keyof Omit<UpdateExpenseFields, "id">)[];
+export type UpdateExpenseFieldKeys = (keyof UpdateExpenseFields)[];
 
 interface UpdateExpenseFormProps {
   isOpen: boolean;
@@ -83,7 +84,6 @@ interface UpdateExpenseFormProps {
   expense: Expense;
   user: Session["user"];
   fieldsToUpdate: UpdateExpenseFieldKeys;
-  participantToRemove?: User;
   selectedParticipant?: User | null;
   amountToBeSettled?: number | null;
 }
@@ -260,7 +260,7 @@ const UpdateExpenseForm = ({
   const participants = expense.participants.map(
     (participant) => participant.user,
   );
-  const participantsIds = getParticipantIds(expense.participants);
+  const participantIds = getParticipantIds(expense.participants);
 
   return (
     <Modal
@@ -377,10 +377,7 @@ const UpdateExpenseForm = ({
                       onSelect={(p) =>
                         handleSelectNewParticipants(p, field.handleChange)
                       }
-                      excludeUserIds={[
-                        ...participantsIds,
-                        ...newParticipantIds,
-                      ]}
+                      excludeUserIds={[...participantIds, ...newParticipantIds]}
                       onBlur={field.handleBlur}
                     />
 
@@ -422,7 +419,7 @@ const UpdateExpenseForm = ({
                                 )
                               }
                               rightItem={
-                                participantsIds.length > 1 && (
+                                participantIds.length > 1 && (
                                   <Button
                                     aria-label="Remove selected user"
                                     type="button"

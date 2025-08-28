@@ -37,28 +37,25 @@ model Session {
 }
 
 model User {
-  id             String    @id @default(cuid())
-  name           String?
-  email          String?   @unique
-  emailVerified  DateTime? @map("email_verified")
-  image          String?
-  password       String?
-  verifyToken    String?   @unique @map("verify_token")
-  verifyTokenExp DateTime? @unique @map("verify_token_exp")
-  resetToken     String?   @unique @map("reset_token")
-  resetTokenExp  DateTime? @unique @map("reset_token_exp")
-  createdAt      DateTime  @default(now())
-
-  accounts Account[]
-  sessions Session[]
-
+  id                 String               @id @default(cuid())
+  name               String?
+  email              String?              @unique
+  emailVerified      DateTime?            @map("email_verified")
+  image              String?
+  password           String?
+  verifyToken        String?              @unique @map("verify_token")
+  verifyTokenExp     DateTime?            @unique @map("verify_token_exp")
+  resetToken         String?              @unique @map("reset_token")
+  resetTokenExp      DateTime?            @unique @map("reset_token_exp")
+  createdAt          DateTime             @default(now())
+  expensesCreated    Expense[]            @relation("CreatedBy")
+  expensesPaid       Expense[]            @relation("PaidBy")
+  ExpenseParticipant ExpenseParticipant[]
   groupsCreated      Group[]              @relation("UserCreatedGroups")
   GroupMember        GroupMember[]
-  ExpenseParticipant ExpenseParticipant[]
-
-  expensesPaid    Expense[]        @relation("PaidBy")
-  expensesCreated Expense[]        @relation("CreatedBy")
-  ExpenseHistory  ExpenseHistory[]
+  accounts           Account[]
+  ExpenseHistory     ExpenseHistory[]
+  sessions           Session[]
 }
 
 model VerificationToken {
@@ -68,6 +65,70 @@ model VerificationToken {
 
   @@unique([identifier, token])
   @@map("verification_tokens")
+}
+
+model Expense {
+  id             String               @id @default(cuid())
+  amount         Float
+  paidById       String               @map("paid_by")
+  groupId        String?
+  createdAt      DateTime             @default(now())
+  name           String
+  type           ExpenseType?
+  createdById    String?              @map("created_by")
+  paymentDate    DateTime?
+  createdBy      User?                @relation("CreatedBy", fields: [createdById], references: [id])
+  group          Group?               @relation(fields: [groupId], references: [id])
+  paidBy         User                 @relation("PaidBy", fields: [paidById], references: [id])
+  participants   ExpenseParticipant[]
+  ExpenseHistory ExpenseHistory[]
+}
+
+model ExpenseParticipant {
+  id        String  @id @default(cuid())
+  expenseId String
+  userId    String
+  amount    Float
+  expense   Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([expenseId, userId])
+}
+
+model ExpenseHistory {
+  id          String   @id @default(cuid())
+  expenseId   String
+  field       String
+  oldValue    String?
+  newValue    String?
+  createdAt   DateTime @default(now())
+  updatedById String   @map("updated_by")
+  expense     Expense  @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  updatedBy   User     @relation(fields: [updatedById], references: [id])
+
+  @@index([expenseId])
+  @@map("expense_history")
+}
+
+model Group {
+  id          String        @id @default(cuid())
+  name        String
+  createdAt   DateTime      @default(now())
+  createdById String        @map("created_by")
+  type        GroupType?    @default(OTHER)
+  expenses    Expense[]
+  createdBy   User          @relation("UserCreatedGroups", fields: [createdById], references: [id], onDelete: Cascade)
+  members     GroupMember[]
+}
+
+model GroupMember {
+  id      String @id @default(cuid())
+  userId  String
+  groupId String
+  group   Group  @relation(fields: [groupId], references: [id])
+  user    User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, groupId])
 }
 
 enum ExpenseType {
@@ -80,20 +141,16 @@ enum ExpenseType {
   HOUSE_RENT
   HOUSE_SERVICES
   HOUSE_SUPPLIES
-
   FOOD_DRINKS
   FOOD_FOOD
   FOOD_OTHER
   FOOD_UTENSILS
-
   ENTERTAINMENT_GAMES
   ENTERTAINMENT_MOVIES
   ENTERTAINMENT_MUSIC
   ENTERTAINMENT_OTHER
   ENTERTAINMENT_SPORTS
-
   UNCATEGORIZED
-
   TRANSPORT_BUS
   TRANSPORT_CAR
   TRANSPORT_FUEL
@@ -103,7 +160,6 @@ enum ExpenseType {
   TRANSPORT_PLANE
   TRANSPORT_TAXI
   TRANSPORT_TRAIN
-
   UTILITIES_CLEANING
   UTILITIES_HEATING
   UTILITIES_LIGHT
@@ -113,7 +169,6 @@ enum ExpenseType {
   UTILITIES_TV
   UTILITIES_WATTER
   UTILITIES_WIFI
-
   LIFE_CLOTHES
   LIFE_DOCTORS
   LIFE_GIFTS
@@ -124,58 +179,6 @@ enum ExpenseType {
   LIFE_UNIVERSITY
 }
 
-model Expense {
-  id     String       @id @default(cuid())
-  name   String
-  type   ExpenseType?
-  amount Float
-
-  paidById    String    @map("paid_by")
-  paidBy      User      @relation("PaidBy", fields: [paidById], references: [id])
-  paymentDate DateTime?
-
-  createdById String? @map("created_by")
-  createdBy   User?   @relation("CreatedBy", fields: [createdById], references: [id])
-
-  participants ExpenseParticipant[]
-
-  groupId String?
-  group   Group?  @relation(fields: [groupId], references: [id])
-
-  createdAt      DateTime         @default(now())
-  ExpenseHistory ExpenseHistory[]
-}
-
-model ExpenseParticipant {
-  id        String @id @default(cuid())
-  expenseId String
-  userId    String
-  amount    Float
-
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  expense Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
-
-  @@unique([expenseId, userId])
-}
-
-model ExpenseHistory {
-  id        String  @id @default(cuid())
-  expenseId String
-  expense   Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
-
-  field    String
-  oldValue String?
-  newValue String?
-
-  updatedById String @map("updated_by")
-  updatedBy   User   @relation(fields: [updatedById], references: [id])
-
-  createdAt DateTime @default(now())
-
-  @@index([expenseId])
-  @@map("expense_history")
-}
-
 enum GroupType {
   HOUSEHOLD
   TRIP
@@ -183,30 +186,4 @@ enum GroupType {
   COUPLE
   FAMILY
   OTHER
-}
-
-model Group {
-  id   String     @id @default(cuid())
-  name String
-  type GroupType? @default(OTHER)
-
-  createdById String @map("created_by")
-  createdBy   User   @relation("UserCreatedGroups", fields: [createdById], references: [id], onDelete: Cascade)
-
-  members GroupMember[]
-
-  expenses Expense[]
-
-  createdAt DateTime @default(now())
-}
-
-model GroupMember {
-  id      String @id @default(cuid())
-  userId  String
-  groupId String
-
-  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
-  group Group @relation(fields: [groupId], references: [id])
-
-  @@unique([userId, groupId])
 }

@@ -23,7 +23,9 @@ import {
   GROUP_TYPES,
 } from "@/components/GroupTypeSelect/constants";
 import Tooltip from "@/components/Tooltip";
-import UpdateGroupForm from "@/components/UpdateGroupForm";
+import UpdateGroupForm, {
+  type UpdateGroupFieldKeys,
+} from "@/components/UpdateGroupForm";
 
 interface HeaderSectionProps {
   group: Group;
@@ -32,7 +34,9 @@ interface HeaderSectionProps {
 
 const HeaderSection = ({ group, loggedUser }: HeaderSectionProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [fieldsToUpdate, setFieldsToUpdate] = useState<string[]>([]);
+  const [fieldsToUpdate, setFieldsToUpdate] = useState<UpdateGroupFieldKeys>(
+    [],
+  );
 
   const type = group?.type ?? GROUP_TYPE.OTHER;
   const Icon = GROUP_TYPES[type].icon;
@@ -62,9 +66,9 @@ const HeaderSection = ({ group, loggedUser }: HeaderSectionProps) => {
                       setIsOpen(true);
                     }}
                     unstyled
-                    className="absolute inset-0 flex cursor-pointer items-center justify-center bg-black/75 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
+                    className="absolute inset-0 flex cursor-pointer items-center justify-center rounded-full bg-black/75 opacity-0 transition-opacity duration-300 group-hover:opacity-100"
                   >
-                    <Repeat className="group-hover:text-primary h-8 w-8 text-transparent transition-colors duration-300" />
+                    <Repeat className="group-hover:text-background dark:group-hover:text-primary h-8 w-8 text-transparent transition-colors duration-300" />
                   </Button>
                 )}
               </div>
@@ -165,7 +169,7 @@ const HeaderSection = ({ group, loggedUser }: HeaderSectionProps) => {
         <UpdateGroupForm
           isOpen={isOpen}
           setIsOpen={setIsOpen}
-          expense={group}
+          group={group}
           user={loggedUser}
           fieldsToUpdate={fieldsToUpdate}
         />

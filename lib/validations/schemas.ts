@@ -183,4 +183,25 @@ export const createGroupSchema = z.object({
         })
         .min(2, "El grupo debe tener al menos 2 miembros."),
 });
+
+export const updateGroupSchema = z.object({
+    name: name.optional(),
+    type: groupType,
+    membersToAdd: z
+        .array(z.string(), {
+            required_error: "Debes agregar al menos 1 miembro.",
+        })
+        .min(1, "Debes agregar al menos 1 miembro.")
+        .max(20)
+        .optional(),
+    memberToRemove: z.string().optional(),
+    expensesToAdd: z
+        .array(z.string(), {
+            required_error: "Debes agregar al menos 1 gasto.",
+        })
+        .min(1, "Debes agregar al menos 1 gasto.")
+        .max(20)
+        .optional(),
+    expenseToRemove: z.string().optional(),
+});
 /* End group form schemas */
