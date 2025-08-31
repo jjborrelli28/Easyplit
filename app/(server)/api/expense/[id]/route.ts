@@ -8,14 +8,13 @@ import type {
     ExpenseUpdateFieldErrors,
     ServerErrorResponse,
     SuccessResponse,
-    User
 } from "@/lib/api/types";
 import AuthOptions from "@/lib/auth/options";
 import prisma from "@/lib/prisma";
 import {
     compareMembers,
     getSuccessMessage,
-    getUpdatedFields,
+    getUpdatedExpenseFields,
 } from "@/lib/utils";
 import { parseZodErrors } from "@/lib/validations/helpers";
 import { updateExpenseSchema } from "@/lib/validations/schemas";
@@ -24,9 +23,7 @@ import { updateExpenseSchema } from "@/lib/validations/schemas";
 type GetExpenseHandler = (
     req: Request,
     context: { params: Promise<{ id: string }> },
-) => Promise<
-    NextResponse<SuccessResponse<Expense> | ServerErrorResponse>
->;
+) => Promise<NextResponse<SuccessResponse<Expense> | ServerErrorResponse>>;
 
 export const GET: GetExpenseHandler = async (req, context) => {
     try {
@@ -173,7 +170,6 @@ export const PATCH: UpdateExpenseHandler = async (req, context) => {
                 },
                 { status: 401 },
             );
-
         }
 
         const params = await context.params;
@@ -264,10 +260,6 @@ export const PATCH: UpdateExpenseHandler = async (req, context) => {
                 { status: 404 },
             );
         }
-
-
-
-
 
         if (paidById && paidById !== expense.paidById) {
             const participantsToUpdate = expense.participants.filter(
@@ -426,7 +418,7 @@ export const PATCH: UpdateExpenseHandler = async (req, context) => {
             });
         }
 
-        const changedFields = getUpdatedFields(expense, {
+        const changedFields = getUpdatedExpenseFields(expense, {
             ...(name && { name }),
             ...(type && { type }),
             ...(participantsToAdd && { participantsToAdd }),
@@ -480,8 +472,8 @@ export const PATCH: UpdateExpenseHandler = async (req, context) => {
                 icon: "CheckCircle",
                 title: "¡Gasto actualizado con éxito!",
                 content: [
-                    ...(name ? getSuccessMessage.name(name) : []),
-                    ...(type ? getSuccessMessage.type(type) : []),
+                    ...(name ? getSuccessMessage.name(name, "expense") : []),
+                    ...(type ? getSuccessMessage.type(type, "expense") : []),
                     ...(participantsToAdd
                         ? getSuccessMessage.participantsToAdd(participantsToAdd)
                         : []),
@@ -489,19 +481,19 @@ export const PATCH: UpdateExpenseHandler = async (req, context) => {
                         ? getSuccessMessage.participantToRemove(
                             expense.participants.find(
                                 (p) => p.userId === participantToRemove,
-                            )?.user as User,
+                            )?.user?.name,
                         )
                         : []),
                     ...(paidById && paymentDate
                         ? getSuccessMessage.paymentData(
-                            expense.participants.find((p) => p.userId === paidById)
-                                ?.user as User,
+                            expense.participants.find((p) => p.userId === paidById)?.user
+                                ?.name,
                             paymentDate,
                         )
                         : paidById
                             ? getSuccessMessage.paidById(
-                                expense.participants.find((p) => p.userId === paidById)
-                                    ?.user as User,
+                                expense.participants.find((p) => p.userId === paidById)?.user
+                                    ?.name,
                             )
                             : paymentDate
                                 ? getSuccessMessage.paymentDate(paymentDate)
@@ -533,11 +525,7 @@ export const PATCH: UpdateExpenseHandler = async (req, context) => {
 type DeleteExpenseHandler = (
     req: Request,
     context: { params: Promise<{ id: string }> },
-) => Promise<
-    NextResponse<
-        SuccessResponse<Expense> | ServerErrorResponse
-    >
->;
+) => Promise<NextResponse<SuccessResponse<Expense> | ServerErrorResponse>>;
 
 export const DELETE: DeleteExpenseHandler = async (req, context) => {
     try {

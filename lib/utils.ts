@@ -3,11 +3,13 @@ import { format, startOfToday, subYears } from "date-fns";
 import {
     Expense as PrismaExpense,
     ExpenseParticipant as PrismaExpenseParticipant,
-    GroupMember as PrismaGroupMember
+    Group as PrismaGroup,
+    GroupMember as PrismaGroupMember,
 } from "@prisma/client";
+import { es } from "date-fns/locale";
 
 import { EXPENSE_TYPE } from "@/components/ExpenseTypeSelect/constants";
-import { es } from "date-fns/locale";
+import { GROUP_TYPE } from "@/components/GroupTypeSelect/constants";
 import type {
     Expense,
     ExpenseParticipant,
@@ -94,7 +96,11 @@ export const formatAmount = (value: number) => {
 };
 
 export const getParticipantIds = (
-    participants: ExpenseParticipant[] | PrismaExpenseParticipant[] | GroupMember[] | PrismaGroupMember[],
+    participants:
+        | ExpenseParticipant[]
+        | PrismaExpenseParticipant[]
+        | GroupMember[]
+        | PrismaGroupMember[],
 ) => {
     return participants.map((p) => p.userId);
 };
@@ -141,7 +147,7 @@ export const isExpenseComplete = (
 
 type ParticipantPaymentType = { userId: string; amount: number | undefined };
 
-type UpdateTypes = {
+type UpdateExpenseTypes = {
     name?: string;
     type?: EXPENSE_TYPE;
     participantsToAdd?: string[];
@@ -159,11 +165,11 @@ export type UpdatedField = {
     newValue: string | null;
 };
 
-export const getUpdatedFields: (
+export const getUpdatedExpenseFields: (
     expense: PrismaExpense & { participants: ExpenseParticipant[] },
-    updated: UpdateTypes,
+    updated: UpdateExpenseTypes,
 ) => UpdatedField[] = (expense, updated) => {
-    const fieldsToCheck: (keyof UpdateTypes)[] = [
+    const fieldsToCheck: (keyof UpdateExpenseTypes)[] = [
         "name",
         "type",
         "participantsToAdd",
@@ -210,30 +216,35 @@ export const getUpdatedFields: (
     }, []);
 };
 
+const SUCCESS_MESSAGE_VARIANTS = {
+    expense: "gasto",
+    group: "grupo",
+};
+
 export const getSuccessMessage = {
-    name: (newName: string) => [
+    name: (newName: string, variant: "expense" | "group") => [
         {
-            text: `El nombre del gasto fue actualizado a “${newName}”.`,
+            text: `El nombre del ${SUCCESS_MESSAGE_VARIANTS[variant]} fue actualizado a “${newName}”.`,
         },
     ],
-    type: (newType: string) => [
+    type: (newType: string, variant: "expense" | "group") => [
         {
-            text: `La categoría del gasto fue actualizada a “${newType}”.`,
+            text: `La categoría del ${SUCCESS_MESSAGE_VARIANTS[variant]} fue actualizada a “${newType}”.`,
         },
     ],
     participantsToAdd: (participants: string[]) => [
         {
-            text: `Se agregó${participants.length > 1 ? "n" : ""} ${participants.length} participante${participants.length > 1 ? "s" : ""} al gasto.`,
+            text: `Se ${participants.length > 1 ? "agregaron" : "agregó"} ${participants.length} participante${participants.length > 1 ? "s" : ""} al gasto.`,
         },
     ],
-    participantToRemove: (participant: User) => [
+    participantToRemove: (participantName?: string | null) => [
         {
-            text: `${participant.name} fue removido del gasto.`,
+            text: `${participantName} fue removido del gasto.`,
         },
     ],
-    paidById: (participant: User) => [
+    paidById: (participantName?: string | null) => [
         {
-            text: `Ahora ${participant.name} figura como quien pagó el gasto.`,
+            text: `Ahora ${participantName} figura como quien pagó el gasto.`,
         },
     ],
     paymentDate: (date: Date) => [
@@ -247,12 +258,12 @@ export const getSuccessMessage = {
             )}.`,
         },
     ],
-    paymentData: (participant: User, date: Date) => [
+    paymentData: (participantName: string | null | undefined, date: Date) => [
         {
             text: "Los detalles del pago fueron actualizados correctamente.",
         },
         {
-            text: `Ahora ${participant.name} figura como quien pagó el gasto.`,
+            text: `Ahora ${participantName} figura como quien pagó el gasto.`,
             style: "muted",
         },
         {
@@ -276,18 +287,38 @@ export const getSuccessMessage = {
             text: `El monto del gasto fue actualizado a $${formatAmount(amount)}.`,
         },
     ],
+    membersToAdd: (members: string[]) => [
+        {
+            text: `Se ${members.length > 1 ? "agregaron" : "agregó"} ${members.length} mimenbro${members.length > 1 ? "s" : ""} al grupo.`,
+        },
+    ],
+    memberToRemove: (memberName?: string | null) => [
+        {
+            text: `${memberName} fue removido del grupo.`,
+        },
+    ],
+    expensesToAdd: (expenses: string[]) => [
+        {
+            text: `Se ${expenses.length > 1 ? "agregaron" : "agregó"} ${expenses.length} gasto${expenses.length > 1 ? "s" : ""} al grupo.`,
+        },
+    ],
+    expenseToRemove: (expenseName?: string) => [
+        {
+            text: `${expenseName} fue removido del grupo.`,
+        },
+    ],
 };
 
 export const getTotalAmountOfExpenses = (expenses?: Expense[]) =>
     expenses?.reduce((total, expense) => total + expense.amount, 0);
 
 export const getTotalPaidByParticipants = (expenses?: Expense[]) => {
-
     return (
         expenses?.reduce((totalPaid, expense) => {
             const paidInThisExpense = expense.participants.reduce(
                 (sum, participant) => {
-                    if (participant.userId === expense.paidById) return sum + expense.amount / expense.participants.length;
+                    if (participant.userId === expense.paidById)
+                        return sum + expense.amount / expense.participants.length;
 
                     return sum + participant.amount;
                 },
@@ -297,4 +328,58 @@ export const getTotalPaidByParticipants = (expenses?: Expense[]) => {
             return totalPaid + paidInThisExpense;
         }, 0) ?? 0
     );
+};
+
+type UpdateGroupTypes = {
+    name?: string;
+    type?: GROUP_TYPE;
+    membersToAdd?: string[];
+    memberToRemove?: string;
+    expensesToAdd?: string[];
+    expeneToRemove?: string;
+};
+
+export const getUpdatedGroupFields: (
+    group: PrismaGroup & { members: GroupMember[] },
+    updated: UpdateGroupTypes,
+) => UpdatedField[] = (group, updated) => {
+    const fieldsToCheck: (keyof UpdateGroupTypes)[] = [
+        "name",
+        "type",
+        "membersToAdd",
+        "memberToRemove",
+        "expensesToAdd",
+        "expeneToRemove",
+    ];
+
+    return fieldsToCheck.reduce<UpdatedField[]>((acc, field) => {
+        let oldValue: unknown;
+        let newValue: unknown;
+
+        if (
+            field === "membersToAdd" ||
+            field === "memberToRemove" ||
+            field === "expensesToAdd" ||
+            field === "expeneToRemove"
+        ) {
+            oldValue = null;
+            newValue = updated[field];
+        } else {
+            oldValue = group[field];
+            newValue = updated[field];
+        }
+
+        const oldStr = oldValue !== undefined ? JSON.stringify(oldValue) : null;
+        const newStr = newValue !== undefined ? JSON.stringify(newValue) : null;
+
+        if (newStr !== null && oldStr !== newStr) {
+            acc.push({
+                field: field.toString(),
+                oldValue: oldStr,
+                newValue: newStr,
+            });
+        }
+
+        return acc;
+    }, []);
 };

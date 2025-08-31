@@ -4,11 +4,16 @@ import type { Group } from "@prisma/client";
 import { getServerSession } from "next-auth";
 
 import API_RESPONSE_CODE from "@/lib/api/API_RESPONSE_CODE";
-import type { GroupUpdateFieldErrors, ServerErrorResponse, SuccessResponse } from "@/lib/api/types";
+import type {
+    GroupUpdateFieldErrors,
+    ServerErrorResponse,
+    SuccessResponse,
+} from "@/lib/api/types";
 import AuthOptions from "@/lib/auth/options";
 import prisma from "@/lib/prisma";
-import { updateGroupSchema } from "@/lib/validations/schemas";
+import { getSuccessMessage, getUpdatedGroupFields } from "@/lib/utils";
 import { parseZodErrors } from "@/lib/validations/helpers";
+import { updateGroupSchema } from "@/lib/validations/schemas";
 
 // Get group
 type GetGroupHandler = (
@@ -162,15 +167,17 @@ type UpdateGroupHandler = (
     req: Request,
     context: { params: Promise<{ id: string }> },
 ) => Promise<
-    NextResponse<SuccessResponse<any> | ServerErrorResponse>
+    NextResponse<
+        SuccessResponse<Group> | ServerErrorResponse<GroupUpdateFieldErrors>
+    >
 >;
 
 export const PATCH: UpdateGroupHandler = async (req, context) => {
     try {
         const session = await getServerSession(AuthOptions);
-        const loggedUserId = session?.user?.id;
+        const updatedById = session?.user?.id;
 
-        if (!loggedUserId) {
+        if (!updatedById) {
             return NextResponse.json(
                 {
                     success: false,
@@ -207,28 +214,108 @@ export const PATCH: UpdateGroupHandler = async (req, context) => {
             );
         }
 
+        const {
+            name,
+            type,
+            membersToAdd,
+            memberToRemove,
+            expensesToAdd,
+            expenseToRemove,
+        } = res.data;
 
-        const { name, type, membersToAdd, memberToRemove, expensesToAdd, expenseToRemove } = body;
+        const group = await prisma.group.findUnique({
+            where: { id },
+            include: {
+                members: {
+                    include: {
+                        user: {
+                            select: {
+                                id: true,
+                                name: true,
+                                email: true,
+                                image: true,
+                            },
+                        },
+                    },
+                },
+                expenses: {
+                    include: {
+                        participants: {
+                            include: {
+                                user: {
+                                    select: {
+                                        id: true,
+                                        name: true,
+                                        email: true,
+                                        image: true,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
+            },
+        });
 
-        if (!name && !description) {
+        if (!group) {
             return NextResponse.json(
                 {
                     success: false,
                     error: {
-                        code: API_RESPONSE_CODE.BAD_REQUEST,
-                        message: ["No se enviaron datos para actualizar."],
-                        statusCode: 400,
+                        code: API_RESPONSE_CODE.NOT_FOUND,
+                        message: ["Grupo no encontrado."],
+                        statusCode: 404,
                     },
                 },
-                { status: 400 },
+                { status: 404 },
             );
         }
 
+        if (memberToRemove) {
+            await prisma.groupMember.deleteMany({
+                where: {
+                    groupId: id,
+                    userId: memberToRemove,
+                },
+            });
+        }
+
+        if (membersToAdd) {
+            await prisma.groupMember.createMany({
+                data: membersToAdd.map((userId) => ({
+                    groupId: id,
+                    userId,
+                })),
+                skipDuplicates: true,
+            });
+        }
+
+        const changedFields = getUpdatedGroupFields(group, {
+            ...(name && { name }),
+            ...(type && { type }),
+            ...(membersToAdd && { membersToAdd }),
+            ...(memberToRemove && { memberToRemove }),
+            ...(expensesToAdd && { expensesToAdd }),
+            ...(expenseToRemove && { expenseToRemove }),
+        });
+
+        if (changedFields.length > 0) {
+            await prisma.expenseHistory.createMany({
+                data: changedFields.map((fieldChange) => ({
+                    expenseId: id,
+                    field: fieldChange.field,
+                    oldValue: fieldChange.oldValue,
+                    newValue: fieldChange.newValue,
+                    updatedById,
+                })),
+            });
+        }
+
         const updatedGroup = await prisma.group.update({
-            where: { id: groupId },
+            where: { id },
             data: {
                 ...(name && { name }),
-                ...(description && { description }),
+                ...(type && { type }),
             },
         });
 
@@ -238,11 +325,25 @@ export const PATCH: UpdateGroupHandler = async (req, context) => {
             message: {
                 color: "success",
                 icon: "CheckCircle",
-                title: "¡Grupo actualizado con éxito!",
+                title: "¡Gasto actualizado con éxito!",
                 content: [
-                    {
-                        text: "Los datos del grupo fueron actualizados correctamente.",
-                    },
+                    ...(name ? getSuccessMessage.name(name, "group") : []),
+                    ...(type ? getSuccessMessage.type(type, "group") : []),
+                    ...(membersToAdd ? getSuccessMessage.membersToAdd(membersToAdd) : []),
+                    ...(memberToRemove
+                        ? getSuccessMessage.memberToRemove(
+                            group.members.find((p) => p.userId === memberToRemove)?.user
+                                ?.name,
+                        )
+                        : []),
+                    ...(expensesToAdd
+                        ? getSuccessMessage.expensesToAdd(expensesToAdd)
+                        : []),
+                    ...(expenseToRemove
+                        ? getSuccessMessage.expenseToRemove(
+                            group.expenses.find((p) => p.id === expenseToRemove)?.name,
+                        )
+                        : []),
                 ],
             },
             data: updatedGroup,
@@ -256,7 +357,6 @@ export const PATCH: UpdateGroupHandler = async (req, context) => {
                 error: {
                     code: API_RESPONSE_CODE.INTERNAL_SERVER_ERROR,
                     message: ["Error interno del servidor."],
-                    details: error,
                     statusCode: 500,
                 },
             },
