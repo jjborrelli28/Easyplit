@@ -8,13 +8,18 @@ import {
 } from "@prisma/client";
 import { es } from "date-fns/locale";
 
-import { EXPENSE_TYPE } from "@/components/ExpenseTypeSelect/constants";
-import { GROUP_TYPE } from "@/components/GroupTypeSelect/constants";
+import {
+    EXPENSE_TYPE,
+    EXPENSE_TYPES,
+} from "@/components/ExpenseTypeSelect/constants";
+import {
+    GROUP_TYPE,
+    GROUP_TYPES,
+} from "@/components/GroupTypeSelect/constants";
 import type {
     Expense,
     ExpenseParticipant,
-    GroupMember,
-    User,
+    GroupMember
 } from "./api/types";
 
 export const today = startOfToday();
@@ -51,7 +56,7 @@ export const getPositiveTruncatedNumber = (number: number) =>
     Math.floor(Math.abs(number) * 100) / 100;
 
 export const compareMembers = (
-    participants?: User[] | { id: string }[],
+    participants?: { id: string }[],
     members?: GroupMember[],
 ) => {
     if (!participants || !members)
@@ -216,7 +221,7 @@ export const getUpdatedExpenseFields: (
     }, []);
 };
 
-const SUCCESS_MESSAGE_VARIANTS = {
+const SUCCESS_MESSAGE_VARIANT = {
     expense: "gasto",
     group: "grupo",
 };
@@ -224,14 +229,24 @@ const SUCCESS_MESSAGE_VARIANTS = {
 export const getSuccessMessage = {
     name: (newName: string, variant: "expense" | "group") => [
         {
-            text: `El nombre del ${SUCCESS_MESSAGE_VARIANTS[variant]} fue actualizado a “${newName}”.`,
+            text: `El nombre del ${SUCCESS_MESSAGE_VARIANT[variant]} fue actualizado a “${newName}”.`,
         },
     ],
-    type: (newType: string, variant: "expense" | "group") => [
-        {
-            text: `La categoría del ${SUCCESS_MESSAGE_VARIANTS[variant]} fue actualizada a “${newType}”.`,
-        },
-    ],
+    type: (
+        newType: keyof typeof EXPENSE_TYPES | keyof typeof GROUP_TYPES,
+        variant: "expense" | "group",
+    ) => {
+        const typeName =
+            variant === "expense"
+                ? EXPENSE_TYPES[newType as keyof typeof EXPENSE_TYPES].label
+                : GROUP_TYPES[newType as keyof typeof GROUP_TYPES].label;
+
+        return [
+            {
+                text: `La categoría del ${SUCCESS_MESSAGE_VARIANT[variant]} fue actualizada a “${typeName}”.`,
+            },
+        ];
+    },
     participantsToAdd: (participants: string[]) => [
         {
             text: `Se ${participants.length > 1 ? "agregaron" : "agregó"} ${participants.length} participante${participants.length > 1 ? "s" : ""} al gasto.`,

@@ -1,4 +1,4 @@
-import { Dispatch, SetStateAction, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import clsx from "clsx";
 import { Check, Trash } from "lucide-react";
@@ -23,8 +23,6 @@ interface GroupPickerProps
   value?: string;
   onChange: (groupId?: string) => void;
   pickedParticipants?: User[];
-  isOpen?: boolean;
-  setIsOpen?: Dispatch<SetStateAction<boolean>>;
   onPick?: VoidFunction;
 }
 
@@ -51,7 +49,6 @@ const GroupPicker = ({
       pickedParticipants,
       group?.members,
     );
-    console.log(differences);
 
     if (haveDifferences && differences.excessParticipants.length > 0) {
       setMessage(["Los participantes del gasto deben ser miembros del grupo."]);

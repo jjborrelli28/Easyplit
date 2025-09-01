@@ -13,12 +13,12 @@ import type { Session } from "next-auth";
 import { useForm } from "@tanstack/react-form";
 import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
-import { X } from "lucide-react";
+import { Trash, X } from "lucide-react";
 
+import type { Expense } from "@/hooks/data/expenses/useSearchExpenses";
 import useUpdateGroup from "@/hooks/data/group/useUpdateGroup";
 
 import type {
-  Expense,
   Group,
   GroupUpdateFieldErrors,
   ResponseMessage,
@@ -27,12 +27,14 @@ import type {
   User,
 } from "@/lib/api/types";
 import ICON_MAP from "@/lib/icons";
-import { getParticipantIds } from "@/lib/utils";
+import { compareMembers, getParticipantIds } from "@/lib/utils";
 import { updateGroupSchema } from "@/lib/validations/schemas";
 
 import Badge from "../Badge";
 import Button from "../Button";
 import Collapse from "../Collapse";
+import ExpenseSearchEngine from "../ExpenseSearchEngine";
+import { EXPENSE_TYPES } from "../ExpenseTypeSelect/constants";
 import FormErrorMessage from "../FormErrorMessage";
 import GroupTypeSelect from "../GroupTypeSelect";
 import { GROUP_TYPE } from "../GroupTypeSelect/constants";
@@ -90,6 +92,9 @@ const UpdateGroupForm = ({
   const [newMembers, setNewMembers] = useState<User[]>([]);
   const [newExpenses, setNewExpenses] = useState<Expense[]>([]);
   const [message, setMessage] = useState<ResponseMessage | null>(null);
+  const [addExpensesError, setAddExpensesError] = useState<string[] | null>(
+    null,
+  );
   const [isSendeable, setIsSendeable] = useState(false);
 
   const editName = fieldsToUpdate.includes("name");
@@ -130,7 +135,7 @@ const UpdateGroupForm = ({
     if (newExpenseIds.includes(newExpense.id)) return;
 
     const newExpensesArray = [...newExpenses, newExpense];
-    const newExpenseIdsArray = newExpensesArray.map((p) => p.id);
+    const newExpenseIdsArray = newExpensesArray.map((e) => e.id);
 
     handleChange(newExpenseIdsArray);
     setNewExpenses(newExpensesArray);
@@ -204,6 +209,31 @@ const UpdateGroupForm = ({
     [isSendeable],
   );
 
+  // Validate that participants in the expenses are members of the group
+  useEffect(() => {
+    const participantIds = Array.from(
+      new Set(
+        newExpenses.flatMap((expense) =>
+          expense.participants.map((p) => p.userId),
+        ),
+      ),
+    ).map((id) => ({ id }));
+    const { haveDifferences, differences } = compareMembers(
+      participantIds,
+      group?.members,
+    );
+
+    if (haveDifferences && differences.excessParticipants.length > 0) {
+      setAddExpensesError([
+        "Los participantes del gasto deben ser miembros del grupo.",
+      ]);
+      return;
+    }
+
+    setAddExpensesError(null);
+  }, [newExpenses, group?.members, addExpensesError]);
+
+  // Form validation if it is sendable
   useEffect(() => {
     if (addMembers) {
       toggleIsSendeable(newMemberIds.length, 0, true);
@@ -214,7 +244,7 @@ const UpdateGroupForm = ({
     }
 
     if (addExpenses) {
-      toggleIsSendeable(newExpenseIds.length, 0, true);
+      toggleIsSendeable(newExpenseIds.length, 0, !addExpensesError);
     }
 
     if (removeExpense) {
@@ -227,6 +257,8 @@ const UpdateGroupForm = ({
     addExpenses,
     newExpenseIds,
     removeExpense,
+    addExpensesError,
+    toggleIsSendeable,
     form.state.isFormValid,
   ]);
 
@@ -241,8 +273,8 @@ const UpdateGroupForm = ({
     form.reset();
   };
 
-  const members = group.members.map((member) => member.user);
   const memberIds = getParticipantIds(group.members);
+  const expenseIds = group.expenses?.map((expense) => expense.id) ?? [];
 
   return (
     <Modal
@@ -425,7 +457,7 @@ const UpdateGroupForm = ({
 
             {addExpenses && (
               <form.Field
-                name="membersToAdd"
+                name="expensesToAdd"
                 validators={{
                   onChange: updateGroupSchema.shape.expensesToAdd,
                   onBlur: updateGroupSchema.shape.expensesToAdd,
@@ -433,20 +465,19 @@ const UpdateGroupForm = ({
               >
                 {(field) => (
                   <div className="flex flex-col gap-y-8">
-                    {/* <ExpenseSearchEngine
-                      user={user}
-                      onSelect={(p) =>
-                        handleSelectNewMembers(p, field.handleChange)
+                    <ExpenseSearchEngine
+                      onSelect={(e) =>
+                        handleSelectNewExpenses(e, field.handleChange)
                       }
-                      excludeUserIds={[...memberIds, ...newMemberIds]}
+                      excludeExpenseIds={[...expenseIds, ...newExpenseIds]}
                       onBlur={field.handleBlur}
-                    /> */}
+                    />
 
                     <Collapse
-                      isOpen={newMemberIds.length > 0}
+                      isOpen={newExpenseIds.length > 0}
                       contentClassName={clsx(
                         "relative transition-[padding] duration-300",
-                        newMemberIds.length > 0 ? "pt-7" : "pt-0",
+                        newExpenseIds.length > 0 ? "pt-7" : "pt-0",
                       )}
                     >
                       <label
@@ -464,40 +495,40 @@ const UpdateGroupForm = ({
                       </label>
 
                       <div className="flex max-h-50 flex-wrap gap-2 overflow-y-scroll pt-3">
-                        {/* {newExpenses.map((p) => (
-                          <Tooltip key={p.id} color="info" content={p.name}>
-                            <Badge
-                              color="info"
-                              leftItem={
-                                p.image && (
-                                  <Image
-                                    alt="User avatar"
-                                    src={p.image}
-                                    height={14}
-                                    width={14}
-                                    className="-ml-1.5 h-3.5 w-3.5 flex-shrink-0 rounded-full"
-                                  />
-                                )
-                              }
-                              rightItem={
-                                memberIds.length > 1 && (
-                                  <Button
-                                    aria-label="Remove selected user"
-                                    type="button"
-                                    onClick={() => handleRemoveNewMember(p.id)}
-                                    unstyled
-                                    className="hover:text-background/90 text-background cursor-pointer rounded-full transition-colors duration-300"
-                                  >
-                                    <X className="-mr-1 h-3.5 w-3.5 stroke-3" />
-                                  </Button>
-                                )
-                              }
+                        {newExpenses.map((e) => {
+                          const type = e?.type ?? "UNCATEGORIZED";
+                          const Icon = EXPENSE_TYPES[type].icon;
+
+                          return (
+                            <div
+                              key={e.id}
+                              className="text-foreground flex min-h-[50px] w-full justify-between gap-x-3 p-3"
                             >
-                              {p.id === user.id ? "Tu" : p.name}
-                            </Badge>
-                          </Tooltip>
-                        ))} */}
+                              <div
+                                className={clsx(
+                                  "flex h-6 w-6 min-w-6 items-center justify-center rounded-full",
+                                  EXPENSE_TYPES[type].color,
+                                )}
+                              >
+                                <Icon className="text-background h-3.5 w-3.5" />
+                              </div>
+
+                              <p className="w-full truncate">{e.name}</p>
+
+                              <Button
+                                aria-label="Remove selected expense"
+                                type="button"
+                                onClick={() => handleRemoveNewExpense(e.id)}
+                                unstyled
+                                className="text-danger hover:text-danger/90 cursor-pointer transition-colors duration-300"
+                              >
+                                <Trash className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          );
+                        })}
                       </div>
+                      <FormErrorMessage message={addExpensesError} />
                     </Collapse>
                   </div>
                 )}

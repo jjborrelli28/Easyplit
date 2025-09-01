@@ -290,6 +290,24 @@ export const PATCH: UpdateGroupHandler = async (req, context) => {
             });
         }
 
+        if (expensesToAdd) {
+            await prisma.expense.updateMany({
+                where: {
+                    id: { in: expensesToAdd },
+                },
+                data: {
+                    groupId: id,
+                },
+            });
+        }
+
+        if (expenseToRemove) {
+            await prisma.expense.update({
+                where: { id: expenseToRemove },
+                data: { groupId: null },
+            });
+        }
+
         const changedFields = getUpdatedGroupFields(group, {
             ...(name && { name }),
             ...(type && { type }),
@@ -299,17 +317,17 @@ export const PATCH: UpdateGroupHandler = async (req, context) => {
             ...(expenseToRemove && { expenseToRemove }),
         });
 
-        if (changedFields.length > 0) {
-            await prisma.expenseHistory.createMany({
-                data: changedFields.map((fieldChange) => ({
-                    expenseId: id,
-                    field: fieldChange.field,
-                    oldValue: fieldChange.oldValue,
-                    newValue: fieldChange.newValue,
-                    updatedById,
-                })),
-            });
-        }
+        // if (changedFields.length > 0) {
+        //     await prisma.expenseHistory.createMany({
+        //         data: changedFields.map((fieldChange) => ({
+        //             expenseId: id,
+        //             field: fieldChange.field,
+        //             oldValue: fieldChange.oldValue,
+        //             newValue: fieldChange.newValue,
+        //             updatedById,
+        //         })),
+        //     });
+        // }
 
         const updatedGroup = await prisma.group.update({
             where: { id },
@@ -325,7 +343,7 @@ export const PATCH: UpdateGroupHandler = async (req, context) => {
             message: {
                 color: "success",
                 icon: "CheckCircle",
-                title: "¡Gasto actualizado con éxito!",
+                title: "Grupo actualizado con éxito!",
                 content: [
                     ...(name ? getSuccessMessage.name(name, "group") : []),
                     ...(type ? getSuccessMessage.type(type, "group") : []),
@@ -357,6 +375,129 @@ export const PATCH: UpdateGroupHandler = async (req, context) => {
                 error: {
                     code: API_RESPONSE_CODE.INTERNAL_SERVER_ERROR,
                     message: ["Error interno del servidor."],
+                    statusCode: 500,
+                },
+            },
+            { status: 500 },
+        );
+    }
+};
+
+// Delete group
+type DeleteGroupHandler = (
+    req: Request,
+    context: { params: Promise<{ id: string }> },
+) => Promise<NextResponse<SuccessResponse<Group> | ServerErrorResponse>>;
+
+export const DELETE: DeleteGroupHandler = async (req, context) => {
+    try {
+        const session = await getServerSession(AuthOptions);
+        const createdById = session?.user?.id;
+
+        if (!createdById) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: {
+                        code: API_RESPONSE_CODE.UNAUTHORIZED,
+                        message: ["No se registró una sesión iniciada."],
+                        statusCode: 401,
+                    },
+                },
+                { status: 401 },
+            );
+        }
+
+        const params = await context.params;
+        const id = params.id;
+
+        if (!id || typeof id !== "string" || id.length <= 1) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: {
+                        code: API_RESPONSE_CODE.INVALID_FIELD_FORMAT,
+                        message: ["ID de grupo inválido."],
+                        statusCode: 400,
+                    },
+                },
+                { status: 400 },
+            );
+        }
+
+        const group = await prisma.group.findUnique({
+            where: { id },
+            include: {
+                createdBy: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        image: true,
+                    },
+                },
+                members: {
+                    include: {
+                        user: {
+                            select: {
+                                id: true,
+                                name: true,
+                                email: true,
+                                image: true,
+                            },
+                        },
+                    },
+                },
+            },
+        });
+
+        if (!group) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: {
+                        code: API_RESPONSE_CODE.NOT_FOUND,
+                        message: ["Grupo no encontrado."],
+                        statusCode: 404,
+                    },
+                },
+                { status: 404 },
+            );
+        }
+
+        await prisma.groupMember.deleteMany({
+            where: { groupId: id },
+        });
+
+        await prisma.group.delete({
+            where: { id },
+        });
+
+        return NextResponse.json({
+            success: true,
+            code: API_RESPONSE_CODE.DATA_DELETED,
+            message: {
+                color: "success",
+                icon: "Trash",
+                title: "Grupo eliminado",
+                content: [
+                    {
+                        text: "El grupo fue eliminado correctamente.",
+                    },
+                ],
+            },
+            data: group,
+        });
+    } catch (error) {
+        console.error(error);
+
+        return NextResponse.json(
+            {
+                success: false,
+                error: {
+                    code: API_RESPONSE_CODE.INTERNAL_SERVER_ERROR,
+                    message: ["Error interno del servidor."],
+                    details: error,
                     statusCode: 500,
                 },
             },

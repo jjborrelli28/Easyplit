@@ -6,10 +6,9 @@ import { useSession } from "next-auth/react";
 
 import useGetGroup from "@/hooks/data/group/useGetGroup";
 
-import { CARD_TYPE } from "@/components/Card";
 import PageContainer from "@/components/PageContainer";
-import PanelList from "@/components/PanelList";
 import Spinner from "@/components/Spinner";
+import ExpenseListSection from "./_components/ExpenseListSection";
 import HeaderSection from "./_components/HeaderSection";
 
 const GroupPage = () => {
@@ -26,7 +25,6 @@ const GroupPage = () => {
   const { data: group, isPending } = useGetGroup(groupId);
 
   const loggedUser = data?.user;
-  //  const isUserEditor = loggedUser?.id === group?.createdById;
 
   return (
     <PageContainer className="border-h-background !px-0 md:border-r">
@@ -42,13 +40,7 @@ const GroupPage = () => {
 
               <hr className="border-h-background" />
 
-              <div>
-                <PanelList
-                  type={CARD_TYPE.EXPENSE}
-                  list={group.expenses}
-                  isActive
-                />
-              </div>
+              <ExpenseListSection group={group} loggedUser={loggedUser} />
             </>
           ) : (
             notFound()

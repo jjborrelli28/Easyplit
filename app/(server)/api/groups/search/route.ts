@@ -9,11 +9,11 @@ import AuthOptions from "@/lib/auth/options";
 import prisma from "@/lib/prisma";
 
 // Search groups by user
-type GetSearchGroupsByUserIdHandler = (
+type GetSearchGroupsHandler = (
     req: Request,
 ) => Promise<NextResponse<SuccessResponse<Group[]> | ServerErrorResponse>>;
 
-export const GET: GetSearchGroupsByUserIdHandler = async (req) => {
+export const GET: GetSearchGroupsHandler = async (req) => {
     try {
         const session = await getServerSession(AuthOptions);
         const userId = session?.user?.id;
@@ -34,20 +34,6 @@ export const GET: GetSearchGroupsByUserIdHandler = async (req) => {
 
         const { searchParams } = new URL(req.url);
         const q = searchParams.get("q");
-
-        if (!userId) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    error: {
-                        code: API_RESPONSE_CODE.BAD_REQUEST,
-                        message: ["Falta el ID del usuario."],
-                        statusCode: 400,
-                    },
-                },
-                { status: 400 },
-            );
-        }
 
         if (!q || q.length < 2) {
             return NextResponse.json({

@@ -19,6 +19,7 @@ import { es } from "date-fns/locale";
 import { CheckCircle, CircleChevronDown, Clock, Trash } from "lucide-react";
 
 import useDeleteExpense from "@/hooks/data/expense/useDeleteExpense";
+import type { Expense as ResExpense } from "@/hooks/data/expenses/useSearchExpenses";
 import useDeleteGroup from "@/hooks/data/group/useDeleteGroup";
 
 import type { Expense, Group, ResponseMessage } from "@/lib/api/types";
@@ -34,6 +35,7 @@ import { GROUP_TYPE, GROUP_TYPES } from "../GroupTypeSelect/constants";
 import MessageCard from "../MessageCard";
 import Modal from "../Modal";
 import Tooltip from "../Tooltip";
+import UpdateGroupForm from "../UpdateGroupForm";
 
 export enum CARD_TYPE {
   EXPENSE = "EXPENSE",
@@ -44,7 +46,8 @@ interface CardProps {
   ref?: Ref<HTMLDivElement>;
   type: CARD_TYPE;
   data: Expense | Group;
-  loggedInUser?: Session["user"];
+  loggedUser?: Session["user"];
+  group?: Group;
   containerClassName?: string;
   containerStyle?: CSSProperties;
 }
@@ -53,7 +56,8 @@ const Card = ({
   ref,
   type,
   data,
-  loggedInUser,
+  loggedUser,
+  group,
   containerClassName,
   containerStyle,
 }: CardProps) => {
@@ -62,14 +66,19 @@ const Card = ({
 
   const { mutate: deleteExpense, isPending: expenseIsPending } =
     useDeleteExpense(data.id);
-  const { mutate: deleteGroup, isPending: groupIsPending } = useDeleteGroup();
+  const { mutate: deleteGroup, isPending: groupIsPending } = useDeleteGroup(
+    data.id,
+  );
 
   const [deleteModalIsOpen, setDeleteModalIsOpen] = useState(false);
   const [participantsIsOpen, setParticipantsIsOpen] = useState(false);
+  const [selectedExpense, setSelectedExpense] = useState<Expense | undefined>(
+    undefined,
+  );
 
   const [message, setMessage] = useState<ResponseMessage | null>(null);
 
-  if (!data || !loggedInUser) return null;
+  if (!data || !loggedUser) return null;
 
   const handleClickCard = (e: MouseEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement;
@@ -85,6 +94,14 @@ const Card = ({
   const handleToggleCard = () =>
     setParticipantsIsOpen((prevState) => !prevState);
 
+  const handleDeleteClick = () => {
+    if (group) {
+      setSelectedExpense(data as Expense);
+    }
+
+    setDeleteModalIsOpen(true);
+  };
+
   const handleDelete = (e: FormEvent) => {
     e.preventDefault();
 
@@ -92,7 +109,7 @@ const Card = ({
       deleteExpense(undefined, {
         onSuccess: (res) => {
           queryClient.invalidateQueries({
-            queryKey: ["my-expenses-and-groups", loggedInUser.id!],
+            queryKey: ["my-expenses-and-groups", loggedUser.id!],
           });
 
           res?.message && setMessage(res.message);
@@ -113,36 +130,29 @@ const Card = ({
         },
       });
     } else {
-      deleteGroup(
-        {
-          data: {
-            id: data.id,
-          },
-        },
-        {
-          onSuccess: (res) => {
-            queryClient.invalidateQueries({
-              queryKey: ["my-expenses-and-groups", loggedInUser.id!],
-            });
+      deleteGroup(undefined, {
+        onSuccess: (res) => {
+          queryClient.invalidateQueries({
+            queryKey: ["my-expenses-and-groups", loggedUser.id!],
+          });
 
-            res?.message && setMessage(res.message);
-          },
-          onError: (res) => {
-            const {
-              error: { message },
-            } = res.response.data;
-
-            setMessage({
-              color: "danger",
-              icon: "CircleX",
-              title: "No se puedo eliminar el grupo",
-              content: message.map((paragraph) => ({
-                text: paragraph,
-              })),
-            });
-          },
+          res?.message && setMessage(res.message);
         },
-      );
+        onError: (res) => {
+          const {
+            error: { message },
+          } = res.response.data;
+
+          setMessage({
+            color: "danger",
+            icon: "CircleX",
+            title: "No se puedo eliminar el grupo",
+            content: message.map((paragraph) => ({
+              text: paragraph,
+            })),
+          });
+        },
+      });
     }
   };
 
@@ -154,15 +164,15 @@ const Card = ({
   const participants =
     type === CARD_TYPE.EXPENSE
       ? (data as Expense).participants.filter(
-          (participant) => participant.userId !== loggedInUser.id,
+          (participant) => participant.userId !== loggedUser.id,
         )
       : (data as Group).members.filter(
-          (member) => member.userId !== loggedInUser.id,
+          (member) => member.userId !== loggedUser.id,
         );
   const IsUserCreator =
     type === CARD_TYPE.EXPENSE
-      ? loggedInUser.id === (data as Expense).paidById
-      : loggedInUser.id === (data as Group).createdById;
+      ? loggedUser.id === (data as Expense).paidById
+      : loggedUser.id === (data as Group).createdById;
   const creatorUserName = IsUserCreator
     ? "mi"
     : type === CARD_TYPE.EXPENSE
@@ -291,11 +301,22 @@ const Card = ({
               {IsUserCreator && (
                 <Button
                   aria-label="Remove card"
-                  onClick={() => setDeleteModalIsOpen(true)}
+                  onClick={handleDeleteClick}
                   unstyled
                   className="text-danger hover:text-danger/90 cursor-pointer transition-colors duration-300"
                 >
-                  <Trash className="h-5 w-5" />
+                  <Tooltip
+                    color="info"
+                    content={
+                      type === CARD_TYPE.EXPENSE
+                        ? group
+                          ? "Eliminar gasto del grupo"
+                          : "Eliminar gasto"
+                        : "Eliminar grupo"
+                    }
+                  >
+                    <Trash className="h-5 w-5" />
+                  </Tooltip>
                 </Button>
               )}
             </div>
@@ -318,7 +339,7 @@ const Card = ({
       </div>
 
       <Modal
-        isOpen={deleteModalIsOpen}
+        isOpen={!group && deleteModalIsOpen}
         onClose={() => setDeleteModalIsOpen(false)}
         showHeader={!message}
         title={`¿Estás seguro de que quieres eliminar este
@@ -379,6 +400,17 @@ const Card = ({
           </>
         )}
       </Modal>
+
+      {group && loggedUser && (
+        <UpdateGroupForm
+          isOpen={deleteModalIsOpen}
+          setIsOpen={setDeleteModalIsOpen}
+          group={group}
+          user={loggedUser}
+          fieldsToUpdate={["expenseToRemove"]}
+          selectedExpense={selectedExpense as ResExpense}
+        />
+      )}
     </>
   );
 };

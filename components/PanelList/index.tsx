@@ -27,6 +27,7 @@ const PANEL_TYPE_STYLES = {
 interface PanelListProps {
   type: CARD_TYPE;
   list?: Expense[] | Group[];
+  group: Group;
   isActive: boolean;
   handleTogglePanel?: VoidFunction;
 }
@@ -34,6 +35,7 @@ interface PanelListProps {
 const PanelList = ({
   type,
   list = [],
+  group,
   isActive,
   handleTogglePanel,
 }: PanelListProps) => {
@@ -119,7 +121,12 @@ const PanelList = ({
                       transform: `translateY(${virtualRow.start}px)`,
                     }}
                   >
-                    <Card type={type} data={item} loggedInUser={user} />
+                    <Card
+                      type={type}
+                      data={item}
+                      loggedUser={user}
+                      group={group}
+                    />
                   </div>
                 );
               })

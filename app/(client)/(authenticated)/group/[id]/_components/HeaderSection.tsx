@@ -7,9 +7,9 @@ import type { Session } from "next-auth";
 import clsx from "clsx";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { CalendarArrowUp, Repeat, UsersRound } from "lucide-react";
+import { CalendarArrowUp, Repeat, UsersRound, X } from "lucide-react";
 
-import type { Group } from "@/lib/api/types";
+import type { Group, User } from "@/lib/api/types";
 import {
   getTotalAmountOfExpenses,
   getTotalPaidByParticipants,
@@ -37,6 +37,7 @@ const HeaderSection = ({ group, loggedUser }: HeaderSectionProps) => {
   const [fieldsToUpdate, setFieldsToUpdate] = useState<UpdateGroupFieldKeys>(
     [],
   );
+  const [selectedMember, setSelectedMember] = useState<User | null>(null);
 
   const type = group?.type ?? GROUP_TYPE.OTHER;
   const Icon = GROUP_TYPES[type].icon;
@@ -46,9 +47,9 @@ const HeaderSection = ({ group, loggedUser }: HeaderSectionProps) => {
 
   return (
     <>
-      <section className="flex flex-col items-center gap-x-4 xl:flex-row xl:items-start xl:justify-between">
+      <section className="flex flex-col items-center gap-x-4 xl:flex-row xl:items-center xl:justify-between">
         <div className="flex w-full xl:w-fit xl:max-w-[calc(100%_-_220px)]">
-          <div className="grid grid-cols-1 items-center justify-center gap-y-4 2xl:grid-cols-[1fr_auto] 2xl:gap-8">
+          <div className="grid w-full grid-cols-1 items-center justify-center gap-y-4 2xl:grid-cols-[1fr_auto] 2xl:gap-8">
             <div className="flex max-w-full min-w-0 items-center gap-x-4">
               <div
                 className={clsx(
@@ -143,6 +144,24 @@ const HeaderSection = ({ group, loggedUser }: HeaderSectionProps) => {
                           />
                         )
                       }
+                      rightItem={
+                        isUserEditor &&
+                        group.members.length > 1 && (
+                          <Button
+                            type="button"
+                            aria-label="Remove selected user"
+                            onClick={() => {
+                              setFieldsToUpdate(["memberToRemove"]);
+                              setSelectedMember(member.user);
+                              setIsOpen(true);
+                            }}
+                            unstyled
+                            className="hover:text-background/90 text-background cursor-pointer rounded-full transition-colors duration-300"
+                          >
+                            <X className="-mr-1 h-3.5 w-3.5 stroke-3" />
+                          </Button>
+                        )
+                      }
                     >
                       {member.userId === loggedUser.id
                         ? "Tu"
@@ -151,6 +170,21 @@ const HeaderSection = ({ group, loggedUser }: HeaderSectionProps) => {
                   </Tooltip>
                 ))}
               </div>
+
+              {isUserEditor && (
+                <Button
+                  aria-label="Add participant"
+                  onClick={() => {
+                    setFieldsToUpdate(["membersToAdd"]);
+                    setIsOpen(true);
+                  }}
+                  color="secondary"
+                  variant="outlined"
+                  className="mt-4 mb-4 xl:mb-0"
+                >
+                  Añadir miembro/s
+                </Button>
+              )}
             </div>
           </div>
         </div>
@@ -172,6 +206,7 @@ const HeaderSection = ({ group, loggedUser }: HeaderSectionProps) => {
           group={group}
           user={loggedUser}
           fieldsToUpdate={fieldsToUpdate}
+          selectedMember={selectedMember}
         />
       )}
     </>

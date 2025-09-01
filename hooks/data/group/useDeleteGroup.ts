@@ -1,23 +1,15 @@
 import { useMutation } from "@tanstack/react-query";
 
-import type {
-    DeleteExpenseGroupFields,
-    ErrorResponse,
-    Group,
-    SuccessResponse,
-} from "@/lib/api/types";
+import type { Group } from "@prisma/client";
+
+import type { ErrorResponse, SuccessResponse } from "@/lib/api/types";
 import api from "@/lib/axios";
 
-const useDeleteGroup = () => {
-    return useMutation<
-        SuccessResponse<Group>,
-        ErrorResponse<DeleteExpenseGroupFields>,
-        DeleteExpenseGroupFields
-    >({
-        mutationFn: async (body) => {
+const useDeleteGroup = (groupId?: string | null) => {
+    return useMutation<SuccessResponse<Group>, ErrorResponse>({
+        mutationFn: async () => {
             const { data } = await api.delete<SuccessResponse<Group>>(
-                "/group",
-                body,
+                `/group/${groupId}`,
             );
 
             return data;

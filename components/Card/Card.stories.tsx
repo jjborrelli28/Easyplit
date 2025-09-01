@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react";
 
 import Card, { CARD_TYPE } from ".";
 
-const loggedInUserMockup = {
+const loggedUserMockup = {
   name: "Participant 1",
   email: "participant_1@test.com",
   image:
@@ -97,7 +97,7 @@ export const Expense: Story = {
   args: {
     type: CARD_TYPE.EXPENSE,
     data: expenseMockup,
-    loggedInUser: loggedInUserMockup,
+    loggedUser: loggedUserMockup,
   },
 };
 
@@ -113,6 +113,6 @@ export const Group: Story = {
   args: {
     type: CARD_TYPE.GROUP,
     data: groupMockup,
-    loggedInUser: loggedInUserMockup,
+    loggedUser: loggedUserMockup,
   },
 };
