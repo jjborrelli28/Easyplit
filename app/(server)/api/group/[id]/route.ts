@@ -11,7 +11,11 @@ import type {
 } from "@/lib/api/types";
 import AuthOptions from "@/lib/auth/options";
 import prisma from "@/lib/prisma";
-import { getSuccessMessage, getUpdatedGroupFields } from "@/lib/utils";
+import {
+    compareMembers,
+    getSuccessMessage,
+    getUpdatedGroupFields,
+} from "@/lib/utils";
 import { parseZodErrors } from "@/lib/validations/helpers";
 import { updateGroupSchema } from "@/lib/validations/schemas";
 
@@ -291,6 +295,54 @@ export const PATCH: UpdateGroupHandler = async (req, context) => {
         }
 
         if (expensesToAdd) {
+            const expenses = await prisma.expense.findMany({
+                where: {
+                    id: { in: expensesToAdd },
+                },
+                include: {
+                    participants: {
+                        include: {
+                            user: {
+                                select: {
+                                    id: true,
+                                    name: true,
+                                    email: true,
+                                    image: true,
+                                },
+                            },
+                        },
+                    },
+                },
+            });
+
+            for (const expense of expenses) {
+                const participantIds = expense.participants.map((p) => ({
+                    id: p.userId,
+                }));
+
+                const { haveDifferences, differences } = compareMembers(
+                    participantIds,
+                    group.members,
+                );
+
+                if (haveDifferences && differences.excessParticipants.length > 0) {
+                    return NextResponse.json(
+                        {
+                            success: false,
+                            error: {
+                                code: API_RESPONSE_CODE.INVALID_FIELD,
+                                message: [
+                                    `Los participantes del gasto "${expense.name}" deben ser miembros del grupo.`,
+                                ],
+                                details: differences,
+                                statusCode: 400,
+                            },
+                        },
+                        { status: 400 },
+                    );
+                }
+            }
+
             await prisma.expense.updateMany({
                 where: {
                     id: { in: expensesToAdd },

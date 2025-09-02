@@ -231,7 +231,7 @@ const UpdateGroupForm = ({
     }
 
     setAddExpensesError(null);
-  }, [newExpenses, group?.members, addExpensesError]);
+  }, [newExpenses, group?.members]);
 
   // Form validation if it is sendable
   useEffect(() => {

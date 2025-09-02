@@ -189,14 +189,14 @@ const HeaderSection = ({ group, loggedUser }: HeaderSectionProps) => {
           </div>
         </div>
 
-        {totalAmount && (
+        {totalAmount ? (
           <PaymentDonutChart
             totalLabel="Pendiente"
             total={totalAmount}
             paidLabel="Cubierto"
             paid={totalPaid}
           />
-        )}
+        ) : null}
       </section>
 
       {group && loggedUser && (

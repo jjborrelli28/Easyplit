@@ -1,10 +1,13 @@
 "use client";
 
-import { useSession } from "next-auth/react";
+import { useState } from "react";
 
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import clsx from "clsx";
 import { CircleChevronDown } from "lucide-react";
+import { useSession } from "next-auth/react";
+
+import type { Expense as ExpenseRes } from "@/hooks/data/expenses/useSearchExpenses";
 
 import type { Expense, Group } from "@/lib/api/types";
 
@@ -12,6 +15,7 @@ import Button from "../Button";
 import Card, { CARD_TYPE } from "../Card";
 import Collapse from "../Collapse";
 import Spinner from "../Spinner";
+import UpdateGroupForm from "../UpdateGroupForm";
 
 const PANEL_TYPE_STYLES = {
   header: {
@@ -40,14 +44,27 @@ const PanelList = ({
   handleTogglePanel,
 }: PanelListProps) => {
   const { status, data } = useSession();
-  const user = data?.user;
+
+  const loggedUser = data?.user;
 
   const virtualizer = useWindowVirtualizer({
-    count: list.length,
+    count: list.length > 0 ? list.length : 1,
     estimateSize: () => 112.72,
     gap: 20,
     overscan: 5,
   });
+
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedExpense, setSelectedExpense] = useState<
+    ExpenseRes | undefined
+  >(undefined);
+
+  const handleDeleteGroupExpense = (expense: ExpenseRes) => {
+    setSelectedExpense(expense);
+    setIsOpen(true);
+  };
+
+  const isGroupExpense = type === CARD_TYPE.EXPENSE && loggedUser && group;
 
   return (
     <>
@@ -107,39 +124,60 @@ const PanelList = ({
               <Spinner />
             </div>
           ) : status === "authenticated" ? (
-            list.length > 0 ? (
-              virtualizer.getVirtualItems().map((virtualRow) => {
-                const item = list[virtualRow.index];
+            virtualizer.getVirtualItems().map((virtualRow) => {
+              const item = list[virtualRow.index];
 
-                return (
-                  <div
-                    ref={virtualizer.measureElement}
-                    key={virtualRow.key}
-                    data-index={virtualRow.index}
-                    className="absolute top-0 left-0 w-full"
-                    style={{
-                      transform: `translateY(${virtualRow.start}px)`,
-                    }}
-                  >
+              return (
+                <div
+                  ref={virtualizer.measureElement}
+                  key={virtualRow.key}
+                  data-index={virtualRow.index}
+                  className="absolute top-0 left-0 w-full"
+                  style={{
+                    transform: `translateY(${virtualRow.start}px)`,
+                  }}
+                >
+                  {list.length > 0 ? (
                     <Card
                       type={type}
                       data={item}
-                      loggedUser={user}
-                      group={group}
+                      loggedUser={loggedUser}
+                      {...(isGroupExpense && {
+                        customHandleDelete: () =>
+                          handleDeleteGroupExpense(item as ExpenseRes),
+                      })}
                     />
-                  </div>
-                );
-              })
-            ) : (
-              <p className="text-foreground/75">
-                {CARD_TYPE.EXPENSE
-                  ? "No hay gastos registrados. Creá un gasto para empezar a organizar tus finanzas."
-                  : "No hay grupos disponibles. Creá un grupo para empezar a organizar tus gastos."}
-              </p>
-            )
+                  ) : (
+                    <p
+                      className={clsx(
+                        "text-foreground/75",
+                        isGroupExpense && "mb-8",
+                      )}
+                    >
+                      {CARD_TYPE.EXPENSE
+                        ? isGroupExpense
+                          ? "No hay gastos registrados. Busca un gastos para añadir al grupo y empezar a organizarlos."
+                          : "No hay gastos registrados. Creá un gasto para empezar a organizar tus finanzas."
+                        : "No hay grupos disponibles. Creá un grupo para empezar a organizar tus gastos."}
+                    </p>
+                  )}
+                </div>
+              );
+            })
           ) : null}
         </div>
       </Collapse>
+
+      {isGroupExpense && (
+        <UpdateGroupForm
+          isOpen={isOpen}
+          setIsOpen={setIsOpen}
+          group={group}
+          user={loggedUser}
+          fieldsToUpdate={["expenseToRemove"]}
+          selectedExpense={selectedExpense}
+        />
+      )}
     </>
   );
 };

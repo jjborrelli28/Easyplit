@@ -8,6 +8,7 @@ import useGetGroup from "@/hooks/data/group/useGetGroup";
 
 import PageContainer from "@/components/PageContainer";
 import Spinner from "@/components/Spinner";
+import DeleteGroupSection from "./_components/DeleteGroupSection";
 import ExpenseListSection from "./_components/ExpenseListSection";
 import HeaderSection from "./_components/HeaderSection";
 
@@ -25,6 +26,7 @@ const GroupPage = () => {
   const { data: group, isPending } = useGetGroup(groupId);
 
   const loggedUser = data?.user;
+  const isUserEditor = loggedUser?.id === group?.createdById;
 
   return (
     <PageContainer className="border-h-background !px-0 md:border-r">
@@ -41,6 +43,14 @@ const GroupPage = () => {
               <hr className="border-h-background" />
 
               <ExpenseListSection group={group} loggedUser={loggedUser} />
+
+              {isUserEditor && (
+                <>
+                  <hr className="border-h-background" />
+
+                  <DeleteGroupSection groupId={group.id} />
+                </>
+              )}
             </>
           ) : (
             notFound()

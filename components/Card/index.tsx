@@ -19,7 +19,6 @@ import { es } from "date-fns/locale";
 import { CheckCircle, CircleChevronDown, Clock, Trash } from "lucide-react";
 
 import useDeleteExpense from "@/hooks/data/expense/useDeleteExpense";
-import type { Expense as ResExpense } from "@/hooks/data/expenses/useSearchExpenses";
 import useDeleteGroup from "@/hooks/data/group/useDeleteGroup";
 
 import type { Expense, Group, ResponseMessage } from "@/lib/api/types";
@@ -35,7 +34,6 @@ import { GROUP_TYPE, GROUP_TYPES } from "../GroupTypeSelect/constants";
 import MessageCard from "../MessageCard";
 import Modal from "../Modal";
 import Tooltip from "../Tooltip";
-import UpdateGroupForm from "../UpdateGroupForm";
 
 export enum CARD_TYPE {
   EXPENSE = "EXPENSE",
@@ -47,7 +45,7 @@ interface CardProps {
   type: CARD_TYPE;
   data: Expense | Group;
   loggedUser?: Session["user"];
-  group?: Group;
+  customHandleDelete?: VoidFunction;
   containerClassName?: string;
   containerStyle?: CSSProperties;
 }
@@ -57,7 +55,7 @@ const Card = ({
   type,
   data,
   loggedUser,
-  group,
+  customHandleDelete,
   containerClassName,
   containerStyle,
 }: CardProps) => {
@@ -72,9 +70,6 @@ const Card = ({
 
   const [deleteModalIsOpen, setDeleteModalIsOpen] = useState(false);
   const [participantsIsOpen, setParticipantsIsOpen] = useState(false);
-  const [selectedExpense, setSelectedExpense] = useState<Expense | undefined>(
-    undefined,
-  );
 
   const [message, setMessage] = useState<ResponseMessage | null>(null);
 
@@ -95,11 +90,11 @@ const Card = ({
     setParticipantsIsOpen((prevState) => !prevState);
 
   const handleDeleteClick = () => {
-    if (group) {
-      setSelectedExpense(data as Expense);
+    if (customHandleDelete) {
+      customHandleDelete();
+    } else {
+      setDeleteModalIsOpen(true);
     }
-
-    setDeleteModalIsOpen(true);
   };
 
   const handleDelete = (e: FormEvent) => {
@@ -188,7 +183,7 @@ const Card = ({
         ref={ref}
         onClick={handleClickCard}
         className={clsx(
-          "border-h-background group hover:border-primary flex cursor-pointer items-center gap-x-4 border p-4 transition-colors duration-300",
+          "border-h-background group hover:border-primary flex w-full cursor-pointer items-center gap-x-4 border p-4 transition-colors duration-300",
           containerClassName,
         )}
         style={containerStyle}
@@ -309,7 +304,7 @@ const Card = ({
                     color="info"
                     content={
                       type === CARD_TYPE.EXPENSE
-                        ? group
+                        ? customHandleDelete
                           ? "Eliminar gasto del grupo"
                           : "Eliminar gasto"
                         : "Eliminar grupo"
@@ -339,7 +334,7 @@ const Card = ({
       </div>
 
       <Modal
-        isOpen={!group && deleteModalIsOpen}
+        isOpen={deleteModalIsOpen}
         onClose={() => setDeleteModalIsOpen(false)}
         showHeader={!message}
         title={`¿Estás seguro de que quieres eliminar este
@@ -400,17 +395,6 @@ const Card = ({
           </>
         )}
       </Modal>
-
-      {group && loggedUser && (
-        <UpdateGroupForm
-          isOpen={deleteModalIsOpen}
-          setIsOpen={setDeleteModalIsOpen}
-          group={group}
-          user={loggedUser}
-          fieldsToUpdate={["expenseToRemove"]}
-          selectedExpense={selectedExpense as ResExpense}
-        />
-      )}
     </>
   );
 };

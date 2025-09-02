@@ -37,13 +37,12 @@ const ExpenseListSection = ({ group, loggedUser }: ExpenseListSectionProps) => {
         {isUserEditor && (
           <div className="flex justify-end">
             <Button
-              aria-label="Add participant"
+              aria-label="Add expense"
               onClick={() => {
                 setFieldsToUpdate(["expensesToAdd"]);
                 setIsOpen(true);
               }}
-              color="secondary"
-              variant="outlined"
+              color="info"
             >
               Añadir gasto/s
             </Button>
