@@ -1,6 +1,6 @@
-import type { ReactNode } from "react";
-
 import clsx from "clsx";
+
+import { formatAmount } from "@/lib/utils";
 
 const SIZES = {
   xs: { container: "text-xs", currency: "top-[-1.5px] mr-0.25 text-[8px]" },
@@ -10,7 +10,7 @@ const SIZES = {
 };
 
 interface AmountNumberProps {
-  children: ReactNode;
+  children: number;
   size?: "xs" | "sm" | "md" | "lg";
   className?: string;
 }
@@ -30,7 +30,7 @@ const AmountNumber = ({
       $
     </span>
 
-    {children}
+    {formatAmount(children)}
   </span>
 );
 

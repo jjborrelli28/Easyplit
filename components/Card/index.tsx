@@ -23,7 +23,7 @@ import useDeleteGroup from "@/hooks/data/group/useDeleteGroup";
 
 import type { Expense, Group, ResponseMessage } from "@/lib/api/types";
 import ICON_MAP from "@/lib/icons";
-import { areAllDebtsSettled, formatAmount } from "@/lib/utils";
+import { areAllDebtsSettled } from "@/lib/utils";
 
 import AmountNumber from "../AmountNumber";
 import Badge from "../Badge";
@@ -245,14 +245,14 @@ const Card = ({
                   <Tooltip
                     content={
                       <AmountNumber size="xs">
-                        {formatAmount((data as Expense).amount)}
+                        {(data as Expense).amount}
                       </AmountNumber>
                     }
                     color="info"
                     containerClassName="lg:justify-end"
                   >
                     <AmountNumber size="lg" className="text-primary">
-                      {formatAmount((data as Expense).amount)}
+                      {(data as Expense).amount}
                     </AmountNumber>
                   </Tooltip>
                 </div>

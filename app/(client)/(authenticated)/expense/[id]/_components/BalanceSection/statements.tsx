@@ -2,7 +2,6 @@ import { CheckCircle } from "lucide-react";
 import type { Session } from "next-auth";
 
 import type { Expense, User } from "@/lib/api/types";
-import { formatAmount } from "@/lib/utils";
 
 import AmountNumber from "@/components/AmountNumber";
 
@@ -43,9 +42,7 @@ export const PayerStatement = ({
 
       <p className="text-d-foreground text-xs font-semibold">
         Aún te deben{" "}
-        <AmountNumber size="xs">
-          {formatAmount(parsedPersonalBalance)}
-        </AmountNumber>
+        <AmountNumber size="xs">{parsedPersonalBalance}</AmountNumber>
       </p>
     </>
   ) : (
@@ -56,9 +53,7 @@ export const PayerStatement = ({
 
       <p className="text-d-foreground text-xs font-semibold">
         Aún le deben{" "}
-        <AmountNumber size="xs">
-          {formatAmount(parsedPersonalBalance)}
-        </AmountNumber>
+        <AmountNumber size="xs">{parsedPersonalBalance}</AmountNumber>
       </p>
     </>
   );
@@ -86,8 +81,7 @@ export const DebtorStatement = ({
     isLoggedUser ? (
       <>
         <p className="text-s-foreground">
-          Pagaste <AmountNumber>{formatAmount(amount)}</AmountNumber> a{" "}
-          {expense.paidBy.name}
+          Pagaste <AmountNumber>{amount}</AmountNumber> a {expense.paidBy.name}
         </p>
 
         <p className="text-xs">
@@ -97,17 +91,14 @@ export const DebtorStatement = ({
           , pero pagaste de más.{" "}
           <span className="text-d-foreground font-semibold">
             {expense.paidBy.name} te debe{" "}
-            <AmountNumber size="xs">
-              {formatAmount(parsedPersonalBalance)}
-            </AmountNumber>
+            <AmountNumber size="xs">{parsedPersonalBalance}</AmountNumber>
           </span>
         </p>
       </>
     ) : loggedUser.id === expense.paidById ? (
       <>
         <p className="text-s-foreground">
-          {user.name} te pagó{" "}
-          <AmountNumber>{formatAmount(amount)}</AmountNumber>
+          {user.name} te pagó <AmountNumber>{amount}</AmountNumber>
         </p>
 
         <p className="text-success text-xs">
@@ -117,16 +108,14 @@ export const DebtorStatement = ({
           , pero pagó de más.{" "}
           <span className="text-d-foreground font-semibold">
             Le debés{" "}
-            <AmountNumber size="xs">
-              {formatAmount(parsedPersonalBalance)}
-            </AmountNumber>
+            <AmountNumber size="xs">{parsedPersonalBalance}</AmountNumber>
           </span>
         </p>
       </>
     ) : (
       <>
         <p className="text-s-foreground">
-          {user.name} pagó <AmountNumber>{formatAmount(amount)}</AmountNumber> a{" "}
+          {user.name} pagó <AmountNumber>{amount}</AmountNumber> a{" "}
           {expense.paidBy.name}
         </p>
 
@@ -137,9 +126,7 @@ export const DebtorStatement = ({
           , pero pagó de más.{" "}
           <span className="text-d-foreground font-semibold">
             {expense.paidBy.name} le debe{" "}
-            <AmountNumber size="xs">
-              {formatAmount(parsedPersonalBalance)}
-            </AmountNumber>
+            <AmountNumber size="xs">{parsedPersonalBalance}</AmountNumber>
           </span>
         </p>
       </>
@@ -148,8 +135,7 @@ export const DebtorStatement = ({
     isLoggedUser ? (
       <>
         <p className="text-s-foreground">
-          Pagaste <AmountNumber>{formatAmount(amount)}</AmountNumber> a{" "}
-          {expense.paidBy.name}
+          Pagaste <AmountNumber>{amount}</AmountNumber> a {expense.paidBy.name}
         </p>
 
         <p className="text-success text-xs">
@@ -160,13 +146,12 @@ export const DebtorStatement = ({
       <>
         {expense.paidById === loggedUser.id ? (
           <p className="text-s-foreground">
-            {user.name} te pagó{" "}
-            <AmountNumber>{formatAmount(amount)}</AmountNumber>
+            {user.name} te pagó <AmountNumber>{amount}</AmountNumber>
           </p>
         ) : (
           <p className="text-s-foreground">
-            {user.name} pagó <AmountNumber>{formatAmount(amount)}</AmountNumber>{" "}
-            a {expense.paidBy.name}
+            {user.name} pagó <AmountNumber>{amount}</AmountNumber> a{" "}
+            {expense.paidBy.name}
           </p>
         )}
         <p className="text-success text-xs">
@@ -179,28 +164,25 @@ export const DebtorStatement = ({
       <>
         <p className="text-d-foreground">
           {user.name} te debe{" "}
-          <AmountNumber>{formatAmount(parsedPersonalBalance)}</AmountNumber>
+          <AmountNumber>{parsedPersonalBalance}</AmountNumber>
         </p>
 
         {!!amount && (
           <p className="text-s-foreground text-xs">
-            Ya pagó{" "}
-            <AmountNumber size="xs">{formatAmount(amount)}</AmountNumber>
+            Ya pagó <AmountNumber size="xs">{amount}</AmountNumber>
           </p>
         )}
       </>
     ) : (
       <>
         <p className="text-d-foreground">
-          Debés{" "}
-          <AmountNumber>{formatAmount(parsedPersonalBalance)}</AmountNumber> a{" "}
+          Debés <AmountNumber>{parsedPersonalBalance}</AmountNumber> a{" "}
           {expense.paidBy.name}
         </p>
 
         {!!amount && (
           <p className="text-s-foreground text-xs">
-            Ya pagaste{" "}
-            <AmountNumber size="xs">{formatAmount(amount)}</AmountNumber>
+            Ya pagaste <AmountNumber size="xs">{amount}</AmountNumber>
           </p>
         )}
       </>
@@ -208,27 +190,25 @@ export const DebtorStatement = ({
   ) : loggedUser.id === expense.paidById ? (
     <>
       <p className="text-d-foreground">
-        {user.name} te debe{" "}
-        <AmountNumber>{formatAmount(parsedPersonalBalance)}</AmountNumber>
+        {user.name} te debe <AmountNumber>{parsedPersonalBalance}</AmountNumber>
       </p>
 
       {!!amount && (
         <p className="text-s-foreground text-xs">
-          Ya pagó <AmountNumber size="xs">{formatAmount(amount)}</AmountNumber>
+          Ya pagó <AmountNumber size="xs">{amount}</AmountNumber>
         </p>
       )}
     </>
   ) : loggedUser.id !== user.id && loggedUser.id !== expense.paidById ? (
     <>
       <p className="text-d-foreground">
-        {user.name} debe{" "}
-        <AmountNumber>{formatAmount(parsedPersonalBalance)}</AmountNumber> a{" "}
+        {user.name} debe <AmountNumber>{parsedPersonalBalance}</AmountNumber> a{" "}
         {expense.paidBy.name}
       </p>
 
       {!!amount && (
         <p className="text-s-foreground text-xs">
-          Ya pagó <AmountNumber size="xs">{formatAmount(amount)}</AmountNumber>
+          Ya pagó <AmountNumber size="xs">{amount}</AmountNumber>
         </p>
       )}
     </>

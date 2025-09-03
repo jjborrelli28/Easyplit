@@ -1,15 +1,14 @@
 import {
   Cell,
+  Label,
   Legend,
   Pie,
   PieChart,
   ResponsiveContainer,
   Tooltip,
-  Label,
 } from "recharts";
 
 import useWindowsDimensions from "@/hooks/useWindowsDimensions";
-import { formatAmount } from "@/lib/utils";
 import AmountNumber from "../AmountNumber";
 
 const COLORS = ["var(--danger)", "var(--success)"];
@@ -76,7 +75,7 @@ const PaymentDonutChart = ({
         <Tooltip
           formatter={(value: number, name: string) => [
             <AmountNumber key={`${name}-${value}`} size="xs">
-              {formatAmount(value)}
+              {value}
             </AmountNumber>,
             name,
           ]}
@@ -121,9 +120,7 @@ const PaymentDonutChart = ({
                   >
                     {entry.value}:
                   </span>
-                  <AmountNumber size="sm">
-                    {formatAmount(entry.payload?.value)}
-                  </AmountNumber>
+                  <AmountNumber size="sm">{entry.payload?.value}</AmountNumber>
                 </li>
               ))}
             </ul>

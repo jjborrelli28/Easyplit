@@ -10,9 +10,11 @@ import {
 
 import clsx from "clsx";
 
-import InputErrorMessage from "../InputErrorMessage";
 import useWindowsDimensions from "@/hooks/useWindowsDimensions";
+
 import { formatAmount } from "@/lib/utils";
+
+import InputErrorMessage from "../InputErrorMessage";
 
 interface AmountInputProps {
   label?: string;

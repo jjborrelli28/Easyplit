@@ -189,7 +189,7 @@ export const POST: RegisterHandler = async (req: Request) => {
 
             const { background, text } = getRandomColorPair();
             const parsedName = parseNameForAvatar(name);
-            const image = `https://ui-avatars.com/api/?name=${parsedName}&background=${background}&color=${text}&size=128`;
+            const image = `https://ui-avatars.com/api/?name=${parsedName}&background=${background}&color=${text}&size=256`;
 
             const user = await prisma.user.create({
                 data: {

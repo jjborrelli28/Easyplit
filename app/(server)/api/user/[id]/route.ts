@@ -11,7 +11,11 @@ import type {
     UpdateUserFields,
     User,
 } from "@/lib/api/types";
-import { hashPassword } from "@/lib/auth/helpers";
+import {
+    getRandomColorPair,
+    hashPassword,
+    parseNameForAvatar,
+} from "@/lib/auth/helpers";
 import AuthOptions from "@/lib/auth/options";
 import prisma from "@/lib/prisma";
 import { isExpenseComplete } from "@/lib/utils";
@@ -105,8 +109,9 @@ export const PATCH: UpdateUserHandler = async (req, context) => {
             );
         }
 
-        const nameIsModified = name !== "" && name !== user.name;
-        const passwordModified = password !== "" && password !== user.password;
+        const nameIsModified = name && name !== "" && name !== user.name;
+        const passwordModified =
+            password && password !== "" && password !== user.password;
 
         if (!nameIsModified && !passwordModified) {
             return NextResponse.json({
@@ -120,12 +125,26 @@ export const PATCH: UpdateUserHandler = async (req, context) => {
         }
 
         if (nameIsModified) {
-            user = await prisma.user.update({
-                where: { id },
-                data: {
-                    name,
-                },
-            });
+            if (user.image?.startsWith("https://ui-avatars.com")) {
+                const { background, text } = getRandomColorPair();
+                const parsedName = parseNameForAvatar(name);
+                const image = `https://ui-avatars.com/api/?name=${parsedName}&background=${background}&color=${text}&size=256`;
+
+                user = await prisma.user.update({
+                    where: { id },
+                    data: {
+                        name,
+                        image,
+                    },
+                });
+            } else {
+                user = await prisma.user.update({
+                    where: { id },
+                    data: {
+                        name,
+                    },
+                });
+            }
         }
 
         if (password && passwordModified && currentPassword) {
