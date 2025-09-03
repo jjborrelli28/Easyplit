@@ -8,6 +8,7 @@ import useGetGroup from "@/hooks/data/group/useGetGroup";
 
 import PageContainer from "@/components/PageContainer";
 import Spinner from "@/components/Spinner";
+import BalanceSection from "./_components/BalanceSection";
 import DeleteGroupSection from "./_components/DeleteGroupSection";
 import ExpenseListSection from "./_components/ExpenseListSection";
 import HeaderSection from "./_components/HeaderSection";
@@ -39,6 +40,8 @@ const GroupPage = () => {
           ) : group ? (
             <>
               <HeaderSection group={group} loggedUser={loggedUser} />
+
+              <BalanceSection group={group} loggedUser={loggedUser} />
 
               <hr className="border-h-background" />
 

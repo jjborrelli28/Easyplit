@@ -31,7 +31,7 @@ const PANEL_TYPE_STYLES = {
 interface PanelListProps {
   type: CARD_TYPE;
   list?: Expense[] | Group[];
-  group: Group;
+  group?: Group;
   isActive: boolean;
   handleTogglePanel?: VoidFunction;
 }

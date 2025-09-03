@@ -293,7 +293,7 @@ const Card = ({
                 </Button>
               </p>
 
-              {IsUserCreator && (
+              {(IsUserCreator || customHandleDelete) && (
                 <Button
                   aria-label="Remove card"
                   onClick={handleDeleteClick}

@@ -19,7 +19,8 @@ import {
 import type {
     Expense,
     ExpenseParticipant,
-    GroupMember
+    GroupMember,
+    User,
 } from "./api/types";
 
 export const today = startOfToday();
@@ -397,4 +398,81 @@ export const getUpdatedGroupFields: (
 
         return acc;
     }, []);
+};
+
+export interface UserBalance extends User {
+    id: string;
+    name: string;
+    balance: number;
+}
+
+export const calculateBalances = (expenses: Expense[]) => {
+    const balances: Record<string, UserBalance> = {};
+
+    expenses.forEach((expense) => {
+        const participants = expense.participants;
+        const split = expense.amount / participants.length;
+
+        participants.forEach((p: ExpenseParticipant) => {
+            if (!balances[p.userId]) {
+                balances[p.userId] = {
+                    id: p.user.id,
+                    name: p.user.name!,
+                    email: p.user.email,
+                    image: p.user.image,
+                    balance: 0,
+                };
+            }
+
+            const paid = p.amount;
+            const shouldPay = split;
+
+            balances[p.userId].balance += paid - shouldPay;
+        });
+    });
+
+    return Object.values(balances);
+};
+
+export interface SimplifiedDebt {
+    from: UserBalance;
+    to: UserBalance;
+    amount: number;
+}
+
+export const simplifyDebts: (balances: UserBalance[]) => SimplifiedDebt[] = (
+    balances,
+) => {
+    const debtors = balances.filter((u) => u.balance < 0).map((u) => ({ ...u }));
+    const creditors = balances
+        .filter((u) => u.balance > 0)
+        .map((u) => ({ ...u }));
+    const transactions: { from: UserBalance; to: UserBalance; amount: number }[] =
+        [];
+
+    let i = 0,
+        j = 0;
+
+    while (i < debtors.length && j < creditors.length) {
+        const debtor = debtors[i];
+        const creditor = creditors[j];
+
+        const amount = Math.min(-debtor.balance, creditor.balance);
+
+        if (amount > 0) {
+            transactions.push({
+                from: debtor,
+                to: creditor,
+                amount,
+            });
+
+            debtor.balance += amount;
+            creditor.balance -= amount;
+        }
+
+        if (debtor.balance === 0) i++;
+        if (creditor.balance === 0) j++;
+    }
+
+    return transactions;
 };

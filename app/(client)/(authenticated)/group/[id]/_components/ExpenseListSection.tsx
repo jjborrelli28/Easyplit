@@ -22,8 +22,6 @@ const ExpenseListSection = ({ group, loggedUser }: ExpenseListSectionProps) => {
     [],
   );
 
-  const isUserEditor = loggedUser?.id === group?.createdById;
-
   return (
     <>
       <section className="flex flex-col gap-y-8">
@@ -34,19 +32,17 @@ const ExpenseListSection = ({ group, loggedUser }: ExpenseListSectionProps) => {
           isActive
         />
 
-        {isUserEditor && (
-          <div className="flex justify-end">
-            <Button
-              aria-label="Add expense"
-              onClick={() => {
-                setFieldsToUpdate(["expensesToAdd"]);
-                setIsOpen(true);
-              }}
-            >
-              Añadir gasto/s
-            </Button>
-          </div>
-        )}
+        <div className="flex justify-end">
+          <Button
+            aria-label="Add expense"
+            onClick={() => {
+              setFieldsToUpdate(["expensesToAdd"]);
+              setIsOpen(true);
+            }}
+          >
+            Añadir gasto/s
+          </Button>
+        </div>
       </section>
 
       {group && loggedUser && (
