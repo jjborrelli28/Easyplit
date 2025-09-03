@@ -55,6 +55,7 @@ model User {
   GroupMember        GroupMember[]
   accounts           Account[]
   ExpenseHistory     ExpenseHistory[]
+  GroupHistory       GroupHistory[]
   sessions           Session[]
 }
 
@@ -111,14 +112,30 @@ model ExpenseHistory {
 }
 
 model Group {
-  id          String        @id @default(cuid())
-  name        String
-  createdAt   DateTime      @default(now())
-  createdById String        @map("created_by")
-  type        GroupType?    @default(OTHER)
-  expenses    Expense[]
-  createdBy   User          @relation("UserCreatedGroups", fields: [createdById], references: [id], onDelete: Cascade)
-  members     GroupMember[]
+  id           String         @id @default(cuid())
+  name         String
+  createdAt    DateTime       @default(now())
+  createdById  String         @map("created_by")
+  type         GroupType?     @default(OTHER)
+  expenses     Expense[]
+  createdBy    User           @relation("UserCreatedGroups", fields: [createdById], references: [id], onDelete: Cascade)
+  members      GroupMember[]
+  GroupHistory GroupHistory[]
+}
+
+model GroupHistory {
+  id          String   @id @default(cuid())
+  groupId     String
+  field       String
+  oldValue    String?
+  newValue    String?
+  createdAt   DateTime @default(now())
+  updatedById String   @map("updated_by")
+  group       Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  updatedBy   User     @relation(fields: [updatedById], references: [id])
+
+  @@index([groupId])
+  @@map("group_history")
 }
 
 model GroupMember {

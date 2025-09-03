@@ -42,7 +42,6 @@ const ExpenseListSection = ({ group, loggedUser }: ExpenseListSectionProps) => {
                 setFieldsToUpdate(["expensesToAdd"]);
                 setIsOpen(true);
               }}
-              color="info"
             >
               Añadir gasto/s
             </Button>

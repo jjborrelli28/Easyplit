@@ -369,17 +369,17 @@ export const PATCH: UpdateGroupHandler = async (req, context) => {
             ...(expenseToRemove && { expenseToRemove }),
         });
 
-        // if (changedFields.length > 0) {
-        //     await prisma.expenseHistory.createMany({
-        //         data: changedFields.map((fieldChange) => ({
-        //             expenseId: id,
-        //             field: fieldChange.field,
-        //             oldValue: fieldChange.oldValue,
-        //             newValue: fieldChange.newValue,
-        //             updatedById,
-        //         })),
-        //     });
-        // }
+        if (changedFields.length > 0) {
+            await prisma.groupHistory.createMany({
+                data: changedFields.map((fieldChange) => ({
+                    groupId: id,
+                    field: fieldChange.field,
+                    oldValue: fieldChange.oldValue,
+                    newValue: fieldChange.newValue,
+                    updatedById,
+                })),
+            });
+        }
 
         const updatedGroup = await prisma.group.update({
             where: { id },
