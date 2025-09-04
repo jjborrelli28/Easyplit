@@ -35,20 +35,9 @@ export const GET: GetSearchGroupsHandler = async (req) => {
         const { searchParams } = new URL(req.url);
         const q = searchParams.get("q");
 
-        if (!q || q.length < 2) {
-            return NextResponse.json({
-                success: true,
-                code: API_RESPONSE_CODE.DATA_FETCHED,
-                data: [],
-            });
-        }
-
         const groups = await prisma.group.findMany({
             where: {
-                name: {
-                    contains: q,
-                    mode: "insensitive",
-                },
+                ...(q ? { name: { contains: q, mode: "insensitive" } } : {}),
                 members: {
                     some: {
                         userId,
@@ -56,7 +45,9 @@ export const GET: GetSearchGroupsHandler = async (req) => {
                 },
             },
             include: {
-                expenses: true,
+                expenses: {
+                    select: { id: true, amount: true },
+                },
                 members: {
                     include: {
                         user: {

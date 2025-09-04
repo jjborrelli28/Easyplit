@@ -48,13 +48,13 @@ const Modal = ({
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 px-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/75 p-4">
       <div
         role="dialog"
         aria-modal="true"
         className={clsx(
           !unstyled &&
-            "bg-background border-foreground/50 my-4 flex max-h-screen w-md max-w-md flex-col gap-y-4 overflow-y-auto border p-4 shadow-xl lg:gap-y-8 lg:p-8",
+            "bg-background border-foreground/50 flex max-h-fit w-md max-w-md flex-col gap-y-4 border p-4 shadow-xl lg:gap-y-8 lg:p-8",
           className,
         )}
       >

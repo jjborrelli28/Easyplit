@@ -15,19 +15,21 @@ export interface Group extends PrismaGroup {
   members: GroupMember[];
 }
 
-const searchGroups = async (q: string) => {
+const searchGroups = async (q?: string) => {
   const { data } = await api.get<SuccessResponse<Group[]>>("/groups/search", {
-    params: { q },
+    params: q && q.trim() !== "" ? { q } : undefined,
   });
 
   return data.data ?? [];
 };
 
 const useSearchGroups = (q: string) => {
+  const isInitial = q.trim() === "";
+
   return useQuery<Group[], AxiosError<ServerErrorResponse>>({
-    queryKey: ["search-groups", q],
+    queryKey: ["search-groups", q || "all"],
     queryFn: () => searchGroups(q),
-    enabled: q.length >= 2,
+    enabled: isInitial || q.length >= 2,
     staleTime: 1000 * 10,
   });
 };

@@ -1,11 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import clsx from "clsx";
 import debounce from "lodash.debounce";
-import { Search } from "lucide-react";
+import { ChevronDown, Search } from "lucide-react";
 
 import useSearchGroups, {
   type Group,
@@ -14,6 +14,7 @@ import useSearchGroups, {
 import { GROUP_TYPE, GROUP_TYPES } from "../GroupTypeSelect/constants";
 import Input, { type InputProps } from "../Input";
 import InputErrorMessage from "../InputErrorMessage";
+import Button from "../Button";
 
 export interface GroupSearchEngineProps
   extends Omit<InputProps, "value" | "onSelect"> {
@@ -35,6 +36,7 @@ const GroupSearchEngine = ({
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
+  const [isOpen, setIsOpen] = useState(false);
 
   const {
     data: groups = [],
@@ -64,6 +66,11 @@ const GroupSearchEngine = ({
     setQuery("");
     setDebouncedQuery("");
     setHighlightedIndex(-1);
+    setIsOpen(false);
+  };
+
+  const handleToggleIsOpen = () => {
+    setIsOpen((prevState) => !prevState);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -102,6 +109,16 @@ const GroupSearchEngine = ({
     enabled: true,
   });
 
+  const isEmpty = filteredGroups.length === 0;
+
+  useEffect(() => {
+    if (debouncedQuery.trim() === "") {
+      setIsOpen(false);
+    } else {
+      setIsOpen(!isEmpty);
+    }
+  }, [debouncedQuery, isEmpty]);
+
   return (
     <div className="relative w-full max-w-md">
       <Input
@@ -112,23 +129,52 @@ const GroupSearchEngine = ({
         onKeyDown={handleKeyDown}
         placeholder="Buscar por nombre de grupo"
         error={
-          isFetched && filteredGroups.length === 0 && !error
+          isFetched && isEmpty && !error && excludeGroupIds.length === 0
             ? "No se encontraron resultados para su busqueda"
             : null
         }
         errorClassName="text-warning"
+        rightItem={
+          <>
+            <div className="bg-background pointer-events-none absolute top-1/2 right-15 -translate-y-1/2 pl-3">
+              <Search
+                className={clsx(
+                  "text-foreground h-5.5 w-5.5 transition-colors duration-300",
+                  isFocused && "text-primary",
+                )}
+              />
+            </div>
+
+            <div
+              className={clsx(
+                "-ml-1 flex h-[50px] items-center border-b transition-colors duration-300",
+                isFocused ? "border-b-primary" : "border-b-foreground",
+              )}
+            >
+              <Button
+                aria-label="Toggle group list"
+                onClick={handleToggleIsOpen}
+                unstyled
+                className={clsx(
+                  "border-l-h-background border-l",
+                  isEmpty ? "cursor-not-allowed" : "cursor-pointer",
+                )}
+                disabled={isEmpty}
+              >
+                <ChevronDown
+                  className={clsx(
+                    "transition-traslate mx-3 h-5.5 w-5.5 duration-300",
+                    isEmpty ? "text-h-background" : "text-primary",
+                    isOpen && "-rotate-180",
+                  )}
+                />
+              </Button>
+            </div>
+          </>
+        }
       />
 
-      <div className="bg-background pointer-events-none absolute top-1/2 right-3 -translate-y-1/2 pl-3">
-        <Search
-          className={clsx(
-            "text-foreground h-5.5 w-5.5 transition-colors duration-300",
-            isFocused && "text-primary",
-          )}
-        />
-      </div>
-
-      {filteredGroups.length > 0 && (
+      {isOpen && !isEmpty && (
         <ul
           className="bg-h-background border-primary absolute top-full right-0 left-0 z-20 max-h-120 overflow-y-auto border !border-t-0 shadow-xl"
           style={{
