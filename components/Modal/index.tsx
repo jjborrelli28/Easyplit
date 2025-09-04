@@ -54,7 +54,7 @@ const Modal = ({
         aria-modal="true"
         className={clsx(
           !unstyled &&
-            "bg-background border-foreground/50 my-4 flex max-h-screen w-md max-w-md flex-col gap-y-4 border p-4 shadow-xl lg:gap-y-8 lg:p-8",
+            "bg-background border-foreground/50 my-4 flex max-h-screen w-md max-w-md flex-col gap-y-4 overflow-y-auto border p-4 shadow-xl lg:gap-y-8 lg:p-8",
           className,
         )}
       >
