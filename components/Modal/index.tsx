@@ -1,10 +1,11 @@
-import { type ReactNode, useEffect } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import clsx from "clsx";
 import { X } from "lucide-react";
 
 import Button from "../Button";
+import useWindowsDimensions from "@/hooks/useWindowsDimensions";
 
 export interface ModalProps {
   isOpen: boolean;
@@ -29,32 +30,55 @@ const Modal = ({
   headerClassName,
   contentClassName,
 }: ModalProps) => {
+  const { height: windowHeight } = useWindowsDimensions();
+
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  const [modalHeight, setModalHeight] = useState(0);
+
+  useEffect(() => {
+    if (modalRef.current) {
+      setModalHeight(modalRef.current.clientHeight);
+    }
+  }, [isOpen]);
+
+  const handleClose = () => {
+    document.body.classList.remove("overflow-hidden");
+
+    onClose();
+  };
+
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") handleClose();
     };
 
     if (isOpen) {
-      document.body.style.overflow = "hidden";
+      document.body.classList.add("overflow-hidden");
       window.addEventListener("keydown", handleEscape);
     }
 
     return () => {
-      document.body.style.overflow = "";
       window.removeEventListener("keydown", handleEscape);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, handleClose]);
 
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/75 p-4">
+    <div
+      className={clsx(
+        "fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/75 p-4",
+        modalHeight >= windowHeight - 32 ? "items-start" : "items-center",
+      )}
+    >
       <div
+        ref={modalRef}
         role="dialog"
         aria-modal="true"
         className={clsx(
           !unstyled &&
-            "bg-background border-foreground/50 flex max-h-fit w-md max-w-md flex-col gap-y-4 border p-4 shadow-xl lg:gap-y-8 lg:p-8",
+            "bg-background border-foreground/50 flex w-md max-w-md flex-col gap-y-4 border p-4 shadow-xl lg:gap-y-8 lg:p-8",
           className,
         )}
       >
@@ -69,7 +93,7 @@ const Modal = ({
 
             <Button
               aria-label="Close modal"
-              onClick={onClose}
+              onClick={handleClose}
               unstyled
               className="hover:text-foreground/90 cursor-pointer pl-4 transition-colors duration-300 lg:pl-8"
             >
@@ -80,7 +104,7 @@ const Modal = ({
 
         <div
           className={clsx(
-            !unstyled && "flex flex-col gap-y-8",
+            !unstyled && "flex flex-col gap-y-8 overflow-y-auto",
             contentClassName,
           )}
         >

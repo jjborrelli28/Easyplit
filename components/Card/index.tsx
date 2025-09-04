@@ -206,7 +206,7 @@ const Card = ({
 
         <div className="flex min-w-0 flex-1 flex-col gap-y-2">
           <div className="flex flex-col gap-y-0.5">
-            <div className="grid-rows-auto grid grid-cols-1 gap-x-4 lg:grid-cols-[1fr_auto] lg:grid-rows-1 lg:items-center">
+            <div className="grid-rows-auto grid grid-cols-1 gap-x-4 gap-y-1 lg:grid-cols-[1fr_auto] lg:grid-rows-1 lg:items-center">
               <div className="flex items-center gap-x-2 truncate">
                 <Tooltip
                   content={data.name}

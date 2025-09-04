@@ -108,7 +108,7 @@ const PanelList = ({
         )}
         contentClassName={clsx("flex flex-1 flex-col gap-y-4")}
         contentStyle={{
-          height: `${virtualizer.getTotalSize()}px`,
+          height: `${isActive ? virtualizer.getTotalSize() : 0}px`,
         }}
       >
         <div
