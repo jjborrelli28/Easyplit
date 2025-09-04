@@ -104,7 +104,7 @@ const Modal = ({
 
         <div
           className={clsx(
-            !unstyled && "flex flex-col gap-y-8 overflow-y-auto",
+            !unstyled && "flex flex-col gap-y-8",
             contentClassName,
           )}
         >

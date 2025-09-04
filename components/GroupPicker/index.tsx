@@ -120,7 +120,7 @@ const GroupPicker = ({
                 />
               </div>
             ) : (
-              <p className="py-2 text-sm">
+              <p className="text-info py-2 text-sm">
                 ¿Querés vincular el gasto a un grupo existente?{" "}
                 <Button
                   type="button"

@@ -95,11 +95,13 @@ const GroupSearchEngine = ({
   const handleFocus = () => {
     setIsFocused(true);
     onFocus?.();
+    setIsOpen(false);
   };
 
   const handleBlur = () => {
     setIsFocused(false);
     onBlur?.();
+    setIsOpen(false);
   };
 
   const virtualizer = useWindowVirtualizer({
@@ -139,7 +141,7 @@ const GroupSearchEngine = ({
             <div className="bg-background pointer-events-none absolute top-1/2 right-15 -translate-y-1/2 pl-3">
               <Search
                 className={clsx(
-                  "text-foreground h-5.5 w-5.5 transition-colors duration-300",
+                  "text-foreground/50 h-5.5 w-5.5 transition-colors duration-300",
                   isFocused && "text-primary",
                 )}
               />
@@ -163,8 +165,12 @@ const GroupSearchEngine = ({
               >
                 <ChevronDown
                   className={clsx(
-                    "transition-traslate mx-3 h-5.5 w-5.5 duration-300",
-                    isEmpty ? "text-h-background" : "text-primary",
+                    "transition-traslate mx-3 h-5.5 w-5.5 transition-colors duration-300",
+                    isEmpty
+                      ? "text-h-background"
+                      : isOpen
+                        ? "text-primary"
+                        : "text-foreground hover:text-primary",
                     isOpen && "-rotate-180",
                   )}
                 />
