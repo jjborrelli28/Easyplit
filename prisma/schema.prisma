@@ -48,6 +48,8 @@ model User {
   resetToken         String?              @unique @map("reset_token")
   resetTokenExp      DateTime?            @unique @map("reset_token_exp")
   createdAt          DateTime             @default(now())
+  isVirtual          Boolean              @default(false)
+  virtualCreatedById String?              @map("virtual_created_by_id")
   expensesCreated    Expense[]            @relation("CreatedBy")
   expensesPaid       Expense[]            @relation("PaidBy")
   ExpenseParticipant ExpenseParticipant[]
@@ -57,6 +59,8 @@ model User {
   ExpenseHistory     ExpenseHistory[]
   GroupHistory       GroupHistory[]
   sessions           Session[]
+  virtualCreatedBy   User?                @relation("VirtualUserCreatedBy", fields: [virtualCreatedById], references: [id])
+  virtualUsers       User[]               @relation("VirtualUserCreatedBy")
 }
 
 model VerificationToken {

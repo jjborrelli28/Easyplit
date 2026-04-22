@@ -391,6 +391,7 @@ const UpdateGroupForm = ({
                       }
                       excludeUserIds={[...memberIds, ...newMemberIds]}
                       onBlur={field.handleBlur}
+                      allowVirtualUsers
                     />
 
                     <Collapse

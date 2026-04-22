@@ -70,6 +70,11 @@ export interface User {
     name: string | null;
     email: string | null;
     image: string | null;
+    isVirtual?: boolean;
+}
+
+export interface CreateVirtualUserFields {
+    name?: string;
 }
 
 export interface UpdateUserFields {

@@ -175,6 +175,7 @@ const GroupForm = ({
                 excludeUserIds={field.state.value}
                 modalTitle="Buscar miembros"
                 modalListTitle="Miembros"
+                allowVirtualUsers
                 error={
                   field.state.meta.errors[0]?.message ||
                   field.state.meta.errorMap.onSubmit

@@ -8,6 +8,7 @@ import { CircleChevronDown } from "lucide-react";
 import { useSession } from "next-auth/react";
 
 import type { Expense as ExpenseRes } from "@/hooks/data/expenses/useSearchExpenses";
+import useWindowsDimensions from "@/hooks/useWindowsDimensions";
 
 import type { Expense, Group } from "@/lib/api/types";
 
@@ -40,7 +41,7 @@ const PanelList = ({
   type,
   list = [],
   group,
-  isActive,
+  isActive: rawIsActive,
   handleTogglePanel,
 }: PanelListProps) => {
   const { status, data } = useSession();
@@ -63,6 +64,11 @@ const PanelList = ({
     setSelectedExpense(expense);
     setIsOpen(true);
   };
+
+  const { width } = useWindowsDimensions();
+
+  const isMobile = width < 1024;
+  const isActive = isMobile ? rawIsActive : true;
 
   const isGroupExpense = type === CARD_TYPE.EXPENSE && loggedUser && group;
 

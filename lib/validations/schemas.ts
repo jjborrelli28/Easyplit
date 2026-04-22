@@ -131,6 +131,16 @@ export const userSchema = z.object({
     name: z.string().nullable(),
     email: z.string().nullable(),
     image: z.string().nullable(),
+    isVirtual: z.boolean().optional(),
+});
+
+export const createVirtualUserSchema = z.object({
+    name: z
+        .string({
+            required_error: "El nombre es obligatorio.",
+        })
+        .min(2, "El nombre debe tener al menos 2 caracteres.")
+        .max(50, "El nombre no puede superar los 50 caracteres."),
 });
 /* End of user form schemas  */
 

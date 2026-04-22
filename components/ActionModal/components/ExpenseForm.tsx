@@ -191,6 +191,7 @@ const ExpenseForm = ({
                 excludeUserIds={field.state.value}
                 modalTitle="Buscar participantes"
                 modalListTitle="Participantes"
+                allowVirtualUsers
                 error={
                   field.state.meta.errors[0]?.message ||
                   field.state.meta.errorMap.onSubmit

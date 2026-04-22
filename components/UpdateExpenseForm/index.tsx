@@ -379,6 +379,7 @@ const UpdateExpenseForm = ({
                       }
                       excludeUserIds={[...participantIds, ...newParticipantIds]}
                       onBlur={field.handleBlur}
+                      allowVirtualUsers
                     />
 
                     <Collapse

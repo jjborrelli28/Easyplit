@@ -56,8 +56,20 @@ export const GET: GetSearchUsersHandler = async (req) => {
                 AND: [
                     {
                         OR: [
-                            { email: { contains: q, mode: "insensitive" } },
-                            { name: { contains: q, mode: "insensitive" } },
+                            // Real users: match by email or name
+                            {
+                                isVirtual: false,
+                                OR: [
+                                    { email: { contains: q, mode: "insensitive" } },
+                                    { name: { contains: q, mode: "insensitive" } },
+                                ],
+                            },
+                            // Virtual users created by the current user: match by name
+                            {
+                                isVirtual: true,
+                                virtualCreatedById: userId,
+                                name: { contains: q, mode: "insensitive" },
+                            },
                         ],
                     },
                     excludeUserIds.length > 0
@@ -74,6 +86,7 @@ export const GET: GetSearchUsersHandler = async (req) => {
                 name: true,
                 email: true,
                 image: true,
+                isVirtual: true,
             },
             take: 10,
         });

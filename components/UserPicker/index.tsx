@@ -2,8 +2,8 @@ import { useMemo, useState } from "react";
 
 import Image from "next/image";
 
-import { Check, Plus, X } from "lucide-react";
 import clsx from "clsx";
+import { Check, Plus, X } from "lucide-react";
 
 import type { User } from "@/lib/api/types";
 
@@ -38,6 +38,7 @@ const UserPicker = ({
   modalListTitle = "Usuarios",
   error,
   containerClassName,
+  allowVirtualUsers,
 }: UserPickerProps) => {
   const [users, setUsers] = useState<User[]>([user as User]);
   const [isOpen, setIsOpen] = useState(false);
@@ -69,9 +70,53 @@ const UserPicker = ({
     updateUserList(newUsers);
   };
 
-  const handleCloseModal = () => setIsOpen(false);
+  const handleCloseModal = () => {
+    setIsOpen(false);
+    onBlur?.();
+  };
 
   const selectedUsers = users.filter((p) => selectedUserIds.has(p.id));
+
+  const renderUserBadge = (u: User, showRemove: boolean) => {
+    const isVirtual = !!u.isVirtual;
+    const badgeColor = isVirtual ? "secondary" : "info";
+    const tooltipContent = isVirtual ? `${u.name} (virtual)` : u.name;
+    const displayName = u.id === user.id ? "Tu" : u.name;
+
+    return (
+      <Tooltip key={u.id} color="info" content={tooltipContent}>
+        <Badge
+          color={badgeColor}
+          leftItem={
+            u.image && (
+              <Image
+                alt="User avatar"
+                src={u.image}
+                height={14}
+                width={14}
+                className="-ml-1.5 h-3.5 w-3.5 flex-shrink-0 rounded-full"
+              />
+            )
+          }
+          rightItem={
+            showRemove && (
+              <Button
+                type="button"
+                aria-label="Remove selected user"
+                onClick={() => handleRemove(u.id)}
+                unstyled
+                className="hover:text-background/90 text-background cursor-pointer rounded-full transition-colors duration-300"
+              >
+                <X className="-mr-1 h-3.5 w-3.5 stroke-3" />
+              </Button>
+            )
+          }
+        >
+          {displayName}
+        </Badge>
+      </Tooltip>
+    );
+  };
 
   return (
     <>
@@ -91,39 +136,7 @@ const UserPicker = ({
         )}
 
         <div className="flex max-h-25 flex-wrap gap-2 overflow-y-scroll py-3">
-          {selectedUsers.map((u) => (
-            <Tooltip key={u.id} color="info" content={u.name}>
-              <Badge
-                color="info"
-                leftItem={
-                  u.image && (
-                    <Image
-                      alt="User avatar"
-                      src={u.image}
-                      height={14}
-                      width={14}
-                      className="-ml-1.5 h-3.5 w-3.5 flex-shrink-0 rounded-full"
-                    />
-                  )
-                }
-                rightItem={
-                  value.length > 1 && (
-                    <Button
-                      type="button"
-                      aria-label="Remove selected user"
-                      onClick={() => handleRemove(u.id)}
-                      unstyled
-                      className="hover:text-background/90 text-background cursor-pointer rounded-full transition-colors duration-300"
-                    >
-                      <X className="-mr-1 h-3.5 w-3.5 stroke-3" />
-                    </Button>
-                  )
-                }
-              >
-                {u.id === user.id ? "Tu" : u.name}
-              </Badge>
-            </Tooltip>
-          ))}
+          {selectedUsers.map((u) => renderUserBadge(u, value.length > 1))}
 
           <Tooltip color="info" content="Agregar participante">
             <Button
@@ -149,7 +162,7 @@ const UserPicker = ({
           user={user}
           onSelect={handleSelect}
           excludeUserIds={[...excludeUserIds, ...value]}
-          onBlur={onBlur}
+          allowVirtualUsers={allowVirtualUsers}
         />
 
         <div className="relative pt-7">
@@ -166,39 +179,7 @@ const UserPicker = ({
           </label>
 
           <div className="flex max-h-50 flex-wrap gap-2 overflow-y-scroll pt-3">
-            {selectedUsers.map((u) => (
-              <Tooltip key={u.id} color="info" content={u.name}>
-                <Badge
-                  color="info"
-                  leftItem={
-                    u.image && (
-                      <Image
-                        alt="User avatar"
-                        src={u.image}
-                        height={14}
-                        width={14}
-                        className="-ml-1.5 h-3.5 w-3.5 flex-shrink-0 rounded-full"
-                      />
-                    )
-                  }
-                  rightItem={
-                    value.length > 1 && (
-                      <Button
-                        aria-label="Remove selected user"
-                        type="button"
-                        onClick={() => handleRemove(u.id)}
-                        unstyled
-                        className="hover:text-background/90 text-background cursor-pointer rounded-full transition-colors duration-300"
-                      >
-                        <X className="-mr-1 h-3.5 w-3.5 stroke-3" />
-                      </Button>
-                    )
-                  }
-                >
-                  {u.id === user.id ? "Tu" : u.name}
-                </Badge>
-              </Tooltip>
-            ))}
+            {selectedUsers.map((u) => renderUserBadge(u, value.length > 1))}
           </div>
         </div>
 

@@ -9,14 +9,18 @@ import type { Session } from "next-auth";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import clsx from "clsx";
 import debounce from "lodash.debounce";
-import { UserRoundSearch } from "lucide-react";
+import { UserRoundPlus, UserRoundSearch } from "lucide-react";
 
+import useCreateVirtualUser from "@/hooks/data/users/useCreateVirtualUser";
 import useSearchUsers from "@/hooks/data/users/useSearchUsers";
 
 import type { User } from "@/lib/api/types";
 
+import Button from "../Button";
 import Input, { type InputProps } from "../Input";
 import InputErrorMessage from "../InputErrorMessage";
+import LoadingBar from "../LoadingBar";
+import Spinner from "../Spinner";
 
 export interface UserSearchEngineProps
   extends Omit<InputProps, "value" | "onSelect"> {
@@ -26,6 +30,7 @@ export interface UserSearchEngineProps
   onFocus?: VoidFunction;
   onBlur?: VoidFunction;
   excludeUserIds?: string[];
+  allowVirtualUsers?: boolean;
 }
 
 const UserSearchEngine = ({
@@ -37,11 +42,16 @@ const UserSearchEngine = ({
   label,
   placeholder = "Buscar por nombre o email",
   excludeUserIds = [],
+  allowVirtualUsers = false,
 }: UserSearchEngineProps) => {
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
+  const [virtualUserError, setVirtualUserError] = useState<string | null>(null);
+
+  const { mutate: createVirtualUser, isPending: isCreating } =
+    useCreateVirtualUser();
 
   const effectiveExcludedIds = useMemo(() => {
     const ids = new Set<string>(excludeUserIds);
@@ -55,6 +65,7 @@ const UserSearchEngine = ({
     data: users = [],
     error,
     isFetched,
+    isLoading,
   } = useSearchUsers(debouncedQuery, effectiveExcludedIds);
 
   const debouncedUpdate = useMemo(
@@ -65,6 +76,7 @@ const UserSearchEngine = ({
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(e.target.value);
     setHighlightedIndex(-1);
+    setVirtualUserError(null);
     debouncedUpdate(e.target.value);
     onChange?.();
   };
@@ -74,6 +86,7 @@ const UserSearchEngine = ({
     setQuery("");
     setDebouncedQuery("");
     setHighlightedIndex(-1);
+    setVirtualUserError(null);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -104,6 +117,27 @@ const UserSearchEngine = ({
     onBlur?.();
   };
 
+  const handleCreateVirtualUser = () => {
+    if (!debouncedQuery || debouncedQuery.length < 2) return;
+
+    createVirtualUser(debouncedQuery, {
+      onSuccess: (createdUser) => {
+        handleSelect(createdUser);
+      },
+      onError: () => {
+        setVirtualUserError(
+          "No se pudo crear el usuario virtual. Intentá de nuevo.",
+        );
+      },
+    });
+  };
+
+  const showNoResults =
+    isFetched && users.length === 0 && !error && debouncedQuery.length >= 2;
+
+  const showVirtualUserOption =
+    allowVirtualUsers && showNoResults && !isCreating;
+
   const virtualizer = useWindowVirtualizer({
     count: users.length,
     estimateSize: () => 80,
@@ -132,7 +166,7 @@ const UserSearchEngine = ({
           </div>
         }
         error={
-          isFetched && users.length === 0 && !error
+          showNoResults && !allowVirtualUsers
             ? "No se encontraron resultados para su busqueda"
             : null
         }
@@ -195,6 +229,59 @@ const UserSearchEngine = ({
             );
           })}
         </ul>
+      )}
+
+      {isLoading && (
+        <div className="mt-3 flex flex-col gap-1.5">
+          <p className="text-foreground/75 text-sm">Buscando...</p>
+
+          <LoadingBar />
+        </div>
+      )}
+
+      {showNoResults && (
+        <p className="text-warning mt-1.5 text-sm">
+          No se encontraron resultados para su busqueda
+        </p>
+      )}
+
+      {(showVirtualUserOption || isCreating) && (
+        <Button
+          variant="text"
+          color="secondary"
+          onClick={handleCreateVirtualUser}
+          className="!flex-start mt-3 flex !p-0 text-start text-sm"
+          disabled={isCreating}
+        >
+          {isCreating ? (
+            <>
+              <Spinner color="foreground" className="!h-5.5 !w-5.5" />
+
+              <p>Creando usuario virtual...</p>
+            </>
+          ) : (
+            <>
+              <UserRoundPlus
+                className={clsx(
+                  "inline h-5.5 min-h-5.5 w-5.5 min-w-5.5 transition-colors duration-300",
+                )}
+              />
+              <p>
+                Agregar{" "}
+                {
+                  <span className="text-primary">
+                    &quot;{debouncedQuery}&quot;{" "}
+                  </span>
+                }
+                como usuario virtual
+              </p>
+            </>
+          )}
+        </Button>
+      )}
+
+      {virtualUserError && (
+        <p className="text-danger mt-1.5 text-sm">{virtualUserError}</p>
       )}
 
       <InputErrorMessage message={error?.response?.data.error.message} />
