@@ -261,6 +261,10 @@ const UpdateExpenseForm = ({
     (participant) => participant.user,
   );
   const participantIds = getParticipantIds(expense.participants);
+  const participantNames = [
+    ...participants.map((p) => p.name),
+    ...newParticipants.map((p) => p.name),
+  ];
 
   return (
     <Modal
@@ -378,6 +382,7 @@ const UpdateExpenseForm = ({
                         handleSelectNewParticipants(p, field.handleChange)
                       }
                       excludeUserIds={[...participantIds, ...newParticipantIds]}
+                      excludeUserNames={participantNames}
                       onBlur={field.handleBlur}
                       allowVirtualUsers
                     />

@@ -30,6 +30,7 @@ export interface UserSearchEngineProps
   onFocus?: VoidFunction;
   onBlur?: VoidFunction;
   excludeUserIds?: string[];
+  excludeUserNames?: (string | null)[];
   allowVirtualUsers?: boolean;
 }
 
@@ -42,6 +43,7 @@ const UserSearchEngine = ({
   label,
   placeholder = "Buscar por nombre o email",
   excludeUserIds = [],
+  excludeUserNames = [],
   allowVirtualUsers = false,
 }: UserSearchEngineProps) => {
   const [query, setQuery] = useState("");
@@ -135,8 +137,19 @@ const UserSearchEngine = ({
   const showNoResults =
     isFetched && users.length === 0 && !error && debouncedQuery.length >= 2;
 
+  const isDuplicateVirtualUserName = useMemo(() => {
+    const normalizedQuery = debouncedQuery.trim().toLowerCase();
+
+    return excludeUserNames.some(
+      (name) => !!name && name.trim().toLowerCase() === normalizedQuery,
+    );
+  }, [excludeUserNames, debouncedQuery]);
+
   const showVirtualUserOption =
-    allowVirtualUsers && showNoResults && !isCreating;
+    allowVirtualUsers &&
+    showNoResults &&
+    !isCreating &&
+    !isDuplicateVirtualUserName;
 
   const virtualizer = useWindowVirtualizer({
     count: users.length,
@@ -241,7 +254,9 @@ const UserSearchEngine = ({
 
       {showNoResults && (
         <p className="text-warning mt-1.5 text-sm">
-          No se encontraron resultados para su busqueda
+          {isDuplicateVirtualUserName
+            ? "Ya agregaste un usuario con ese nombre"
+            : "No se encontraron resultados para su busqueda"}
         </p>
       )}
 

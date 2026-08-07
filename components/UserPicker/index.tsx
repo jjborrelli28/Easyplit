@@ -162,6 +162,7 @@ const UserPicker = ({
           user={user}
           onSelect={handleSelect}
           excludeUserIds={[...excludeUserIds, ...value]}
+          excludeUserNames={selectedUsers.map((u) => u.name)}
           allowVirtualUsers={allowVirtualUsers}
         />
 

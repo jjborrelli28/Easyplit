@@ -274,6 +274,10 @@ const UpdateGroupForm = ({
   };
 
   const memberIds = getParticipantIds(group.members);
+  const memberNames = [
+    ...group.members.map((m) => m.user.name),
+    ...newMembers.map((m) => m.name),
+  ];
   const expenseIds = group.expenses?.map((expense) => expense.id) ?? [];
 
   return (
@@ -390,6 +394,7 @@ const UpdateGroupForm = ({
                         handleSelectNewMembers(p, field.handleChange)
                       }
                       excludeUserIds={[...memberIds, ...newMemberIds]}
+                      excludeUserNames={memberNames}
                       onBlur={field.handleBlur}
                       allowVirtualUsers
                     />
