@@ -10,6 +10,7 @@ import type {
     SuccessResponse,
     User,
 } from "@/lib/api/types";
+import { renderEmailTemplate } from "@/lib/email/template";
 import { sendMail } from "@/lib/mailer";
 import prisma from "@/lib/prisma";
 import verifyRecaptcha from "@/lib/recaptcha";
@@ -122,10 +123,24 @@ export const POST: ForgotPasswordHandler = async (req: Request) => {
 
         const resetLink = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password?token=${resetToken}`;
 
+        const { html, text } = renderEmailTemplate({
+            previewText: "Restablecé tu contraseña en Easyplit.",
+            heading: "Restablecé tu contraseña",
+            paragraphs: [
+                "Recibimos una solicitud para restablecer tu contraseña. Hacé clic en el siguiente botón para elegir una nueva.",
+                "Este enlace vence en 60 minutos.",
+            ],
+            ctaLabel: "Restablecer contraseña",
+            ctaUrl: resetLink,
+            footerNote:
+                "Si no solicitaste este cambio, podés ignorar este correo.",
+        });
+
         await sendMail({
             to: email,
             subject: "Restablecer contraseña en Easyplit",
-            html: `<p>Hacé clic en el siguiente enlace para restablecer tu contraseña: <a href="${resetLink}">¡Restablecer Ahora!</a></p>`,
+            html,
+            text,
         });
 
         return NextResponse.json({

@@ -1,6 +1,7 @@
 import bcrypt from "bcryptjs";
 import type { SendMailOptions } from "nodemailer";
 
+import { renderEmailTemplate } from "../email/template";
 import { sendMail } from "../mailer";
 
 export const hashPassword = (password: string) => bcrypt.hash(password, 10);
@@ -11,10 +12,24 @@ export const sendVerificationEmail = async (
 ) => {
     const verificationUrl = `${process.env.NEXT_PUBLIC_API_URL}/auth/verify-email?token=${verifyToken}`;
 
+    const { html, text } = renderEmailTemplate({
+        previewText:
+            "Verificá tu correo electrónico para activar tu cuenta en Easyplit.",
+        heading: "Verificá tu correo electrónico",
+        paragraphs: [
+            "¡Gracias por registrarte en Easyplit! Para activar tu cuenta, hacé clic en el siguiente botón.",
+        ],
+        ctaLabel: "Verificar mi correo",
+        ctaUrl: verificationUrl,
+        footerNote:
+            "Si no creaste una cuenta en Easyplit, podés ignorar este correo.",
+    });
+
     const options: SendMailOptions = {
         to: email,
         subject: "Verificación de correo electrónico en Easyplit",
-        html: `<p>Verifique su correo electrónico haciendo clic en el siguiente enlace: <a href="${verificationUrl}">¡Verificar Ahora!</a></p>`,
+        html,
+        text,
     };
 
     try {
