@@ -43,6 +43,35 @@ export const sendVerificationEmail = async (
     }
 };
 
+export const sendPasswordChangedEmail = async (email: string) => {
+    const { html, text } = renderEmailTemplate({
+        previewText: "Tu contraseña de Easyplit fue actualizada.",
+        heading: "Tu contraseña fue actualizada",
+        paragraphs: [
+            "Te confirmamos que la contraseña de tu cuenta de Easyplit se cambió correctamente.",
+        ],
+        footerNote:
+            "Si no fuiste vos quien hizo este cambio, escribinos de inmediato a easyplit@gmail.com.",
+    });
+
+    const options: SendMailOptions = {
+        to: email,
+        subject: "Tu contraseña fue actualizada en Easyplit",
+        html,
+        text,
+    };
+
+    try {
+        await sendMail(options);
+    } catch (error) {
+        console.error(error);
+
+        throw new Error(
+            "Error al intentar enviar el correo electrónico de aviso de cambio de contraseña.",
+        );
+    }
+};
+
 export const parseNameForAvatar = (name: string) => {
     return name
         .trim()

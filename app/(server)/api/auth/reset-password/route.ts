@@ -7,7 +7,7 @@ import type {
     SuccessResponse,
     User,
 } from "@/lib/api/types";
-import { hashPassword } from "@/lib/auth/helpers";
+import { hashPassword, sendPasswordChangedEmail } from "@/lib/auth/helpers";
 import prisma from "@/lib/prisma";
 import { parseZodErrors } from "@/lib/validations/helpers";
 import { resetPasswordSchema } from "@/lib/validations/schemas";
@@ -76,6 +76,14 @@ export const POST: ResetPasswordHandler = async (req: Request) => {
                 resetTokenExp: null,
             },
         });
+
+        if (user.email) {
+            try {
+                await sendPasswordChangedEmail(user.email);
+            } catch (error) {
+                console.error(error);
+            }
+        }
 
         return NextResponse.json({
             success: true,
