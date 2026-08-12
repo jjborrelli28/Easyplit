@@ -9,7 +9,11 @@ import type {
     SuccessResponse,
     User,
 } from "@/lib/api/types";
-import { getRandomColorPair, parseNameForAvatar } from "@/lib/auth/helpers";
+import {
+    getRandomColorPair,
+    parseNameForAvatar,
+    sendVirtualUserInvitationEmail,
+} from "@/lib/auth/helpers";
 import AuthOptions from "@/lib/auth/options";
 import prisma from "@/lib/prisma";
 import { parseZodErrors } from "@/lib/validations/helpers";
@@ -62,7 +66,56 @@ export const POST: CreateVirtualUserHandler = async (req) => {
             );
         }
 
-        const { name } = res.data;
+        const { name, email, context } = res.data;
+
+        if (email) {
+            const existingRealUser = await prisma.user.findUnique({
+                where: { email },
+            });
+
+            if (existingRealUser) {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        error: {
+                            code: API_RESPONSE_CODE.EMAIL_ALREADY_REGISTERED,
+                            message: [
+                                "Ya existe una cuenta con ese correo electrónico. Buscala en el buscador de usuarios.",
+                            ],
+                            fields: { email: "Ya existe una cuenta con ese correo." },
+                            statusCode: 409,
+                        },
+                    },
+                    { status: 409 },
+                );
+            }
+
+            const existingOwnVirtualUser = await prisma.user.findFirst({
+                where: {
+                    isVirtual: true,
+                    virtualCreatedById: creatorId,
+                    contactEmail: email,
+                },
+            });
+
+            if (existingOwnVirtualUser) {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        error: {
+                            code: API_RESPONSE_CODE.EMAIL_ALREADY_REGISTERED,
+                            message: [
+                                "Ya tenés un usuario virtual con ese correo. Buscalo en el buscador de usuarios.",
+                            ],
+                            fields: { email: "Ya tenés un usuario virtual con ese correo." },
+                            statusCode: 409,
+                        },
+                    },
+                    { status: 409 },
+                );
+            }
+        }
+
         const { background, text } = getRandomColorPair();
         const parsedName = parseNameForAvatar(name);
         const image = `https://ui-avatars.com/api/?name=${parsedName}&background=${background}&color=${text}&size=128`;
@@ -70,6 +123,7 @@ export const POST: CreateVirtualUserHandler = async (req) => {
         const virtualUser = await prisma.user.create({
             data: {
                 name,
+                contactEmail: email,
                 image,
                 isVirtual: true,
                 virtualCreatedById: creatorId,
@@ -78,10 +132,19 @@ export const POST: CreateVirtualUserHandler = async (req) => {
                 id: true,
                 name: true,
                 email: true,
+                contactEmail: true,
                 image: true,
                 isVirtual: true,
             },
         });
+
+        if (email) {
+            await sendVirtualUserInvitationEmail({
+                to: email,
+                inviterName: session.user.name ?? "Un usuario de Easyplit",
+                context,
+            });
+        }
 
         return NextResponse.json({
             success: true,

@@ -9,9 +9,9 @@ import type { Session } from "next-auth";
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import clsx from "clsx";
 import debounce from "lodash.debounce";
-import { UserRoundPlus, UserRoundSearch } from "lucide-react";
+import { Mail, UserRoundPlus, UserRoundSearch } from "lucide-react";
+import { z } from "zod";
 
-import useCreateVirtualUser from "@/hooks/data/users/useCreateVirtualUser";
 import useSearchUsers from "@/hooks/data/users/useSearchUsers";
 
 import type { User } from "@/lib/api/types";
@@ -20,7 +20,8 @@ import Button from "../Button";
 import Input, { type InputProps } from "../Input";
 import InputErrorMessage from "../InputErrorMessage";
 import LoadingBar from "../LoadingBar";
-import Spinner from "../Spinner";
+
+const isEmail = (value: string) => z.string().email().safeParse(value).success;
 
 export interface UserSearchEngineProps
   extends Omit<InputProps, "value" | "onSelect"> {
@@ -50,10 +51,6 @@ const UserSearchEngine = ({
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
-  const [virtualUserError, setVirtualUserError] = useState<string | null>(null);
-
-  const { mutate: createVirtualUser, isPending: isCreating } =
-    useCreateVirtualUser();
 
   const effectiveExcludedIds = useMemo(() => {
     const ids = new Set<string>(excludeUserIds);
@@ -78,7 +75,6 @@ const UserSearchEngine = ({
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setQuery(e.target.value);
     setHighlightedIndex(-1);
-    setVirtualUserError(null);
     debouncedUpdate(e.target.value);
     onChange?.();
   };
@@ -88,7 +84,6 @@ const UserSearchEngine = ({
     setQuery("");
     setDebouncedQuery("");
     setHighlightedIndex(-1);
-    setVirtualUserError(null);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -119,19 +114,33 @@ const UserSearchEngine = ({
     onBlur?.();
   };
 
+  const isEmailQuery = isEmail(debouncedQuery);
+
+  const generateDraftId = () =>
+    `draft-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
   const handleCreateVirtualUser = () => {
     if (!debouncedQuery || debouncedQuery.length < 2) return;
 
-    createVirtualUser(debouncedQuery, {
-      onSuccess: (createdUser) => {
-        handleSelect(createdUser);
-      },
-      onError: () => {
-        setVirtualUserError(
-          "No se pudo crear el usuario virtual. Intentá de nuevo.",
-        );
-      },
-    });
+    const draftUser: User = isEmailQuery
+      ? {
+          id: generateDraftId(),
+          name: debouncedQuery,
+          email: debouncedQuery,
+          image: null,
+          isVirtual: true,
+          isDraft: true,
+        }
+      : {
+          id: generateDraftId(),
+          name: debouncedQuery,
+          email: null,
+          image: null,
+          isVirtual: true,
+          isDraft: true,
+        };
+
+    handleSelect(draftUser);
   };
 
   const showNoResults =
@@ -146,10 +155,7 @@ const UserSearchEngine = ({
   }, [excludeUserNames, debouncedQuery]);
 
   const showVirtualUserOption =
-    allowVirtualUsers &&
-    showNoResults &&
-    !isCreating &&
-    !isDuplicateVirtualUserName;
+    allowVirtualUsers && showNoResults && !isDuplicateVirtualUserName;
 
   const virtualizer = useWindowVirtualizer({
     count: users.length,
@@ -236,7 +242,9 @@ const UserSearchEngine = ({
                 <div className="flex w-full flex-col justify-center overflow-hidden">
                   <p className="truncate font-semibold">{user.name}</p>
 
-                  <p className="truncate text-sm">{user.email}</p>
+                  <p className="truncate text-sm">
+                    {user.email ?? user.contactEmail}
+                  </p>
                 </div>
               </li>
             );
@@ -260,19 +268,27 @@ const UserSearchEngine = ({
         </p>
       )}
 
-      {(showVirtualUserOption || isCreating) && (
+      {showVirtualUserOption && (
         <Button
           variant="text"
           color="secondary"
           onClick={handleCreateVirtualUser}
           className="!flex-start mt-3 flex !p-0 text-start text-sm"
-          disabled={isCreating}
         >
-          {isCreating ? (
+          {isEmailQuery ? (
             <>
-              <Spinner color="foreground" className="!h-5.5 !w-5.5" />
-
-              <p>Creando usuario virtual...</p>
+              <Mail
+                className={clsx(
+                  "inline h-5.5 min-h-5.5 w-5.5 min-w-5.5 transition-colors duration-300",
+                )}
+              />
+              <p>
+                Agregar{" "}
+                <span className="text-primary">
+                  &quot;{debouncedQuery}&quot;{" "}
+                </span>
+                e invitarlo/a a unirse a Easyplit
+              </p>
             </>
           ) : (
             <>
@@ -293,10 +309,6 @@ const UserSearchEngine = ({
             </>
           )}
         </Button>
-      )}
-
-      {virtualUserError && (
-        <p className="text-danger mt-1.5 text-sm">{virtualUserError}</p>
       )}
 
       <InputErrorMessage message={error?.response?.data.error.message} />

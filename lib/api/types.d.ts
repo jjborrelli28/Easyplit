@@ -71,10 +71,16 @@ export interface User {
     email: string | null;
     image: string | null;
     isVirtual?: boolean;
+    /** Contact email used to invite a virtual user (not set for real users). */
+    contactEmail?: string | null;
+    /** Client-only: staged virtual user not yet created in the database. */
+    isDraft?: boolean;
 }
 
 export interface CreateVirtualUserFields {
     name?: string;
+    email?: string;
+    context?: string;
 }
 
 export interface UpdateUserFields {

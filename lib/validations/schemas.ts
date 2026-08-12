@@ -141,6 +141,8 @@ export const createVirtualUserSchema = z.object({
         })
         .min(2, "El nombre debe tener al menos 2 caracteres.")
         .max(50, "El nombre no puede superar los 50 caracteres."),
+    email: email.optional(),
+    context: z.string().max(100).optional(),
 });
 /* End of user form schemas  */
 

@@ -17,6 +17,7 @@ import { isEqual } from "date-fns";
 import { X } from "lucide-react";
 
 import useUpdateExpense from "@/hooks/data/expense/useUpdateExpense";
+import useResolveDraftUsers from "@/hooks/data/users/useResolveDraftUsers";
 
 import type {
   Expense,
@@ -98,11 +99,14 @@ const UpdateExpenseForm = ({
   amountToBeSettled,
 }: UpdateExpenseFormProps) => {
   const { mutate: updateExpense, isPending } = useUpdateExpense(expense.id);
+  const resolveDraftUsers = useResolveDraftUsers();
   const queryClient = useQueryClient();
 
   const [newParticipants, setNewParticipants] = useState<User[]>([]);
   const [message, setMessage] = useState<ResponseMessage | null>(null);
   const [isSendeable, setIsSendeable] = useState(false);
+  const [isResolvingParticipants, setIsResolvingParticipants] =
+    useState(false);
 
   const editName = fieldsToUpdate.includes("name");
   const editType = fieldsToUpdate.includes("type");
@@ -176,10 +180,41 @@ const UpdateExpenseForm = ({
       }),
     },
     onSubmit: async ({ value }) => {
-      const { paidById, paymentDate, ...restFields } = value;
+      const { paidById, paymentDate, participantsToAdd, ...restFields } =
+        value;
+
+      let resolvedParticipantsToAdd = participantsToAdd;
+
+      if (participantsToAdd) {
+        setIsResolvingParticipants(true);
+
+        try {
+          const { resolvedUsers } = await resolveDraftUsers(
+            newParticipants,
+            expense.name,
+          );
+
+          resolvedParticipantsToAdd = resolvedUsers.map((p) => p.id);
+        } catch {
+          setIsResolvingParticipants(false);
+
+          form.setErrorMap({
+            onServer: [
+              "No se pudieron agregar todos los participantes. Intentá de nuevo.",
+            ],
+          });
+
+          return;
+        }
+
+        setIsResolvingParticipants(false);
+      }
 
       const body = {
         ...restFields,
+        ...(participantsToAdd && {
+          participantsToAdd: resolvedParticipantsToAdd,
+        }),
         ...(paidById !== expense.paidById && { paidById }),
         ...(paymentDate &&
           !isEqual(paymentDate!, expense.paymentDate) && { paymentDate }),
@@ -629,7 +664,7 @@ const UpdateExpenseForm = ({
             <Button
               type="submit"
               className="mt-4 lg:mt-7"
-              loading={isPending}
+              loading={isPending || isResolvingParticipants}
               disabled={!isSendeable}
               fullWidth
             >

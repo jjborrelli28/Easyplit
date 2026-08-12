@@ -50,6 +50,9 @@ model User {
   createdAt          DateTime             @default(now())
   isVirtual          Boolean              @default(false)
   virtualCreatedById String?              @map("virtual_created_by_id")
+  /// Contact email used to invite a virtual user. Not globally unique: each
+  /// creator can have their own virtual user for the same real-world email.
+  contactEmail       String?              @map("contact_email")
   expensesCreated    Expense[]            @relation("CreatedBy")
   expensesPaid       Expense[]            @relation("PaidBy")
   ExpenseParticipant ExpenseParticipant[]
@@ -61,6 +64,8 @@ model User {
   sessions           Session[]
   virtualCreatedBy   User?                @relation("VirtualUserCreatedBy", fields: [virtualCreatedById], references: [id])
   virtualUsers       User[]               @relation("VirtualUserCreatedBy")
+
+  @@unique([contactEmail, virtualCreatedById])
 }
 
 model VerificationToken {

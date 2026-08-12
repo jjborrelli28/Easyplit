@@ -6,6 +6,7 @@ import { useForm } from "@tanstack/react-form";
 import { useQueryClient } from "@tanstack/react-query";
 
 import useCreateExpense from "@/hooks/data/expense/useCreateExpense";
+import useResolveDraftUsers from "@/hooks/data/users/useResolveDraftUsers";
 
 import type {
   CreateExpenseFields,
@@ -44,10 +45,13 @@ const ExpenseForm = ({
   handleShowModalHeader,
 }: ExpenseFromProps) => {
   const { mutate: createExpense, isPending } = useCreateExpense();
+  const resolveDraftUsers = useResolveDraftUsers();
   const queryClient = useQueryClient();
 
   const [participants, setParticipants] = useState<User[]>([user as User]);
   const [message, setMessage] = useState<ResponseMessage | null>(null);
+  const [isResolvingParticipants, setIsResolvingParticipants] =
+    useState(false);
 
   const form = useForm<
     CreateExpenseFields,
@@ -71,31 +75,61 @@ const ExpenseForm = ({
       groupId: undefined,
     },
     onSubmit: async ({ value }) => {
-      createExpense(value, {
-        onSuccess: (res) => {
-          queryClient.invalidateQueries({
-            queryKey: ["my-expenses-and-groups", user.id!],
-          });
+      setIsResolvingParticipants(true);
 
-          handleShowModalHeader(false);
+      let participantIds = value.participantIds;
+      let paidById = value.paidById;
 
-          res?.message && setMessage(res.message);
+      try {
+        const { resolvedUsers, idMap } = await resolveDraftUsers(
+          participants,
+          value.name,
+        );
+
+        participantIds = resolvedUsers.map((p) => p.id);
+        paidById = idMap.get(paidById) ?? paidById;
+      } catch {
+        setIsResolvingParticipants(false);
+
+        form.setErrorMap({
+          onServer: [
+            "No se pudieron agregar todos los participantes. Intentá de nuevo.",
+          ],
+        });
+
+        return;
+      }
+
+      setIsResolvingParticipants(false);
+
+      createExpense(
+        { ...value, participantIds, paidById },
+        {
+          onSuccess: (res) => {
+            queryClient.invalidateQueries({
+              queryKey: ["my-expenses-and-groups", user.id!],
+            });
+
+            handleShowModalHeader(false);
+
+            res?.message && setMessage(res.message);
+          },
+          onError: (res) => {
+            const {
+              error: { message, fields },
+            } = res.response.data;
+
+            form.setErrorMap({
+              onSubmit: {
+                fields: fields as Partial<
+                  Record<keyof ExpenseCreationFieldErrors, unknown>
+                >,
+              },
+              onServer: message,
+            });
+          },
         },
-        onError: (res) => {
-          const {
-            error: { message, fields },
-          } = res.response.data;
-
-          form.setErrorMap({
-            onSubmit: {
-              fields: fields as Partial<
-                Record<keyof ExpenseCreationFieldErrors, unknown>
-              >,
-            },
-            onServer: message,
-          });
-        },
-      });
+      );
     },
   });
 
@@ -293,7 +327,7 @@ const ExpenseForm = ({
           <Button
             type="submit"
             className="col-span-1 mt-4 lg:col-span-2 lg:mt-7"
-            loading={isPending}
+            loading={isPending || isResolvingParticipants}
             fullWidth
           >
             Crear

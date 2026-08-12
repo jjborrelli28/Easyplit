@@ -12,6 +12,7 @@ import type {
 import {
     getRandomColorPair,
     hashPassword,
+    mergeVirtualUserInto,
     parseNameForAvatar,
     sendVerificationEmail,
 } from "@/lib/auth/helpers";
@@ -69,6 +70,77 @@ export const POST: RegisterHandler = async (req: Request) => {
         }
 
         const existingUser = await prisma.user.findUnique({ where: { email } });
+
+        if (!existingUser) {
+            const matchingVirtualUsers = await prisma.user.findMany({
+                where: { isVirtual: true, contactEmail: email },
+                orderBy: { createdAt: "asc" },
+            });
+
+            if (matchingVirtualUsers.length > 0) {
+                const [primary, ...others] = matchingVirtualUsers;
+
+                const hashedPassword = await hashPassword(password);
+                const verifyToken = uuidv4();
+                const verifyTokenExp = new Date(Date.now() + 30 * 60 * 1000); // valid for 30 mins
+
+                const { background, text } = getRandomColorPair();
+                const parsedName = parseNameForAvatar(name);
+                const image = `https://ui-avatars.com/api/?name=${parsedName}&background=${background}&color=${text}&size=256`;
+
+                const user = await prisma.$transaction(async (tx) => {
+                    const updated = await tx.user.update({
+                        where: { id: primary.id },
+                        data: {
+                            name,
+                            email,
+                            contactEmail: null,
+                            password: hashedPassword,
+                            image,
+                            isVirtual: false,
+                            virtualCreatedById: null,
+                            verifyToken,
+                            verifyTokenExp,
+                        },
+                    });
+
+                    for (const other of others) {
+                        await mergeVirtualUserInto(tx, other.id, updated.id);
+                    }
+
+                    return updated;
+                });
+
+                await sendVerificationEmail(email, verifyToken);
+
+                return NextResponse.json({
+                    success: true,
+                    code: API_RESPONSE_CODE.EMAIL_VERIFICATION_SENT,
+                    message: {
+                        color: "primary",
+                        icon: "MailCheck",
+                        title: "¡Verificá tu correo!",
+                        content: [
+                            {
+                                text: "Ya te habían agregado a algún grupo o gasto en Easyplit. Te enviamos un correo para verificar tu cuenta y activarla.",
+                            },
+                            {
+                                text: "Por favor, revisá tu bandeja de entrada (y también el correo no deseado o spam).",
+                                style: "muted",
+                            },
+                        ],
+                        actionLabel: "Volver al inicio",
+                        actionHref: "/",
+                    },
+                    data: {
+                        id: user.id,
+                        name: user.name,
+                        email: user.email,
+                        image: user.image,
+                    },
+                });
+            }
+        }
 
         if (existingUser?.password) {
             if (existingUser?.emailVerified) {

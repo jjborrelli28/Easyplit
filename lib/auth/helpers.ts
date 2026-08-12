@@ -1,3 +1,4 @@
+import type { Prisma } from "@prisma/client";
 import bcrypt from "bcryptjs";
 import type { SendMailOptions } from "nodemailer";
 
@@ -72,12 +73,132 @@ export const sendPasswordChangedEmail = async (email: string) => {
     }
 };
 
+const escapeHtml = (value: string) =>
+    value
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+
+interface SendVirtualUserInvitationEmailParams {
+    to: string;
+    inviterName: string;
+    context?: string;
+}
+
+export const sendVirtualUserInvitationEmail = async ({
+    to,
+    inviterName,
+    context,
+}: SendVirtualUserInvitationEmailParams) => {
+    const safeInviterName = escapeHtml(inviterName);
+    const safeContext = context ? escapeHtml(context) : null;
+    const registerUrl = `${process.env.NEXT_PUBLIC_APP_URL}/register`;
+
+    const { html, text } = renderEmailTemplate({
+        previewText: `${safeInviterName} te agregó en Easyplit.`,
+        heading: "Te agregaron a Easyplit",
+        paragraphs: [
+            `<strong>${safeInviterName}</strong> te agregó${
+                safeContext ? ` a <strong>"${safeContext}"</strong>` : ""
+            } en Easyplit, una app para organizar y dividir gastos compartidos.`,
+            "Creá tu cuenta con este mismo correo para ver el detalle y empezar a usarla.",
+        ],
+        ctaLabel: "Crear mi cuenta",
+        ctaUrl: registerUrl,
+        footerNote: "Si no esperabas este correo, podés ignorarlo.",
+    });
+
+    const options: SendMailOptions = {
+        to,
+        subject: `${inviterName} te agregó en Easyplit`,
+        html,
+        text,
+    };
+
+    try {
+        await sendMail(options);
+    } catch (error) {
+        console.error(error);
+
+        throw new Error(
+            "Error al intentar enviar el correo electrónico de invitación a Easyplit.",
+        );
+    }
+};
+
 export const parseNameForAvatar = (name: string) => {
     return name
         .trim()
         .split(/\s+/)
         .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
         .join("+");
+};
+
+/**
+ * Reassigns every group/expense relation from a virtual user to a real user
+ * (e.g. after that person registers with the email used to invite them), then
+ * deletes the now-empty virtual user. Falls back to dropping a relation row
+ * when the target is already linked to the same group/expense.
+ */
+export const mergeVirtualUserInto = async (
+    tx: Prisma.TransactionClient,
+    fromUserId: string,
+    toUserId: string,
+) => {
+    const groupMembers = await tx.groupMember.findMany({
+        where: { userId: fromUserId },
+    });
+
+    for (const member of groupMembers) {
+        try {
+            await tx.groupMember.update({
+                where: { id: member.id },
+                data: { userId: toUserId },
+            });
+        } catch {
+            await tx.groupMember.delete({ where: { id: member.id } });
+        }
+    }
+
+    const participants = await tx.expenseParticipant.findMany({
+        where: { userId: fromUserId },
+    });
+
+    for (const participant of participants) {
+        try {
+            await tx.expenseParticipant.update({
+                where: { id: participant.id },
+                data: { userId: toUserId },
+            });
+        } catch {
+            await tx.expenseParticipant.delete({ where: { id: participant.id } });
+        }
+    }
+
+    await tx.expense.updateMany({
+        where: { paidById: fromUserId },
+        data: { paidById: toUserId },
+    });
+    await tx.expense.updateMany({
+        where: { createdById: fromUserId },
+        data: { createdById: toUserId },
+    });
+    await tx.group.updateMany({
+        where: { createdById: fromUserId },
+        data: { createdById: toUserId },
+    });
+    await tx.groupHistory.updateMany({
+        where: { updatedById: fromUserId },
+        data: { updatedById: toUserId },
+    });
+    await tx.expenseHistory.updateMany({
+        where: { updatedById: fromUserId },
+        data: { updatedById: toUserId },
+    });
+
+    await tx.user.delete({ where: { id: fromUserId } });
 };
 
 export const getRandomColorPair = () => {

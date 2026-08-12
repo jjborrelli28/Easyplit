@@ -64,11 +64,14 @@ export const GET: GetSearchUsersHandler = async (req) => {
                                     { name: { contains: q, mode: "insensitive" } },
                                 ],
                             },
-                            // Virtual users created by the current user: match by name
+                            // Virtual users created by the current user: match by name or contact email
                             {
                                 isVirtual: true,
                                 virtualCreatedById: userId,
-                                name: { contains: q, mode: "insensitive" },
+                                OR: [
+                                    { name: { contains: q, mode: "insensitive" } },
+                                    { contactEmail: { contains: q, mode: "insensitive" } },
+                                ],
                             },
                         ],
                     },
@@ -85,6 +88,7 @@ export const GET: GetSearchUsersHandler = async (req) => {
                 id: true,
                 name: true,
                 email: true,
+                contactEmail: true,
                 image: true,
                 isVirtual: true,
             },

@@ -17,6 +17,7 @@ import { Trash, X } from "lucide-react";
 
 import type { Expense } from "@/hooks/data/expenses/useSearchExpenses";
 import useUpdateGroup from "@/hooks/data/group/useUpdateGroup";
+import useResolveDraftUsers from "@/hooks/data/users/useResolveDraftUsers";
 
 import type {
   Group,
@@ -87,6 +88,7 @@ const UpdateGroupForm = ({
   selectedExpense,
 }: UpdateGroupFormProps) => {
   const { mutate: updateGroup, isPending } = useUpdateGroup(group.id);
+  const resolveDraftUsers = useResolveDraftUsers();
   const queryClient = useQueryClient();
 
   const [newMembers, setNewMembers] = useState<User[]>([]);
@@ -96,6 +98,7 @@ const UpdateGroupForm = ({
     null,
   );
   const [isSendeable, setIsSendeable] = useState(false);
+  const [isResolvingMembers, setIsResolvingMembers] = useState(false);
 
   const editName = fieldsToUpdate.includes("name");
   const editType = fieldsToUpdate.includes("type");
@@ -168,29 +171,59 @@ const UpdateGroupForm = ({
       ...(removeExpense && { expenseToRemove: selectedExpense?.id }),
     },
     onSubmit: async ({ value }) => {
-      updateGroup(value, {
-        onSuccess: (res) => {
-          queryClient.invalidateQueries({
-            queryKey: ["group", group.id],
-          });
+      let membersToAdd = value.membersToAdd;
 
-          res?.message && setMessage(res.message);
-        },
-        onError: (res) => {
-          const {
-            error: { message, fields },
-          } = res.response.data;
+      if (membersToAdd) {
+        setIsResolvingMembers(true);
+
+        try {
+          const { resolvedUsers } = await resolveDraftUsers(
+            newMembers,
+            group.name,
+          );
+
+          membersToAdd = resolvedUsers.map((m) => m.id);
+        } catch {
+          setIsResolvingMembers(false);
 
           form.setErrorMap({
-            onSubmit: {
-              fields: fields as Partial<
-                Record<keyof GroupUpdateFieldErrors, unknown>
-              >,
-            },
-            onServer: message,
+            onServer: [
+              "No se pudieron agregar todos los miembros. Intentá de nuevo.",
+            ],
           });
+
+          return;
+        }
+
+        setIsResolvingMembers(false);
+      }
+
+      updateGroup(
+        { ...value, membersToAdd },
+        {
+          onSuccess: (res) => {
+            queryClient.invalidateQueries({
+              queryKey: ["group", group.id],
+            });
+
+            res?.message && setMessage(res.message);
+          },
+          onError: (res) => {
+            const {
+              error: { message, fields },
+            } = res.response.data;
+
+            form.setErrorMap({
+              onSubmit: {
+                fields: fields as Partial<
+                  Record<keyof GroupUpdateFieldErrors, unknown>
+                >,
+              },
+              onServer: message,
+            });
+          },
         },
-      });
+      );
     },
   });
 
@@ -560,7 +593,7 @@ const UpdateGroupForm = ({
             <Button
               type="submit"
               className="mt-4 lg:mt-7"
-              loading={isPending}
+              loading={isPending || isResolvingMembers}
               disabled={!isSendeable}
               fullWidth
             >

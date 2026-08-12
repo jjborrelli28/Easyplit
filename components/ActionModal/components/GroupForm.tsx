@@ -6,12 +6,14 @@ import { useForm } from "@tanstack/react-form";
 import { useQueryClient } from "@tanstack/react-query";
 
 import useCreateGroup from "@/hooks/data/group/useCreateGroup";
+import useResolveDraftUsers from "@/hooks/data/users/useResolveDraftUsers";
 
 import type {
   CreateGroupFields,
   GroupCreationFieldErrors,
   ResponseMessage,
   ServerErrorResponse,
+  User,
 } from "@/lib/api/types";
 import ICON_MAP from "@/lib/icons";
 import { createGroupSchema } from "@/lib/validations/schemas";
@@ -36,9 +38,12 @@ const GroupForm = ({
   handleShowModalHeader,
 }: ExpenseFromProps) => {
   const { mutate: createGroup, isPending } = useCreateGroup();
+  const resolveDraftUsers = useResolveDraftUsers();
   const queryClient = useQueryClient();
 
+  const [members, setMembers] = useState<User[]>([user as User]);
   const [message, setMessage] = useState<ResponseMessage | null>(null);
+  const [isResolvingMembers, setIsResolvingMembers] = useState(false);
 
   const form = useForm<
     CreateGroupFields,
@@ -58,31 +63,56 @@ const GroupForm = ({
       memberIds: [user.id!],
     },
     onSubmit: async ({ value }) => {
-      createGroup(value, {
-        onSuccess: (res) => {
-          queryClient.invalidateQueries({
-            queryKey: ["my-expenses-and-groups", user.id!],
-          });
+      setIsResolvingMembers(true);
 
-          handleShowModalHeader(false);
+      let memberIds = value.memberIds;
 
-          res?.message && setMessage(res.message);
+      try {
+        const { resolvedUsers } = await resolveDraftUsers(members, value.name);
+
+        memberIds = resolvedUsers.map((m) => m.id);
+      } catch {
+        setIsResolvingMembers(false);
+
+        form.setErrorMap({
+          onServer: [
+            "No se pudieron agregar todos los miembros. Intentá de nuevo.",
+          ],
+        });
+
+        return;
+      }
+
+      setIsResolvingMembers(false);
+
+      createGroup(
+        { ...value, memberIds },
+        {
+          onSuccess: (res) => {
+            queryClient.invalidateQueries({
+              queryKey: ["my-expenses-and-groups", user.id!],
+            });
+
+            handleShowModalHeader(false);
+
+            res?.message && setMessage(res.message);
+          },
+          onError: (res) => {
+            const {
+              error: { message, fields },
+            } = res.response.data;
+
+            form.setErrorMap({
+              onSubmit: {
+                fields: fields as Partial<
+                  Record<keyof GroupCreationFieldErrors, unknown>
+                >,
+              },
+              onServer: message,
+            });
+          },
         },
-        onError: (res) => {
-          const {
-            error: { message, fields },
-          } = res.response.data;
-
-          form.setErrorMap({
-            onSubmit: {
-              fields: fields as Partial<
-                Record<keyof GroupCreationFieldErrors, unknown>
-              >,
-            },
-            onServer: message,
-          });
-        },
-      });
+      );
     },
   });
 
@@ -171,6 +201,7 @@ const GroupForm = ({
                 user={user}
                 value={field.state.value}
                 onChange={field.handleChange}
+                onUserListChange={setMembers}
                 onBlur={field.handleBlur}
                 excludeUserIds={field.state.value}
                 modalTitle="Buscar miembros"
@@ -187,7 +218,7 @@ const GroupForm = ({
           <Button
             type="submit"
             className="mt-4 lg:mt-7"
-            loading={isPending}
+            loading={isPending || isResolvingMembers}
             fullWidth
           >
             Crear
