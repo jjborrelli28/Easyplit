@@ -272,6 +272,7 @@ const UserSearchEngine = ({
         <Button
           variant="text"
           color="secondary"
+          onMouseDown={(e) => e.preventDefault()}
           onClick={handleCreateVirtualUser}
           className="!flex-start mt-3 flex !p-0 text-start text-sm"
         >
