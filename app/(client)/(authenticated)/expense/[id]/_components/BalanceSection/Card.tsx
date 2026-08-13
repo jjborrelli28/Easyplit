@@ -61,6 +61,7 @@ export const Card = ({
     user.id !== expense.paidById &&
     (isUserEditor || user.id === loggedUser.id);
   const showRemoveButton =
+    !hasACreditBalance &&
     !debtSettled &&
     !allDebtsSettled &&
     isUserEditor &&

@@ -62,11 +62,11 @@ const amount = z
     .number({
         required_error: "El monto es obligatorio.",
     })
+    .positive({
+        message: "El monto debe ser mayor a $0.",
+    })
     .max(100_000_000, {
         message: "El monto no puede ser mayor a $100.000.000",
-    })
-    .refine((val) => val !== 0, {
-        message: "El monto no puede ser $0.",
     });
 const participantPayment = z
     .object({

@@ -142,13 +142,19 @@ export const areAllDebtsSettled = (expense: Expense) => {
 export const isExpenseComplete = (
     expense: PrismaExpense & { participants: PrismaExpenseParticipant[] },
 ) => {
-    const participantsCount = expense.participants.length;
+    return expense.participants
+        .filter((p) => p.userId !== expense.paidById)
+        .every((p) => {
+            const personalBalance = getPersonalBalance(
+                p.amount,
+                expense.amount,
+                expense.participants.length,
+            );
 
-    return expense.participants.every((p) => {
-        const personalBalance = p.amount - expense.amount / participantsCount;
-        const roundedBalance = Math.floor(personalBalance * 100) / 100;
-        return roundedBalance <= 0;
-    });
+            const roundedBalance = Math.floor(personalBalance * 100) / 100;
+
+            return roundedBalance <= 0;
+        });
 };
 
 type ParticipantPaymentType = { userId: string; amount: number | undefined };
@@ -352,7 +358,7 @@ type UpdateGroupTypes = {
     membersToAdd?: string[];
     memberToRemove?: string;
     expensesToAdd?: string[];
-    expeneToRemove?: string;
+    expenseToRemove?: string;
 };
 
 export const getUpdatedGroupFields: (
@@ -365,7 +371,7 @@ export const getUpdatedGroupFields: (
         "membersToAdd",
         "memberToRemove",
         "expensesToAdd",
-        "expeneToRemove",
+        "expenseToRemove",
     ];
 
     return fieldsToCheck.reduce<UpdatedField[]>((acc, field) => {
@@ -376,7 +382,7 @@ export const getUpdatedGroupFields: (
             field === "membersToAdd" ||
             field === "memberToRemove" ||
             field === "expensesToAdd" ||
-            field === "expeneToRemove"
+            field === "expenseToRemove"
         ) {
             oldValue = null;
             newValue = updated[field];

@@ -14,6 +14,8 @@ import { upsertContactsForRealUserIds } from "@/lib/contacts/helpers";
 import prisma from "@/lib/prisma";
 import {
     compareMembers,
+    getPersonalBalance,
+    getPositiveTruncatedNumber,
     getSuccessMessage,
     getUpdatedExpenseFields,
 } from "@/lib/utils";
@@ -262,29 +264,162 @@ export const PATCH: UpdateExpenseHandler = async (req, context) => {
             );
         }
 
+        const isAuthorized =
+            updatedById === expense.createdById ||
+            updatedById === expense.paidById ||
+            expense.participants.some((p) => p.userId === updatedById) ||
+            (expense.group?.members.some((m) => m.userId === updatedById) ??
+                false);
+
+        if (!isAuthorized) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: {
+                        code: API_RESPONSE_CODE.FORBIDDEN,
+                        message: ["No tenés permisos para modificar este gasto."],
+                        statusCode: 403,
+                    },
+                },
+                { status: 403 },
+            );
+        }
+
+        let group = null;
+
+        if (groupId) {
+            group = await prisma.group.findUnique({
+                where: { id: groupId },
+                include: {
+                    members: {
+                        include: {
+                            user: {
+                                select: {
+                                    id: true,
+                                    name: true,
+                                    email: true,
+                                    image: true,
+                                },
+                            },
+                        },
+                    },
+                },
+            });
+
+            if (!group) {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        error: {
+                            code: API_RESPONSE_CODE.NOT_FOUND,
+                            message: ["No se encontró el grupo seleccionado."],
+                            statusCode: 404,
+                        },
+                    },
+                    { status: 404 },
+                );
+            }
+        }
+
         if (paidById && paidById !== expense.paidById) {
-            const participantsToUpdate = expense.participants.filter(
-                (p) => p.userId === paidById || p.userId === expense.paidById,
+            const oldPayerParticipant = expense.participants.find(
+                (p) => p.userId === expense.paidById,
+            );
+            const newPayerParticipant = expense.participants.find(
+                (p) => p.userId === paidById,
             );
 
             await Promise.all(
-                participantsToUpdate.map((participant) =>
-                    prisma.expenseParticipant.update({
-                        where: {
-                            expenseId_userId: {
-                                expenseId: id,
-                                userId: participant.userId,
+                [
+                    oldPayerParticipant &&
+                        prisma.expenseParticipant.update({
+                            where: {
+                                expenseId_userId: {
+                                    expenseId: id,
+                                    userId: expense.paidById,
+                                },
                             },
-                        },
-                        data: {
-                            amount: participant.userId === paidById ? expense.amount : 0,
-                        },
-                    }),
-                ),
+                            data: { amount: 0 },
+                        }),
+                    newPayerParticipant
+                        ? prisma.expenseParticipant.update({
+                            where: {
+                                expenseId_userId: { expenseId: id, userId: paidById },
+                            },
+                            data: { amount: expense.amount },
+                        })
+                        : prisma.expenseParticipant.create({
+                            data: {
+                                expenseId: id,
+                                userId: paidById,
+                                amount: expense.amount,
+                            },
+                        }),
+                ].filter(Boolean),
             );
         }
 
         if (participantToRemove) {
+            if (participantToRemove === expense.paidById) {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        error: {
+                            code: API_RESPONSE_CODE.INVALID_FIELD,
+                            message: [
+                                "No se puede quitar al pagador del gasto. Reasigná el pago a otra persona primero.",
+                            ],
+                            statusCode: 400,
+                        },
+                    },
+                    { status: 400 },
+                );
+            }
+
+            if (expense.participants.length <= 2) {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        error: {
+                            code: API_RESPONSE_CODE.INVALID_FIELD,
+                            message: [
+                                "Un gasto debe tener al menos 2 participantes.",
+                            ],
+                            statusCode: 400,
+                        },
+                    },
+                    { status: 400 },
+                );
+            }
+
+            const targetParticipant = expense.participants.find(
+                (p) => p.userId === participantToRemove,
+            );
+
+            if (targetParticipant) {
+                const personalBalance = getPersonalBalance(
+                    targetParticipant.amount,
+                    expense.amount,
+                    expense.participants.length,
+                );
+
+                if (getPositiveTruncatedNumber(personalBalance) !== 0) {
+                    return NextResponse.json(
+                        {
+                            success: false,
+                            error: {
+                                code: API_RESPONSE_CODE.INVALID_FIELD,
+                                message: [
+                                    "No se puede quitar a un participante con saldo pendiente en el gasto.",
+                                ],
+                                statusCode: 400,
+                            },
+                        },
+                        { status: 400 },
+                    );
+                }
+            }
+
             await prisma.expenseParticipant.delete({
                 where: {
                     expenseId_userId: {
@@ -296,10 +431,12 @@ export const PATCH: UpdateExpenseHandler = async (req, context) => {
         }
 
         if (participantsToAdd) {
-            if (expense.group) {
+            const targetGroup = group ?? expense.group;
+
+            if (targetGroup) {
                 const { haveDifferences, differences } = compareMembers(
-                    expense.participants,
-                    expense.group.members,
+                    participantsToAdd.map((userId) => ({ id: userId })),
+                    targetGroup.members,
                 );
 
                 if (haveDifferences && differences.excessParticipants.length > 0) {
@@ -364,8 +501,6 @@ export const PATCH: UpdateExpenseHandler = async (req, context) => {
                 );
             }
 
-            const newAmount = existingParticipant.amount + participantPayment.amount;
-
             await prisma.expenseParticipant.update({
                 where: {
                     expenseId_userId: {
@@ -374,45 +509,9 @@ export const PATCH: UpdateExpenseHandler = async (req, context) => {
                     },
                 },
                 data: {
-                    amount: newAmount,
+                    amount: { increment: participantPayment.amount },
                 },
             });
-        }
-
-        let group = null;
-
-        if (groupId) {
-            group = await prisma.group.findUnique({
-                where: { id: groupId },
-                include: {
-                    members: {
-                        include: {
-                            user: {
-                                select: {
-                                    id: true,
-                                    name: true,
-                                    email: true,
-                                    image: true,
-                                },
-                            },
-                        },
-                    },
-                },
-            });
-
-            if (!group) {
-                return NextResponse.json(
-                    {
-                        success: false,
-                        error: {
-                            code: API_RESPONSE_CODE.NOT_FOUND,
-                            message: ["No se encontró el grupo seleccionado."],
-                            statusCode: 404,
-                        },
-                    },
-                    { status: 404 },
-                );
-            }
         }
 
         if (amount) {
@@ -420,7 +519,7 @@ export const PATCH: UpdateExpenseHandler = async (req, context) => {
                 where: {
                     expenseId_userId: {
                         expenseId: id,
-                        userId: expense.paidById,
+                        userId: paidById ?? expense.paidById,
                     },
                 },
                 data: {

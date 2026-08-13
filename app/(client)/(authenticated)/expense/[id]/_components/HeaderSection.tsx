@@ -10,11 +10,7 @@ import { es } from "date-fns/locale";
 import { BanknoteArrowUp, CalendarArrowUp, Group, Repeat } from "lucide-react";
 
 import type { Expense } from "@/lib/api/types";
-import {
-  formatAmount,
-  getPersonalBalance,
-  getPositiveTruncatedNumber,
-} from "@/lib/utils";
+import { areAllDebtsSettled, formatAmount } from "@/lib/utils";
 
 import Button from "@/components/Button";
 import {
@@ -40,16 +36,7 @@ const HeaderSection = ({ expense, loggedUser }: HeaderSectionProps) => {
 
   const type = expense?.type ?? EXPENSE_TYPE.UNCATEGORIZED;
   const Icon = EXPENSE_TYPES[type].icon;
-  const allDebtsSettled = expense.participants
-    .filter((p) => p.userId !== expense.paidById)
-    .every((p) => {
-      const personalBalance = getPersonalBalance(
-        p.amount,
-        expense.amount,
-        expense.participants.length,
-      );
-      return getPositiveTruncatedNumber(personalBalance) === 0;
-    });
+  const allDebtsSettled = areAllDebtsSettled(expense);
   const isUserEditor =
     loggedUser?.id === expense?.createdById ||
     loggedUser?.id === expense?.paidById;

@@ -13,7 +13,8 @@ import AuthOptions from "@/lib/auth/options";
 import { upsertContactsForRealUserIds } from "@/lib/contacts/helpers";
 import prisma from "@/lib/prisma";
 import {
-    compareMembers,
+    getPersonalBalance,
+    getPositiveTruncatedNumber,
     getSuccessMessage,
     getUpdatedGroupFields,
 } from "@/lib/utils";
@@ -276,7 +277,108 @@ export const PATCH: UpdateGroupHandler = async (req, context) => {
             );
         }
 
+        const isAuthorized =
+            updatedById === group.createdById ||
+            group.members.some((m) => m.userId === updatedById);
+
+        if (!isAuthorized) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: {
+                        code: API_RESPONSE_CODE.FORBIDDEN,
+                        message: ["No tenés permisos para modificar este grupo."],
+                        statusCode: 403,
+                    },
+                },
+                { status: 403 },
+            );
+        }
+
         if (memberToRemove) {
+            const memberExpenses = group.expenses.filter((e) =>
+                e.participants.some((p) => p.userId === memberToRemove),
+            );
+
+            const isPayerOfSomeExpense = memberExpenses.some(
+                (e) => e.paidById === memberToRemove,
+            );
+
+            if (isPayerOfSomeExpense) {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        error: {
+                            code: API_RESPONSE_CODE.INVALID_FIELD,
+                            message: [
+                                "No se puede remover al miembro porque pagó uno o más gastos del grupo. Reasigná el pago primero.",
+                            ],
+                            statusCode: 400,
+                        },
+                    },
+                    { status: 400 },
+                );
+            }
+
+            const hasPendingBalance = memberExpenses.some((expense) => {
+                const participant = expense.participants.find(
+                    (p) => p.userId === memberToRemove,
+                );
+
+                if (!participant) return false;
+
+                const personalBalance = getPersonalBalance(
+                    participant.amount,
+                    expense.amount,
+                    expense.participants.length,
+                );
+
+                return getPositiveTruncatedNumber(personalBalance) !== 0;
+            });
+
+            if (hasPendingBalance) {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        error: {
+                            code: API_RESPONSE_CODE.INVALID_FIELD,
+                            message: [
+                                "No se puede remover al miembro porque tiene un saldo pendiente en el grupo.",
+                            ],
+                            statusCode: 400,
+                        },
+                    },
+                    { status: 400 },
+                );
+            }
+
+            const wouldEmptyExpense = memberExpenses.some(
+                (e) => e.participants.length <= 2,
+            );
+
+            if (wouldEmptyExpense) {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        error: {
+                            code: API_RESPONSE_CODE.INVALID_FIELD,
+                            message: [
+                                "No se puede remover al miembro porque quedaría un gasto del grupo con un solo participante. Eliminá o reorganizá ese gasto primero.",
+                            ],
+                            statusCode: 400,
+                        },
+                    },
+                    { status: 400 },
+                );
+            }
+
+            await prisma.expenseParticipant.deleteMany({
+                where: {
+                    userId: memberToRemove,
+                    expenseId: { in: memberExpenses.map((e) => e.id) },
+                },
+            });
+
             await prisma.groupMember.deleteMany({
                 where: {
                     groupId: id,
@@ -305,6 +407,15 @@ export const PATCH: UpdateGroupHandler = async (req, context) => {
         }
 
         if (expensesToAdd) {
+            const effectiveMemberIds = new Set(
+                group.members.map((m) => m.userId),
+            );
+
+            if (memberToRemove) effectiveMemberIds.delete(memberToRemove);
+            if (membersToAdd) {
+                membersToAdd.forEach((userId) => effectiveMemberIds.add(userId));
+            }
+
             const expenses = await prisma.expense.findMany({
                 where: {
                     id: { in: expensesToAdd },
@@ -326,16 +437,11 @@ export const PATCH: UpdateGroupHandler = async (req, context) => {
             });
 
             for (const expense of expenses) {
-                const participantIds = expense.participants.map((p) => ({
-                    id: p.userId,
-                }));
-
-                const { haveDifferences, differences } = compareMembers(
-                    participantIds,
-                    group.members,
+                const excessParticipants = expense.participants.filter(
+                    (p) => !effectiveMemberIds.has(p.userId),
                 );
 
-                if (haveDifferences && differences.excessParticipants.length > 0) {
+                if (excessParticipants.length > 0) {
                     return NextResponse.json(
                         {
                             success: false,
@@ -344,7 +450,7 @@ export const PATCH: UpdateGroupHandler = async (req, context) => {
                                 message: [
                                     `Los participantes del gasto "${expense.name}" deben ser miembros del grupo.`,
                                 ],
-                                details: differences,
+                                details: { excessParticipants },
                                 statusCode: 400,
                             },
                         },
@@ -364,6 +470,24 @@ export const PATCH: UpdateGroupHandler = async (req, context) => {
         }
 
         if (expenseToRemove) {
+            const targetExpense = group.expenses.find(
+                (e) => e.id === expenseToRemove,
+            );
+
+            if (!targetExpense) {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        error: {
+                            code: API_RESPONSE_CODE.NOT_FOUND,
+                            message: ["El gasto no pertenece a este grupo."],
+                            statusCode: 404,
+                        },
+                    },
+                    { status: 404 },
+                );
+            }
+
             await prisma.expense.update({
                 where: { id: expenseToRemove },
                 data: { groupId: null },

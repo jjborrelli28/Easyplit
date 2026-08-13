@@ -80,6 +80,20 @@ export const POST: CreateExpenseHandler = async (req) => {
       groupId,
     } = res.data;
 
+    if (!participantIds.includes(paidById)) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: {
+            code: API_RESPONSE_CODE.INVALID_FIELD,
+            message: ["El pagador debe ser uno de los participantes del gasto."],
+            statusCode: 400,
+          },
+        },
+        { status: 400 },
+      );
+    }
+
     if (groupId) {
       const group = await prisma.group.findUnique({
         where: { id: groupId },
