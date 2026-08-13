@@ -284,11 +284,11 @@ const UserSearchEngine = ({
                 )}
               />
               <p>
-                Agregar{" "}
+                Invitar a{" "}
                 <span className="text-primary">
                   &quot;{debouncedQuery}&quot;{" "}
                 </span>
-                e invitarlo/a a unirse a Easyplit
+                por email
               </p>
             </>
           ) : (

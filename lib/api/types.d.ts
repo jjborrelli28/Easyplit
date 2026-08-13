@@ -77,10 +77,23 @@ export interface User {
     isDraft?: boolean;
 }
 
-export interface CreateVirtualUserFields {
+export interface InviteUserFields {
     name?: string;
     email?: string;
     context?: string;
+}
+
+export interface PendingInvitation {
+    id: string;
+    name: string | null;
+    contactEmail: string | null;
+    inviter: {
+        id: string;
+        name: string | null;
+        image: string | null;
+    };
+    groups: { id: string; name: string }[];
+    expenses: { id: string; name: string }[];
 }
 
 export interface UpdateUserFields {

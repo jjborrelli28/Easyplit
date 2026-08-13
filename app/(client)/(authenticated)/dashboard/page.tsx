@@ -7,6 +7,7 @@ import { useSession } from "next-auth/react";
 import ActionModal, { ACTION_TYPE } from "@/components/ActionModal";
 import Button from "@/components/Button";
 import PageContainer from "@/components/PageContainer";
+import PendingInvitations from "@/components/PendingInvitations";
 import ExpenseAndGroupList from "./_components/GroupAndExpenseList";
 
 const DashboardPage = () => {
@@ -35,6 +36,8 @@ const DashboardPage = () => {
             <h1 className="text-3xl font-bold">Panel de control</h1>
 
             <hr className="border-h-background" />
+
+            <PendingInvitations />
 
             <section className="flex gap-x-4">
               <Button onClick={handleCreateExpense} className="w-32 max-w-none">

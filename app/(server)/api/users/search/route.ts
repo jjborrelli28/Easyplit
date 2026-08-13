@@ -56,9 +56,14 @@ export const GET: GetSearchUsersHandler = async (req) => {
                 AND: [
                     {
                         OR: [
-                            // Real users: match by email or name
+                            // Real users: only people already in my contact
+                            // network (shared a group/expense before), matched
+                            // by email or name. Never search the whole User
+                            // table, or this becomes an account-enumeration
+                            // oracle.
                             {
                                 isVirtual: false,
+                                contactsReceived: { some: { userId } },
                                 OR: [
                                     { email: { contains: q, mode: "insensitive" } },
                                     { name: { contains: q, mode: "insensitive" } },

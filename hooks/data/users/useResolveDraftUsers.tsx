@@ -2,7 +2,7 @@ import { useCallback } from "react";
 
 import type { User } from "@/lib/api/types";
 
-import useCreateVirtualUser from "./useCreateVirtualUser";
+import useInviteUser from "./useInviteUser";
 
 interface ResolveDraftUsersResult {
     resolvedUsers: User[];
@@ -10,7 +10,7 @@ interface ResolveDraftUsersResult {
 }
 
 const useResolveDraftUsers = () => {
-    const { mutateAsync: createVirtualUser } = useCreateVirtualUser();
+    const { mutateAsync: inviteUser } = useInviteUser();
 
     const resolveDraftUsers = useCallback(
         async (
@@ -23,21 +23,21 @@ const useResolveDraftUsers = () => {
                 users.map(async (candidate) => {
                     if (!candidate.isDraft) return candidate;
 
-                    const createdUser = await createVirtualUser({
+                    const resolvedUser = await inviteUser({
                         name: candidate.name ?? "",
                         email: candidate.email ?? undefined,
                         context,
                     });
 
-                    idMap.set(candidate.id, createdUser.id);
+                    idMap.set(candidate.id, resolvedUser.id);
 
-                    return createdUser;
+                    return resolvedUser;
                 }),
             );
 
             return { resolvedUsers, idMap };
         },
-        [createVirtualUser],
+        [inviteUser],
     );
 
     return resolveDraftUsers;

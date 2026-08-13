@@ -10,6 +10,7 @@ import type {
   SuccessResponse,
 } from "@/lib/api/types";
 import AuthOptions from "@/lib/auth/options";
+import { upsertContactsForRealUserIds } from "@/lib/contacts/helpers";
 import prisma from "@/lib/prisma";
 import { compareMembers } from "@/lib/utils";
 import { parseZodErrors } from "@/lib/validations/helpers";
@@ -183,6 +184,12 @@ export const POST: CreateExpenseHandler = async (req) => {
         },
       },
     });
+
+    try {
+      await upsertContactsForRealUserIds([...participantIds, paidById]);
+    } catch (error) {
+      console.error("Failed to upsert contacts for expense creation", error);
+    }
 
     return NextResponse.json({
       success: true,

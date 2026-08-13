@@ -128,6 +128,100 @@ export const sendVirtualUserInvitationEmail = async ({
     }
 };
 
+interface SendAddedToGroupOrExpenseEmailParams {
+    to: string;
+    inviterName: string;
+    context?: string;
+}
+
+export const sendAddedToGroupOrExpenseEmail = async ({
+    to,
+    inviterName,
+    context,
+}: SendAddedToGroupOrExpenseEmailParams) => {
+    const safeInviterName = escapeHtml(inviterName);
+    const safeContext = context ? escapeHtml(context) : null;
+    const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL}/login`;
+
+    const { html, text } = renderEmailTemplate({
+        previewText: `${safeInviterName} te agregó en Easyplit.`,
+        heading: "Te agregaron a algo en Easyplit",
+        paragraphs: [
+            `<strong>${safeInviterName}</strong> te agregó${
+                safeContext ? ` a <strong>"${safeContext}"</strong>` : ""
+            } en Easyplit.`,
+            "Iniciá sesión con tu cuenta para ver el detalle.",
+        ],
+        ctaLabel: "Iniciar sesión",
+        ctaUrl: loginUrl,
+        footerNote: "Si no esperabas este correo, podés ignorarlo.",
+    });
+
+    const options: SendMailOptions = {
+        to,
+        subject: `${inviterName} te agregó en Easyplit`,
+        html,
+        text,
+    };
+
+    try {
+        await sendMail(options);
+    } catch (error) {
+        console.error(error);
+
+        throw new Error(
+            "Error al intentar enviar el correo de notificación de Easyplit.",
+        );
+    }
+};
+
+interface SendPendingInvitationEmailParams {
+    to: string;
+    inviterName: string;
+    context?: string;
+}
+
+export const sendPendingInvitationEmail = async ({
+    to,
+    inviterName,
+    context,
+}: SendPendingInvitationEmailParams) => {
+    const safeInviterName = escapeHtml(inviterName);
+    const safeContext = context ? escapeHtml(context) : null;
+    const loginUrl = `${process.env.NEXT_PUBLIC_APP_URL}/login`;
+
+    const { html, text } = renderEmailTemplate({
+        previewText: `${safeInviterName} te invitó en Easyplit.`,
+        heading: "Tenés una invitación en Easyplit",
+        paragraphs: [
+            `<strong>${safeInviterName}</strong> quiere agregarte${
+                safeContext ? ` a <strong>"${safeContext}"</strong>` : ""
+            } en Easyplit.`,
+            "Iniciá sesión para aceptar o rechazar la invitación.",
+        ],
+        ctaLabel: "Iniciar sesión",
+        ctaUrl: loginUrl,
+        footerNote: "Si no esperabas este correo, podés ignorarlo.",
+    });
+
+    const options: SendMailOptions = {
+        to,
+        subject: `${inviterName} te invitó en Easyplit`,
+        html,
+        text,
+    };
+
+    try {
+        await sendMail(options);
+    } catch (error) {
+        console.error(error);
+
+        throw new Error(
+            "Error al intentar enviar el correo de invitación pendiente de Easyplit.",
+        );
+    }
+};
+
 export const parseNameForAvatar = (name: string) => {
     return name
         .trim()

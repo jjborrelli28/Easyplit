@@ -10,6 +10,7 @@ import type {
     SuccessResponse,
 } from "@/lib/api/types";
 import AuthOptions from "@/lib/auth/options";
+import { upsertContactsForRealUserIds } from "@/lib/contacts/helpers";
 import prisma from "@/lib/prisma";
 import {
     compareMembers,
@@ -327,6 +328,16 @@ export const PATCH: UpdateExpenseHandler = async (req, context) => {
                 })),
                 skipDuplicates: true,
             });
+
+            try {
+                await upsertContactsForRealUserIds([
+                    ...expense.participants.map((p) => p.userId),
+                    ...participantsToAdd,
+                    expense.paidById,
+                ]);
+            } catch (error) {
+                console.error("Failed to upsert contacts for expense update", error);
+            }
         }
 
         if (participantPayment) {

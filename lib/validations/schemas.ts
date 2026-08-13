@@ -134,7 +134,7 @@ export const userSchema = z.object({
     isVirtual: z.boolean().optional(),
 });
 
-export const createVirtualUserSchema = z.object({
+export const inviteUserSchema = z.object({
     name: z
         .string({
             required_error: "El nombre es obligatorio.",

@@ -84,7 +84,11 @@ const UserPicker = ({
     const displayName = u.id === user.id ? "Tu" : u.name;
 
     return (
-      <Tooltip key={u.id} color="info" content={tooltipContent}>
+      <Tooltip
+        key={u.id}
+        color={isVirtual ? "secondary" : "info"}
+        content={tooltipContent}
+      >
         <Badge
           color={badgeColor}
           leftItem={

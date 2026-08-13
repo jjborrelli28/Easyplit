@@ -16,6 +16,7 @@ import {
     parseNameForAvatar,
     sendVerificationEmail,
 } from "@/lib/auth/helpers";
+import { syncContactsForUser } from "@/lib/contacts/helpers";
 import prisma from "@/lib/prisma";
 import verifyRecaptcha from "@/lib/recaptcha";
 import { parseZodErrors } from "@/lib/validations/helpers";
@@ -110,6 +111,15 @@ export const POST: RegisterHandler = async (req: Request) => {
 
                     return updated;
                 });
+
+                try {
+                    await syncContactsForUser(user.id);
+                } catch (error) {
+                    console.error(
+                        "Failed to sync contacts for newly registered user",
+                        error,
+                    );
+                }
 
                 await sendVerificationEmail(email, verifyToken);
 

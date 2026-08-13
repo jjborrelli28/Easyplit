@@ -64,8 +64,53 @@ model User {
   sessions           Session[]
   virtualCreatedBy   User?                @relation("VirtualUserCreatedBy", fields: [virtualCreatedById], references: [id])
   virtualUsers       User[]               @relation("VirtualUserCreatedBy")
+  contactsInitiated  Contact[]            @relation("ContactOwner")
+  contactsReceived   Contact[]            @relation("ContactTarget")
+  rateLimitAttempts  RateLimitAttempt[]
+  /// Real account this (virtual) placeholder is waiting to be confirmed by.
+  /// Set the first time a real user is invited by someone who isn't already
+  /// their contact; cleared on reject, cleared implicitly (row deleted) on
+  /// accept via mergeVirtualUserInto.
+  pendingRealUserId  String?              @map("pending_real_user_id")
+  pendingRealUser    User?                @relation("PendingRealUser", fields: [pendingRealUserId], references: [id])
+  pendingInvitees    User[]               @relation("PendingRealUser")
 
   @@unique([contactEmail, virtualCreatedById])
+  @@index([pendingRealUserId])
+}
+
+/// Persistent record that two real users have shared a group or expense at
+/// least once. Kept even if that group/expense is later deleted, so past
+/// collaborators stay discoverable in search. Stored as two directed rows
+/// (A->B and B->A) instead of one symmetric row so the hot-path query (search
+/// autocomplete, fired on every keystroke) is a plain `userId` filter.
+model Contact {
+  id            String   @id @default(cuid())
+  userId        String   @map("user_id")
+  contactUserId String   @map("contact_user_id")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  user        User @relation("ContactOwner", fields: [userId], references: [id], onDelete: Cascade)
+  contactUser User @relation("ContactTarget", fields: [contactUserId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, contactUserId])
+  @@index([contactUserId])
+  @@map("contacts")
+}
+
+/// Simple DB-backed rate limiting (no Redis in this project). Has a known
+/// count-then-create race under high concurrency; acceptable as
+/// defense-in-depth, not a hard limit.
+model RateLimitAttempt {
+  id        String   @id @default(cuid())
+  actorId   String   @map("actor_id")
+  action    String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  actor User @relation(fields: [actorId], references: [id], onDelete: Cascade)
+
+  @@index([actorId, action, createdAt])
+  @@map("rate_limit_attempts")
 }
 
 model VerificationToken {

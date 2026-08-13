@@ -10,6 +10,7 @@ import type {
     SuccessResponse,
 } from "@/lib/api/types";
 import AuthOptions from "@/lib/auth/options";
+import { upsertContactsForRealUserIds } from "@/lib/contacts/helpers";
 import prisma from "@/lib/prisma";
 import {
     compareMembers,
@@ -292,6 +293,15 @@ export const PATCH: UpdateGroupHandler = async (req, context) => {
                 })),
                 skipDuplicates: true,
             });
+
+            try {
+                await upsertContactsForRealUserIds([
+                    ...group.members.map((m) => m.userId),
+                    ...membersToAdd,
+                ]);
+            } catch (error) {
+                console.error("Failed to upsert contacts for group update", error);
+            }
         }
 
         if (expensesToAdd) {

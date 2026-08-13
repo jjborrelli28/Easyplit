@@ -10,6 +10,7 @@ import type {
   SuccessResponse
 } from "@/lib/api/types";
 import AuthOptions from "@/lib/auth/options";
+import { upsertContactsForRealUserIds } from "@/lib/contacts/helpers";
 import prisma from "@/lib/prisma";
 import { parseZodErrors } from "@/lib/validations/helpers";
 import { createGroupSchema } from "@/lib/validations/schemas";
@@ -99,6 +100,12 @@ export const POST: CreateGroupHandler = async (req) => {
         },
       },
     });
+
+    try {
+      await upsertContactsForRealUserIds(memberIds);
+    } catch (error) {
+      console.error("Failed to upsert contacts for group creation", error);
+    }
 
     return NextResponse.json({
       success: true,
