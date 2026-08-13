@@ -69,10 +69,18 @@ export const GET: GetSearchUsersHandler = async (req) => {
                                     { name: { contains: q, mode: "insensitive" } },
                                 ],
                             },
-                            // Virtual users created by the current user: match by name or contact email
+                            // Virtual users created by the current user: match
+                            // by name or contact email. Excludes placeholders
+                            // linked to a real account (pendingRealUserId set)
+                            // — those must always be re-resolved through
+                            // POST /api/invite (even after being rejected),
+                            // never picked directly from a search result, or
+                            // the invitation/consent flow gets silently
+                            // bypassed.
                             {
                                 isVirtual: true,
                                 virtualCreatedById: userId,
+                                pendingRealUserId: null,
                                 OR: [
                                     { name: { contains: q, mode: "insensitive" } },
                                     { contactEmail: { contains: q, mode: "insensitive" } },

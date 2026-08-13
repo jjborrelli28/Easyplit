@@ -148,7 +148,10 @@ export const POST: InviteUserHandler = async (req) => {
                                 virtualCreatedById: creatorId,
                             },
                         },
-                        update: { pendingRealUserId: realUser.id },
+                        update: {
+                            pendingRealUserId: realUser.id,
+                            contactRejected: false,
+                        },
                         create: {
                             name,
                             contactEmail: email,

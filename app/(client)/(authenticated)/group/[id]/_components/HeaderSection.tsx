@@ -182,7 +182,7 @@ const HeaderSection = ({ group, loggedUser }: HeaderSectionProps) => {
                   variant="outlined"
                   className="mt-4 mb-4 xl:mb-0"
                 >
-                  Añadir miembro/s
+                  Añadir miembros
                 </Button>
               )}
             </div>

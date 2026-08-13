@@ -38,7 +38,11 @@ export const GET: GetPendingInvitationsHandler = async () => {
         }
 
         const placeholders = await prisma.user.findMany({
-            where: { isVirtual: true, pendingRealUserId: userId },
+            where: {
+                isVirtual: true,
+                pendingRealUserId: userId,
+                contactRejected: false,
+            },
             include: {
                 virtualCreatedBy: { select: { id: true, name: true, image: true } },
                 GroupMember: { include: { group: { select: { id: true, name: true } } } },

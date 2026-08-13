@@ -99,7 +99,7 @@ const BalanceSection = ({ expense, loggedUser }: BalanceSectionProps) => {
               color="secondary"
               variant="outlined"
             >
-              Añadir participante/s
+              Añadir participantes
             </Button>
           </div>
         )}

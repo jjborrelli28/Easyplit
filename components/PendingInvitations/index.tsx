@@ -10,6 +10,7 @@ import { Check, CircleChevronDown, X } from "lucide-react";
 import useAcceptInvitation from "@/hooks/data/invitations/useAcceptInvitation";
 import useGetMyInvitations from "@/hooks/data/invitations/useGetMyInvitations";
 import useRejectInvitation from "@/hooks/data/invitations/useRejectInvitation";
+import useSnackbar from "@/hooks/useSnackbar";
 
 import Button from "../Button";
 import Collapse from "../Collapse";
@@ -31,15 +32,22 @@ const describeContext = (
   return `Quiere agregarte a ${names.length} gastos/grupos`;
 };
 
+interface ProcessingInvitation {
+  id: string;
+  action: "accept" | "reject";
+}
+
 const PendingInvitations = () => {
   const { data: invitations = [] } = useGetMyInvitations();
-  const { mutate: acceptInvitation, isPending: isAccepting } =
-    useAcceptInvitation();
-  const { mutate: rejectInvitation, isPending: isRejecting } =
-    useRejectInvitation();
+  const { mutate: acceptInvitation } = useAcceptInvitation();
+  const { mutate: rejectInvitation } = useRejectInvitation();
+  const { showSnackbar } = useSnackbar();
   const queryClient = useQueryClient();
 
   const [listIsOpen, setListIsOpen] = useState(true);
+  const [processing, setProcessing] = useState<ProcessingInvitation | null>(
+    null,
+  );
 
   const virtualizer = useWindowVirtualizer({
     count: invitations.length > 0 ? invitations.length : 1,
@@ -57,19 +65,35 @@ const PendingInvitations = () => {
   };
 
   const handleAccept = (id: string) => {
+    setProcessing({ id, action: "accept" });
+
     acceptInvitation(id, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["my-invitations"] });
         queryClient.invalidateQueries({ queryKey: ["my-expenses-and-groups"] });
+
+        showSnackbar("Solicitud de contacto aceptada", { color: "success" });
       },
+      onError: () => {
+        showSnackbar("No se pudo aceptar la solicitud", { color: "danger" });
+      },
+      onSettled: () => setProcessing(null),
     });
   };
 
   const handleReject = (id: string) => {
+    setProcessing({ id, action: "reject" });
+
     rejectInvitation(id, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["my-invitations"] });
+
+        showSnackbar("Solicitud de contacto rechazada", { color: "success" });
       },
+      onError: () => {
+        showSnackbar("No se pudo rechazar la solicitud", { color: "danger" });
+      },
+      onSettled: () => setProcessing(null),
     });
   };
 
@@ -141,7 +165,10 @@ const PendingInvitations = () => {
                         <Button
                           color="success"
                           onClick={() => handleAccept(item.id)}
-                          loading={isAccepting}
+                          loading={
+                            processing?.id === item.id &&
+                            processing.action === "accept"
+                          }
                           className="w-32 max-w-full justify-start"
                         >
                           <Check className="h-4 w-4 stroke-3" /> Aceptar
@@ -150,7 +177,10 @@ const PendingInvitations = () => {
                         <Button
                           color="danger"
                           onClick={() => handleReject(item.id)}
-                          loading={isRejecting}
+                          loading={
+                            processing?.id === item.id &&
+                            processing.action === "reject"
+                          }
                           className="w-32"
                         >
                           <X className="h-4 w-4 min-w-4 stroke-3" /> Rechazar

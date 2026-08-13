@@ -8,8 +8,10 @@ import AuthOptions from "@/lib/auth/options";
 import prisma from "@/lib/prisma";
 
 // Reject a pending invitation: the placeholder stays exactly as it is
-// (still in whatever groups/expenses it was added to), just no longer
-// linked to this real account, so no contact ever forms.
+// (still in whatever groups/expenses it was added to, still linked via
+// pendingRealUserId so it never resurfaces as a directly-selectable search
+// result), just flagged as rejected, so no contact ever forms unless the
+// inviter explicitly re-invites this email through POST /api/invite.
 type RejectInvitationHandler = (
     req: Request,
     context: { params: Promise<{ id: string }> },
@@ -54,7 +56,7 @@ export const POST: RejectInvitationHandler = async (req, context) => {
 
         await prisma.user.update({
             where: { id },
-            data: { pendingRealUserId: null },
+            data: { contactRejected: true },
         });
 
         return NextResponse.json({

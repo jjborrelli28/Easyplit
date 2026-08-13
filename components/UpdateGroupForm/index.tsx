@@ -48,9 +48,9 @@ import UserSearchEngine from "../UserSearchEngine";
 const modalTitles = {
   name: "Modificar nombre del grupo",
   type: "Modificar tipo de grupo",
-  membersToAdd: "Agregar miembro/s",
+  membersToAdd: "Agregar miembros",
   memberToRemove: "Eliminar miembro",
-  expensesToAdd: "Agregar gasto/s",
+  expensesToAdd: "Agregar gastos",
   expenseToRemove: "Eliminar gasto",
   default: "Modificar datos del grupo",
 };
@@ -58,9 +58,9 @@ const modalTitles = {
 const buttonLabels = {
   name: "Aplicar cambios",
   type: "Aplicar cambios",
-  membersToAdd: "Agregar miembro/s",
+  membersToAdd: "Agregar miembros",
   memberToRemove: "Eliminar miembro",
-  expensesToAdd: "Agregar gasto/s",
+  expensesToAdd: "Agregar gastos",
   expenseToRemove: "Eliminar gasto",
   default: "Aplicar cambios",
 };

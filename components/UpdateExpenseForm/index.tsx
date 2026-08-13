@@ -56,7 +56,7 @@ const modalTitles = {
   paidById: "Modificar quién pagó",
   paymentDate: "Modificar fecha de pago",
   paymentData: "Modificar datos del pago",
-  participantsToAdd: "Agregar participante/s",
+  participantsToAdd: "Agregar participantes",
   participantToRemove: "Eliminar participante",
   groupId: "Asignar gasto a un grupo",
   default: "Modificar datos del gasto",
@@ -70,7 +70,7 @@ const buttonLabels = {
   paidById: "Aplicar cambios",
   paymentDate: "Aplicar cambios",
   paymentData: "Aplicar cambios",
-  participantsToAdd: "Agregar participante/s",
+  participantsToAdd: "Agregar participantes",
   participantToRemove: "Eliminar participante",
   groupId: "Agregar a grupo",
   default: "Aplicar cambios",
@@ -105,8 +105,7 @@ const UpdateExpenseForm = ({
   const [newParticipants, setNewParticipants] = useState<User[]>([]);
   const [message, setMessage] = useState<ResponseMessage | null>(null);
   const [isSendeable, setIsSendeable] = useState(false);
-  const [isResolvingParticipants, setIsResolvingParticipants] =
-    useState(false);
+  const [isResolvingParticipants, setIsResolvingParticipants] = useState(false);
 
   const editName = fieldsToUpdate.includes("name");
   const editType = fieldsToUpdate.includes("type");
@@ -180,8 +179,7 @@ const UpdateExpenseForm = ({
       }),
     },
     onSubmit: async ({ value }) => {
-      const { paidById, paymentDate, participantsToAdd, ...restFields } =
-        value;
+      const { paidById, paymentDate, participantsToAdd, ...restFields } = value;
 
       let resolvedParticipantsToAdd = participantsToAdd;
 
