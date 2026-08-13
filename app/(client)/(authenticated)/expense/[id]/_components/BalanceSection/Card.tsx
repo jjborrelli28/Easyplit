@@ -53,7 +53,11 @@ export const Card = ({
   const isUserEditor =
     loggedUser?.id === expense?.createdById ||
     loggedUser?.id === expense?.paidById;
-  const hasACreditBalance = !isPayer && personalBalance < 0;
+  // Rounded to cents, not the raw balance: splitting an amount that doesn't
+  // divide evenly (e.g. $5000 / 3) leaves a sub-cent residual between the
+  // exact share and the nearest-cent suggested settle amount, which must
+  // never read as a real over/underpayment.
+  const hasACreditBalance = !isPayer && Math.round(personalBalance * 100) < 0;
   const showSettleButton =
     !hasACreditBalance &&
     !allDebtsSettled &&

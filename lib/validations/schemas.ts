@@ -67,6 +67,9 @@ const amount = z
     })
     .max(100_000_000, {
         message: "El monto no puede ser mayor a $100.000.000",
+    })
+    .multipleOf(0.01, {
+        message: "El monto no puede tener más de 2 decimales.",
     });
 const participantPayment = z
     .object({

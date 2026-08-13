@@ -54,7 +54,7 @@ export const getPersonalBalance = (
 };
 
 export const getPositiveTruncatedNumber = (number: number) =>
-    Math.floor(Math.abs(number) * 100) / 100;
+    Math.round(Math.abs(number) * 100) / 100;
 
 export const compareMembers = (
     participants?: { id: string }[],
@@ -133,9 +133,7 @@ export const areAllDebtsSettled = (expense: Expense) => {
                 expense.participants.length,
             );
 
-            const roundedBalance = Math.floor(personalBalance * 100) / 100;
-
-            return roundedBalance <= 0;
+            return Math.round(personalBalance * 100) <= 0;
         });
 };
 
@@ -151,9 +149,7 @@ export const isExpenseComplete = (
                 expense.participants.length,
             );
 
-            const roundedBalance = Math.floor(personalBalance * 100) / 100;
-
-            return roundedBalance <= 0;
+            return Math.round(personalBalance * 100) <= 0;
         });
 };
 
@@ -463,7 +459,14 @@ export const simplifyDebts: (balances: UserBalance[]) => SimplifiedDebt[] = (
         const debtor = debtors[i];
         const creditor = creditors[j];
 
-        const amount = Math.min(-debtor.balance, creditor.balance);
+        // Keep the running balances unrounded (avoids losing precision across
+        // iterations), but only round-and-emit at the point where a value is
+        // actually shown/transferred, and only treat a balance as settled once
+        // it rounds to exactly $0 — otherwise sub-cent float noise (e.g. from
+        // dividing an expense unevenly) can either fabricate a phantom
+        // fraction-of-a-cent transaction or stop the loop from advancing.
+        const rawAmount = Math.min(-debtor.balance, creditor.balance);
+        const amount = Math.round(rawAmount * 100) / 100;
 
         if (amount > 0) {
             transactions.push({
@@ -471,13 +474,13 @@ export const simplifyDebts: (balances: UserBalance[]) => SimplifiedDebt[] = (
                 to: creditor,
                 amount,
             });
-
-            debtor.balance += amount;
-            creditor.balance -= amount;
         }
 
-        if (debtor.balance === 0) i++;
-        if (creditor.balance === 0) j++;
+        debtor.balance += rawAmount;
+        creditor.balance -= rawAmount;
+
+        if (Math.round(debtor.balance * 100) === 0) i++;
+        if (Math.round(creditor.balance * 100) === 0) j++;
     }
 
     return transactions;
