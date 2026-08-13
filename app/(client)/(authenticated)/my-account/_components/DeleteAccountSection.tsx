@@ -30,6 +30,10 @@ const DeleteAccountSection = ({ user }: DeleteAccountSectionProps) => {
 
   const [modalIsOpen, setModalIsOpen] = useState(false);
   const [message, setMessage] = useState<ResponseMessage | null>(null);
+  // Accounts without a password (Google) skip the password field, so typing
+  // the account's own email back is what stands in as the deliberate
+  // confirmation step before enabling the delete button.
+  const [emailConfirmation, setEmailConfirmation] = useState("");
 
   const form = useForm<
     DeleteUserFields,
@@ -50,6 +54,7 @@ const DeleteAccountSection = ({ user }: DeleteAccountSectionProps) => {
       deleteUser(value, {
         onSuccess: (res) => {
           form.reset();
+          setEmailConfirmation("");
 
           res?.message && setMessage(res.message);
         },
@@ -72,7 +77,13 @@ const DeleteAccountSection = ({ user }: DeleteAccountSectionProps) => {
   const handleCloseModal = () => {
     setModalIsOpen(false);
     form.reset();
+    setEmailConfirmation("");
   };
+
+  const emailConfirmed =
+    user.hasPassword ||
+    (!!user.email &&
+      emailConfirmation.trim().toLowerCase() === user.email.toLowerCase());
 
   return (
     <>
@@ -134,10 +145,10 @@ const DeleteAccountSection = ({ user }: DeleteAccountSectionProps) => {
                 </p>
               </div>
 
-              <p>
+              <p className="text-sm">
                 {user.hasPassword
                   ? "Para confirmar la eliminación de tu cuenta, ingresá tu contraseña actual:"
-                  : "¿Estás seguro de que querés continuar?"}
+                  : `Para confirmar, escribí tu email (${user.email}):`}
               </p>
             </div>
 
@@ -180,12 +191,27 @@ const DeleteAccountSection = ({ user }: DeleteAccountSectionProps) => {
                 </form.Field>
               )}
 
+              {!user.hasPassword && (
+                <Input
+                  id="email-confirmation"
+                  type="email"
+                  label="Email"
+                  placeholder={user.email ?? ""}
+                  value={emailConfirmation}
+                  onChange={(e) => setEmailConfirmation(e.target.value)}
+                  autoComplete="off"
+                  required
+                  containerClassName="!pt-4"
+                />
+              )}
+
               <div className="flex flex-col">
                 <div className="flex flex-col gap-y-4">
                   <Button
                     type="submit"
                     color="danger"
                     loading={isPending}
+                    disabled={!emailConfirmed}
                     fullWidth
                   >
                     Eliminar cuenta

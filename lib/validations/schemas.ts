@@ -123,7 +123,9 @@ export const updateUserSchema = z.object({
 });
 
 export const deleteUserSchema = z.object({
-    password,
+    // Optional: accounts created via social login (Google) never set a
+    // password, so the client sends an empty string in that case.
+    password: z.union([z.literal(""), password]).optional(),
 });
 
 export const userSchema = z.object({

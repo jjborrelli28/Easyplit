@@ -317,7 +317,9 @@ export const DELETE: DeleteUserHandler = async (req, context) => {
         }
 
         if (user?.password) {
-            const validUser = await compare(password, user.password);
+            const validUser = password
+                ? await compare(password, user.password)
+                : false;
 
             if (!validUser) {
                 return NextResponse.json(
@@ -332,28 +334,6 @@ export const DELETE: DeleteUserHandler = async (req, context) => {
                     { status: 400 },
                 );
             }
-        }
-
-        const groupsCount = await prisma.group.count({
-            where: {
-                createdById: id,
-            },
-        });
-
-        if (groupsCount > 0) {
-            return NextResponse.json(
-                {
-                    success: false,
-                    error: {
-                        code: API_RESPONSE_CODE.NO_CHANGES_PROVIDED,
-                        message: [
-                            "No se puede eliminar el usuario porque tiene grupos creados.",
-                        ],
-                        statusCode: 400,
-                    },
-                },
-                { status: 400 },
-            );
         }
 
         const expenses = await prisma.expense.findMany({
@@ -385,9 +365,35 @@ export const DELETE: DeleteUserHandler = async (req, context) => {
             );
         }
 
-        await prisma.user.delete({
-            where: { id },
-        });
+        // Never hard-delete a real account: ExpenseParticipant.user and
+        // GroupMember.user cascade-delete on User removal, which would
+        // silently drop this person from every shared expense/group and
+        // corrupt balance calculations for everyone else. Instead, downgrade
+        // this same row into a virtual-user placeholder (same mechanism used
+        // for people invited without an account) so every existing relation
+        // (ExpenseParticipant, GroupMember, Expense.paidBy/createdBy,
+        // Group.createdBy) keeps pointing at the same id, untouched. Name and
+        // image are preserved so the history stays legible to others; only
+        // login access is removed.
+        await prisma.$transaction([
+            prisma.session.deleteMany({ where: { userId: id } }),
+            prisma.account.deleteMany({ where: { userId: id } }),
+            prisma.user.update({
+                where: { id },
+                data: {
+                    isVirtual: true,
+                    email: null,
+                    password: null,
+                    emailVerified: null,
+                    verifyToken: null,
+                    verifyTokenExp: null,
+                    resetToken: null,
+                    resetTokenExp: null,
+                    virtualCreatedById: null,
+                    contactEmail: null,
+                },
+            }),
+        ]);
 
         return NextResponse.json({
             success: true,
