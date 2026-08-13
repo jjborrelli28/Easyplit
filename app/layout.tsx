@@ -5,6 +5,7 @@ import { Inter } from "next/font/google";
 
 import NextAuthProvider from "@/providers/NextAuthProvider";
 import QueryClientProvider from "@/providers/QueryClientProvider";
+import SnackbarProvider from "@/providers/SnackbarProvider";
 import ThemeProvider from "@/providers/ThemeProvider";
 
 import Header from "@/components/Header";
@@ -41,9 +42,11 @@ const RootLayout = async ({ children }: RootLayoutProps) => {
               enableSystem
               disableTransitionOnChange
             >
-              <Header />
+              <SnackbarProvider>
+                <Header />
 
-              {children}
+                {children}
+              </SnackbarProvider>
             </ThemeProvider>
           </NextAuthProvider>
         </QueryClientProvider>
