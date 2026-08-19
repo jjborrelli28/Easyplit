@@ -14,8 +14,6 @@ import { upsertContactsForRealUserIds } from "@/lib/contacts/helpers";
 import prisma from "@/lib/prisma";
 import {
     getParticipantIds,
-    getPersonalBalance,
-    getPositiveTruncatedNumber,
     getSuccessMessage,
     getUpdatedGroupFields,
 } from "@/lib/utils";
@@ -296,6 +294,38 @@ export const PATCH: UpdateGroupHandler = async (req, context) => {
             );
         }
 
+        // Only the group's creator can rename it or manage its members —
+        // mirrors `isUserEditor` in the client, which already hides these
+        // actions from any other member that `isAuthorized` above still lets
+        // in. Adding/removing an expense from the group stays open to any
+        // member, matching the existing (ungated) client behavior for those.
+        const isPrivilegedEditor = updatedById === group.createdById;
+
+        const isSelfRemoval =
+            memberToRemove !== undefined && memberToRemove === updatedById;
+
+        const touchesRestrictedFields =
+            name !== undefined ||
+            type !== undefined ||
+            membersToAdd !== undefined ||
+            (memberToRemove !== undefined && !isSelfRemoval);
+
+        if (touchesRestrictedFields && !isPrivilegedEditor) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: {
+                        code: API_RESPONSE_CODE.FORBIDDEN,
+                        message: [
+                            "Solo quien creó el grupo puede realizar esta acción.",
+                        ],
+                        statusCode: 403,
+                    },
+                },
+                { status: 403 },
+            );
+        }
+
         if (memberToRemove) {
             const memberExpenses = group.expenses.filter((e) =>
                 e.participants.some((p) => p.userId === memberToRemove),
@@ -321,38 +351,11 @@ export const PATCH: UpdateGroupHandler = async (req, context) => {
                 );
             }
 
-            const hasPendingBalance = memberExpenses.some((expense) => {
-                const participant = expense.participants.find(
-                    (p) => p.userId === memberToRemove,
-                );
-
-                if (!participant) return false;
-
-                const personalBalance = getPersonalBalance(
-                    participant.amount,
-                    expense.amount,
-                    expense.participants.length,
-                );
-
-                return getPositiveTruncatedNumber(personalBalance) !== 0;
-            });
-
-            if (hasPendingBalance) {
-                return NextResponse.json(
-                    {
-                        success: false,
-                        error: {
-                            code: API_RESPONSE_CODE.INVALID_FIELD,
-                            message: [
-                                "No se puede remover al miembro porque tiene un saldo pendiente en el grupo.",
-                            ],
-                            statusCode: 400,
-                        },
-                    },
-                    { status: 400 },
-                );
-            }
-
+            // Any real payment they already made on the group's expenses is
+            // assumed to be settled between people outside the app —
+            // removing them just redistributes each expense's total among
+            // whoever's left, so there's no balance-based restriction here
+            // beyond not being a payer and keeping each expense's minimum.
             const wouldEmptyExpense = memberExpenses.some(
                 (e) => e.participants.length <= 2,
             );

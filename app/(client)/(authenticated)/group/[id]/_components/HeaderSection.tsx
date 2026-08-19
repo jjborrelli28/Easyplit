@@ -145,7 +145,7 @@ const HeaderSection = ({ group, loggedUser }: HeaderSectionProps) => {
                         )
                       }
                       rightItem={
-                        isUserEditor &&
+                        (isUserEditor || member.userId === loggedUser.id) &&
                         group.members.length > 1 && (
                           <Button
                             type="button"

@@ -14,7 +14,7 @@ import { useForm } from "@tanstack/react-form";
 import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
 import { isEqual } from "date-fns";
-import { X } from "lucide-react";
+import { TriangleAlert, X } from "lucide-react";
 
 import useUpdateExpense from "@/hooks/data/expense/useUpdateExpense";
 import useResolveDraftUsers from "@/hooks/data/users/useResolveDraftUsers";
@@ -32,6 +32,7 @@ import { updateExpenseSchema } from "@/lib/validations/schemas";
 
 import { getParticipantOptions } from "../ActionModal";
 import AmountInput from "../AmountInput";
+import AmountNumber from "../AmountNumber";
 import Badge from "../Badge";
 import Button from "../Button";
 import Collapse from "../Collapse";
@@ -301,6 +302,11 @@ const UpdateExpenseForm = ({
     ...participants.map((p) => p.name),
     ...newParticipants.map((p) => p.name),
   ];
+  const removeParticipantAmount = expense.participants.find(
+    (p) => p.userId === selectedParticipant?.id,
+  )?.amount;
+  const isSelfRemoval =
+    !!removeParticipant && selectedParticipant.id === user.id;
 
   return (
     <Modal
@@ -311,7 +317,9 @@ const UpdateExpenseForm = ({
           ? editPaymentData
             ? modalTitles.paymentData
             : modalTitles.default
-          : modalTitles[fieldsToUpdate[0]]
+          : isSelfRemoval
+            ? "Salir del gasto"
+            : modalTitles[fieldsToUpdate[0]]
       }
       className="!gap-y-4 lg:!gap-y-8"
     >
@@ -473,11 +481,41 @@ const UpdateExpenseForm = ({
           )}
 
           {removeParticipant && (
-            <p>
-              ¿Estas seguro que deseas eliminar a{" "}
-              <span className="text-semibold">{selectedParticipant.name}</span>{" "}
-              del gasto?
-            </p>
+            <div className="flex flex-col gap-y-4">
+              <p>
+                {isSelfRemoval ? (
+                  "¿Estas seguro que deseas salir de este gasto?"
+                ) : (
+                  <>
+                    ¿Estas seguro que deseas eliminar a{" "}
+                    <span className="text-semibold">
+                      {selectedParticipant.name}
+                    </span>{" "}
+                    del gasto?
+                  </>
+                )}
+              </p>
+
+              {!!removeParticipantAmount && (
+                <div className="border-warning text-warning flex items-center gap-x-3 border p-3">
+                  <TriangleAlert className="mt-0.5 h-5 w-5 flex-shrink-0" />
+
+                  <p className="border-warning border-l pl-3 text-xs">
+                    {isSelfRemoval
+                      ? "Ya pagaste"
+                      : `${selectedParticipant.name} ya pagó`}{" "}
+                    <AmountNumber size="xs">
+                      {removeParticipantAmount}
+                    </AmountNumber>{" "}
+                    en este gasto. Esa devolución queda a resolver
+                    {isSelfRemoval ? " con el resto" : " entre ustedes"} por
+                    fuera de la app — al{" "}
+                    {isSelfRemoval ? "salir" : "eliminarlo"}, el saldo del resto
+                    de los participantes se recalcula entre quienes queden.
+                  </p>
+                </div>
+              )}
+            </div>
           )}
 
           {editPaidById && (
@@ -655,7 +693,9 @@ const UpdateExpenseForm = ({
               ? editPaymentData
                 ? buttonLabels.paymentData
                 : buttonLabels.default
-              : buttonLabels[fieldsToUpdate[0]]}
+              : isSelfRemoval
+                ? "Salir del gasto"
+                : buttonLabels[fieldsToUpdate[0]]}
           </Button>
 
           <form.Subscribe selector={(state) => [state.errorMap]}>

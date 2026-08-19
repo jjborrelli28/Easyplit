@@ -15,8 +15,6 @@ import prisma from "@/lib/prisma";
 import {
     compareMembers,
     getParticipantIds,
-    getPersonalBalance,
-    getPositiveTruncatedNumber,
     getSuccessMessage,
     getUpdatedExpenseFields,
 } from "@/lib/utils";
@@ -286,6 +284,65 @@ export const PATCH: UpdateExpenseHandler = async (req, context) => {
             );
         }
 
+        // Only the expense's creator or payer can touch anything beyond
+        // settling a debt or removing yourself — mirrors `isUserEditor` in
+        // the client, which already hides these actions from any other
+        // participant/group member that the broader `isAuthorized` check
+        // above still lets in.
+        const isPrivilegedEditor =
+            updatedById === expense.createdById ||
+            updatedById === expense.paidById;
+
+        const isSelfRemoval =
+            participantToRemove !== undefined &&
+            participantToRemove === updatedById;
+
+        const touchesRestrictedFields =
+            name !== undefined ||
+            type !== undefined ||
+            amount !== undefined ||
+            paidById !== undefined ||
+            paymentDate !== undefined ||
+            groupId !== undefined ||
+            participantsToAdd !== undefined ||
+            (participantToRemove !== undefined && !isSelfRemoval);
+
+        if (touchesRestrictedFields && !isPrivilegedEditor) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: {
+                        code: API_RESPONSE_CODE.FORBIDDEN,
+                        message: [
+                            "Solo quien creó el gasto o lo pagó puede realizar esta acción.",
+                        ],
+                        statusCode: 403,
+                    },
+                },
+                { status: 403 },
+            );
+        }
+
+        // Settling a debt is the one action a plain participant can do
+        // themselves — but only for their own balance, not someone else's.
+        if (
+            participantPayment &&
+            !isPrivilegedEditor &&
+            participantPayment.userId !== updatedById
+        ) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: {
+                        code: API_RESPONSE_CODE.FORBIDDEN,
+                        message: ["Solo podés liquidar tu propia deuda."],
+                        statusCode: 403,
+                    },
+                },
+                { status: 403 },
+            );
+        }
+
         let group = null;
 
         if (groupId) {
@@ -393,34 +450,11 @@ export const PATCH: UpdateExpenseHandler = async (req, context) => {
                 );
             }
 
-            const targetParticipant = expense.participants.find(
-                (p) => p.userId === participantToRemove,
-            );
-
-            if (targetParticipant) {
-                const personalBalance = getPersonalBalance(
-                    targetParticipant.amount,
-                    expense.amount,
-                    expense.participants.length,
-                );
-
-                if (getPositiveTruncatedNumber(personalBalance) !== 0) {
-                    return NextResponse.json(
-                        {
-                            success: false,
-                            error: {
-                                code: API_RESPONSE_CODE.INVALID_FIELD,
-                                message: [
-                                    "No se puede quitar a un participante con saldo pendiente en el gasto.",
-                                ],
-                                statusCode: 400,
-                            },
-                        },
-                        { status: 400 },
-                    );
-                }
-            }
-
+            // Any real payment this participant already made is assumed to
+            // be settled between people outside the app (cash, transfer,
+            // whatever) — removing them just redistributes the same total
+            // among whoever's left, so there's no balance-based restriction
+            // here beyond the payer/minimum-participants checks above.
             await prisma.expenseParticipant.delete({
                 where: {
                     expenseId_userId: {

@@ -61,13 +61,16 @@ export const Card = ({
     !debtSettled &&
     !isPayer &&
     (isUserEditor || isLoggedUser);
+  // Any real payment this participant already made is assumed to be
+  // settled between people outside the app — removing them just
+  // redistributes the same total among whoever's left, so there's no
+  // balance-based restriction here beyond not being the payer and keeping
+  // at least 2 participants. Either the creator/payer or the participant
+  // themselves (leaving on their own) can do this.
   const showRemoveButton =
-    !hasACreditBalance &&
-    !debtSettled &&
-    !allDebtsSettled &&
-    isUserEditor &&
     !isPayer &&
-    expense.participants.length > 2;
+    expense.participants.length > 2 &&
+    (isUserEditor || isLoggedUser);
 
   return (
     <li

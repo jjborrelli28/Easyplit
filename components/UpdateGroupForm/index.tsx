@@ -13,7 +13,7 @@ import type { Session } from "next-auth";
 import { useForm } from "@tanstack/react-form";
 import { useQueryClient } from "@tanstack/react-query";
 import clsx from "clsx";
-import { Trash, X } from "lucide-react";
+import { Trash, TriangleAlert, X } from "lucide-react";
 
 import type { Expense } from "@/hooks/data/expenses/useSearchExpenses";
 import useUpdateGroup from "@/hooks/data/group/useUpdateGroup";
@@ -30,6 +30,7 @@ import type {
 import { compareMembers, getParticipantIds } from "@/lib/utils";
 import { updateGroupSchema } from "@/lib/validations/schemas";
 
+import AmountNumber from "../AmountNumber";
 import Badge from "../Badge";
 import Button from "../Button";
 import Collapse from "../Collapse";
@@ -315,6 +316,14 @@ const UpdateGroupForm = ({
     ...newMembers.map((m) => m.name),
   ];
   const expenseIds = group.expenses?.map((expense) => expense.id) ?? [];
+  const removeMemberAmount = (group.expenses ?? []).reduce(
+    (total, expense) =>
+      total +
+      (expense.participants.find((p) => p.userId === selectedMember?.id)
+        ?.amount ?? 0),
+    0,
+  );
+  const isSelfRemoval = !!removeMember && selectedMember.id === user.id;
 
   return (
     <Modal
@@ -323,7 +332,9 @@ const UpdateGroupForm = ({
       title={
         fieldsToUpdate.length > 1
           ? modalTitles.default
-          : modalTitles[fieldsToUpdate[0]]
+          : isSelfRemoval
+            ? "Salir del grupo"
+            : modalTitles[fieldsToUpdate[0]]
       }
       className="!gap-y-4 lg:!gap-y-8"
     >
@@ -559,11 +570,39 @@ const UpdateGroupForm = ({
           )}
 
           {removeMember && (
-            <p>
-              ¿Estas seguro que deseas eliminar a{" "}
-              <span className="text-semibold">{selectedMember.name}</span> del
-              grupo?
-            </p>
+            <div className="flex flex-col gap-y-4">
+              <p>
+                {isSelfRemoval ? (
+                  "¿Estas seguro que deseas salir de este grupo?"
+                ) : (
+                  <>
+                    ¿Estas seguro que deseas eliminar a{" "}
+                    <span className="text-semibold">{selectedMember.name}</span>{" "}
+                    del grupo?
+                  </>
+                )}
+              </p>
+
+              {!!removeMemberAmount && (
+                <div className="border-warning text-warning flex items-start gap-x-3 border p-3">
+                  <TriangleAlert className="mt-0.5 h-5 w-5 flex-shrink-0" />
+
+                  <p className="text-xs">
+                    {isSelfRemoval
+                      ? "Ya pagaste"
+                      : `${selectedMember.name} ya pagó`}{" "}
+                    <AmountNumber size="xs">{removeMemberAmount}</AmountNumber>{" "}
+                    en total dentro de los gastos de este grupo. Esa devolución
+                    queda a resolver
+                    {isSelfRemoval ? " con el resto" : " entre ustedes"} por
+                    fuera de la app — al{" "}
+                    {isSelfRemoval ? "salir" : "eliminarlo"}, el saldo del resto
+                    de los participantes se recalcula entre quienes queden en
+                    cada gasto.
+                  </p>
+                </div>
+              )}
+            </div>
           )}
 
           {removeExpense && (
@@ -583,7 +622,9 @@ const UpdateGroupForm = ({
           >
             {fieldsToUpdate.length > 1
               ? buttonLabels.default
-              : buttonLabels[fieldsToUpdate[0]]}
+              : isSelfRemoval
+                ? "Salir del grupo"
+                : buttonLabels[fieldsToUpdate[0]]}
           </Button>
 
           <form.Subscribe selector={(state) => [state.errorMap]}>
