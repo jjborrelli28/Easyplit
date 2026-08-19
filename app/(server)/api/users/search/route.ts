@@ -51,6 +51,11 @@ export const GET: GetSearchUsersHandler = async (req) => {
             ? excludeUserIdsParam.split(",").map((id) => id.trim())
             : [];
 
+        // "yo" is a shortcut that always surfaces yourself, regardless of
+        // your actual name/email — no need to type either just to find
+        // yourself.
+        const isSelfKeyword = q.trim().toLowerCase() === "yo";
+
         const users = await prisma.user.findMany({
             where: {
                 AND: [
@@ -68,6 +73,31 @@ export const GET: GetSearchUsersHandler = async (req) => {
                                     { email: { contains: q, mode: "insensitive" } },
                                     { name: { contains: q, mode: "insensitive" } },
                                 ],
+                            },
+                            // Yourself: not a "contact" of your own account,
+                            // so the clause above never matches it — needed
+                            // so you can find yourself when adding yourself
+                            // back to an expense/group you're not part of.
+                            {
+                                id: userId,
+                                ...(isSelfKeyword
+                                    ? {}
+                                    : {
+                                        OR: [
+                                            {
+                                                email: {
+                                                    contains: q,
+                                                    mode: "insensitive",
+                                                },
+                                            },
+                                            {
+                                                name: {
+                                                    contains: q,
+                                                    mode: "insensitive",
+                                                },
+                                            },
+                                        ],
+                                    }),
                             },
                             // Virtual users created by the current user: match
                             // by name or contact email. Excludes placeholders
@@ -108,10 +138,22 @@ export const GET: GetSearchUsersHandler = async (req) => {
             take: 10,
         });
 
+        // With the "yo" shortcut, yourself should be the first suggestion,
+        // not wherever the DB happened to return it relative to contacts
+        // that also matched.
+        const data = isSelfKeyword
+            ? [...users].sort((a, b) => {
+                if (a.id === userId) return -1;
+                if (b.id === userId) return 1;
+
+                return 0;
+            })
+            : users;
+
         return NextResponse.json({
             success: true,
             code: API_RESPONSE_CODE.DATA_FETCHED,
-            data: users,
+            data,
         });
     } catch (error) {
         console.error(error);

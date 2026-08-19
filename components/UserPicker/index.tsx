@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 
 import Image from "next/image";
 
+import type { Session } from "next-auth";
+
 import clsx from "clsx";
 import { Check, Plus, X } from "lucide-react";
 
@@ -18,6 +20,7 @@ import UserSearchEngine, {
 
 interface UserPickerProps
   extends Omit<UserSearchEngineProps, "onChange" | "onSelect"> {
+  user: Session["user"];
   value: string[];
   onChange: (userIds: string[]) => void;
   onUserListChange?: (users: User[]) => void;

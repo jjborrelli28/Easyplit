@@ -36,7 +36,7 @@ export interface UserSearchEngineProps
 }
 
 const UserSearchEngine = ({
-  user,
+  user: loggedUser,
   onSelect,
   onChange,
   onFocus,
@@ -52,20 +52,12 @@ const UserSearchEngine = ({
   const [isFocused, setIsFocused] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
 
-  const effectiveExcludedIds = useMemo(() => {
-    const ids = new Set<string>(excludeUserIds);
-
-    if (user?.id) ids.add(user.id);
-
-    return Array.from(ids);
-  }, [excludeUserIds, user?.id]);
-
   const {
     data: users = [],
     error,
     isFetched,
     isLoading,
-  } = useSearchUsers(debouncedQuery, effectiveExcludedIds);
+  } = useSearchUsers(debouncedQuery, excludeUserIds);
 
   const debouncedUpdate = useMemo(
     () => debounce((val: string) => setDebouncedQuery(val), 300),
@@ -240,7 +232,10 @@ const UserSearchEngine = ({
                 />
 
                 <div className="flex w-full flex-col justify-center overflow-hidden">
-                  <p className="truncate font-semibold">{user.name}</p>
+                  <p className="truncate font-semibold">
+                    {user.name}
+                    {user.id === loggedUser?.id && " (yo)"}
+                  </p>
 
                   <p className="truncate text-sm">
                     {user.email ?? user.contactEmail}
