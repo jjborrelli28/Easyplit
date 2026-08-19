@@ -1,13 +1,14 @@
 import { notFound } from "next/navigation";
 
-import { AlertTriangle, CheckCircle, CircleAlert, Clock10 } from "lucide-react";
+import { AlertTriangle, CircleAlert, Clock10 } from "lucide-react";
 
 import MessageCard, { type MessageCardProps } from "@/components/MessageCard";
 import PageContainer from "@/components/PageContainer";
+import VerifyEmailSuccessCard from "./_components/VerifyEmailSuccessCard";
 
 type State = "token_expired" | "success" | "already_verified" | "error";
 
-const messageCardProps: Record<State, MessageCardProps> = {
+const messageCardProps: Record<Exclude<State, "success">, MessageCardProps> = {
   token_expired: {
     color: "primary",
     icon: Clock10,
@@ -22,21 +23,6 @@ const messageCardProps: Record<State, MessageCardProps> = {
     ),
     actionLabel: "Volver a registrarte",
     actionHref: "/register",
-  },
-  success: {
-    color: "success",
-    icon: CheckCircle,
-    title: "¡Cuenta verificada!",
-    children: (
-      <div className="space-y-2">
-        <p>
-          Te confirmamos que tu dirección de correo fue verificada con éxito.
-        </p>
-        <p>Ya podés iniciar sesión y empezar a usar Easyplit!</p>
-      </div>
-    ),
-    actionLabel: "Iniciar sesión",
-    actionHref: "/login",
   },
   ["already_verified"]: {
     color: "warning",
@@ -70,13 +56,13 @@ const messageCardProps: Record<State, MessageCardProps> = {
 };
 
 interface VerifyEmailResultPageProps {
-  searchParams: Promise<{ status?: State }>;
+  searchParams: Promise<{ status?: State; signInToken?: string }>;
 }
 
 const VerifyEmailResultPage = async ({
   searchParams,
 }: VerifyEmailResultPageProps) => {
-  const { status } = await searchParams;
+  const { status, signInToken } = await searchParams;
 
   if (
     !status ||
@@ -87,7 +73,11 @@ const VerifyEmailResultPage = async ({
 
   return (
     <PageContainer centered>
-      <MessageCard titleTag="h1" {...messageCardProps[status]} />
+      {status === "success" ? (
+        <VerifyEmailSuccessCard signInToken={signInToken} />
+      ) : (
+        <MessageCard titleTag="h1" {...messageCardProps[status]} />
+      )}
     </PageContainer>
   );
 };

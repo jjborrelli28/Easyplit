@@ -154,6 +154,65 @@ const AuthOptions: NextAuthOptions = {
             },
         }),
 
+        // Backs the "Iniciar sesión" button on the post-verification page:
+        // clicking the emailed verification link already proved mailbox
+        // ownership, so this exchanges the short-lived, single-use token
+        // handed to that page for a real session instead of asking for a
+        // password again seconds later.
+        CredentialsProvider({
+            id: "email-verification",
+            name: "Email verification",
+            credentials: {
+                signInToken: { label: "Token", type: "text" },
+            },
+            async authorize(credentials) {
+                const signInToken = credentials?.signInToken;
+
+                if (!signInToken) {
+                    throw new Error(
+                        JSON.stringify({
+                            code: API_RESPONSE_CODE.INVALID_CREDENTIALS,
+                            message: ["Token de inicio de sesión inválido."],
+                            statusCode: 400,
+                        }),
+                    );
+                }
+
+                const user = await prisma.user.findFirst({
+                    where: { signInToken },
+                });
+
+                if (
+                    !user ||
+                    !user.signInTokenExp ||
+                    user.signInTokenExp <= new Date()
+                ) {
+                    throw new Error(
+                        JSON.stringify({
+                            code: API_RESPONSE_CODE.INVALID_CREDENTIALS,
+                            message: [
+                                "El enlace para iniciar sesión expiró o ya fue utilizado.",
+                            ],
+                            statusCode: 400,
+                        }),
+                    );
+                }
+
+                await prisma.user.update({
+                    where: { id: user.id },
+                    data: { signInToken: null, signInTokenExp: null },
+                });
+
+                return {
+                    id: user.id,
+                    name: user.name,
+                    email: user.email,
+                    image: user.image,
+                    hasPassword: !!user.password,
+                };
+            },
+        }),
+
         GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID!,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET!,

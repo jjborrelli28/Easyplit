@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 
+import { v4 as uuidv4 } from "uuid";
+
 import prisma from "@/lib/prisma";
+
+const SIGN_IN_TOKEN_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 export const GET = async (req: Request) => {
     try {
@@ -47,17 +51,21 @@ export const GET = async (req: Request) => {
             );
         }
 
+        const signInToken = uuidv4();
+
         await prisma.user.update({
             where: { id: user.id },
             data: {
                 emailVerified: new Date(),
                 verifyToken: null,
                 verifyTokenExp: null,
+                signInToken,
+                signInTokenExp: new Date(Date.now() + SIGN_IN_TOKEN_TTL_MS),
             },
         });
 
         return NextResponse.redirect(
-            `${process.env.NEXT_PUBLIC_APP_URL}/verify-email/result?status=success`,
+            `${process.env.NEXT_PUBLIC_APP_URL}/verify-email/result?status=success&signInToken=${signInToken}`,
         );
     } catch (error) {
         console.error(error);
