@@ -66,46 +66,45 @@ export const POST: CreateGroupHandler = async (req) => {
 
     const { name, type, memberIds } = res.data;
 
-    const group = await prisma.group.create({
-      data: {
-        name,
-        type,
-        createdById,
-        members: {
-          create: memberIds.map((userId: string) => ({
-            userId,
-          })),
-        },
-      },
-      include: {
-        createdBy: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            image: true,
+    const [group] = await Promise.all([
+      prisma.group.create({
+        data: {
+          name,
+          type,
+          createdById,
+          members: {
+            create: memberIds.map((userId: string) => ({
+              userId,
+            })),
           },
         },
-        members: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                image: true,
+        include: {
+          createdBy: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              image: true,
+            },
+          },
+          members: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  image: true,
+                },
               },
             },
           },
         },
-      },
-    });
-
-    try {
-      await upsertContactsForRealUserIds(memberIds);
-    } catch (error) {
-      console.error("Failed to upsert contacts for group creation", error);
-    }
+      }),
+      upsertContactsForRealUserIds(memberIds).catch((error) => {
+        console.error("Failed to upsert contacts for group creation", error);
+      }),
+    ]);
 
     return NextResponse.json({
       success: true,

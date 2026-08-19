@@ -1,3 +1,5 @@
+import { useMemo } from "react";
+
 import type { Group } from "@/lib/api/types";
 
 import { HandCoins } from "lucide-react";
@@ -15,10 +17,15 @@ interface BalanceSectionProps {
 const BalanceSection = ({ group, loggedUser }: BalanceSectionProps) => {
   const expenses = group.expenses;
 
-  if (!expenses || expenses?.length === 0) return null;
+  // A group's expense history has no upper bound (unlike members/
+  // participants, capped at 20), so this is the one balance calculation
+  // worth memoizing — otherwise every unrelated re-render redoes the full
+  // O(expenses × participants) split + simplification pass.
+  const simplifiedDebts = useMemo(() => {
+    if (!expenses || expenses.length === 0) return [];
 
-  const balances = calculateBalances(expenses);
-  const simplifiedDebts = simplifyDebts(balances);
+    return simplifyDebts(calculateBalances(expenses));
+  }, [expenses]);
 
   if (simplifiedDebts.length === 0) return null;
 

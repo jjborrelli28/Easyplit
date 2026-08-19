@@ -36,36 +36,41 @@ export const upsertContactsForRealUserIds = async (userIds: string[]) => {
  * expense already links two real accounts once this one activates.
  */
 export const syncContactsForUser = async (userId: string) => {
-    const memberships = await prisma.groupMember.findMany({
-        where: { userId },
-        select: { groupId: true },
-    });
+    const [memberships, participations] = await Promise.all([
+        prisma.groupMember.findMany({
+            where: { userId },
+            select: { groupId: true },
+        }),
+        prisma.expenseParticipant.findMany({
+            where: { userId },
+            select: { expenseId: true },
+        }),
+    ]);
 
-    for (const { groupId } of memberships) {
-        const members = await prisma.groupMember.findMany({
-            where: { groupId },
-            select: { userId: true },
-        });
+    await Promise.all([
+        ...memberships.map(async ({ groupId }) => {
+            const members = await prisma.groupMember.findMany({
+                where: { groupId },
+                select: { userId: true },
+            });
 
-        await upsertContactsForRealUserIds(members.map((m) => m.userId));
-    }
+            await upsertContactsForRealUserIds(members.map((m) => m.userId));
+        }),
+        ...participations.map(async ({ expenseId }) => {
+            const expense = await prisma.expense.findUnique({
+                where: { id: expenseId },
+                select: {
+                    paidById: true,
+                    participants: { select: { userId: true } },
+                },
+            });
 
-    const participations = await prisma.expenseParticipant.findMany({
-        where: { userId },
-        select: { expenseId: true },
-    });
+            if (!expense) return;
 
-    for (const { expenseId } of participations) {
-        const expense = await prisma.expense.findUnique({
-            where: { id: expenseId },
-            select: { paidById: true, participants: { select: { userId: true } } },
-        });
-
-        if (!expense) continue;
-
-        await upsertContactsForRealUserIds([
-            ...expense.participants.map((p) => p.userId),
-            expense.paidById,
-        ]);
-    }
+            await upsertContactsForRealUserIds([
+                ...expense.participants.map((p) => p.userId),
+                expense.paidById,
+            ]);
+        }),
+    ]);
 };

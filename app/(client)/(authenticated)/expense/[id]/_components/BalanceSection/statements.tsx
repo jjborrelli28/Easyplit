@@ -160,33 +160,21 @@ export const DebtorStatement = ({
       </>
     )
   ) : isLoggedUser ? (
-    loggedUser.id === expense.paidById ? (
-      <>
-        <p className="text-d-foreground">
-          {user.name} te debe{" "}
-          <AmountNumber>{parsedPersonalBalance}</AmountNumber>
-        </p>
+    // DebtorStatement only renders when user.id !== expense.paidById (Card.tsx
+    // picks PayerStatement otherwise), so isLoggedUser here always implies
+    // loggedUser.id !== expense.paidById — there's no "you owe yourself" case.
+    <>
+      <p className="text-d-foreground">
+        Debés <AmountNumber>{parsedPersonalBalance}</AmountNumber> a{" "}
+        {expense.paidBy.name}
+      </p>
 
-        {!!amount && (
-          <p className="text-s-foreground text-xs">
-            Ya pagó <AmountNumber size="xs">{amount}</AmountNumber>
-          </p>
-        )}
-      </>
-    ) : (
-      <>
-        <p className="text-d-foreground">
-          Debés <AmountNumber>{parsedPersonalBalance}</AmountNumber> a{" "}
-          {expense.paidBy.name}
+      {!!amount && (
+        <p className="text-s-foreground text-xs">
+          Ya pagaste <AmountNumber size="xs">{amount}</AmountNumber>
         </p>
-
-        {!!amount && (
-          <p className="text-s-foreground text-xs">
-            Ya pagaste <AmountNumber size="xs">{amount}</AmountNumber>
-          </p>
-        )}
-      </>
-    )
+      )}
+    </>
   ) : loggedUser.id === expense.paidById ? (
     <>
       <p className="text-d-foreground">
@@ -199,7 +187,8 @@ export const DebtorStatement = ({
         </p>
       )}
     </>
-  ) : loggedUser.id !== user.id && loggedUser.id !== expense.paidById ? (
+  ) : (
+    // Neither the debtor nor the payer, so a third party is viewing.
     <>
       <p className="text-d-foreground">
         {user.name} debe <AmountNumber>{parsedPersonalBalance}</AmountNumber> a{" "}
@@ -212,4 +201,4 @@ export const DebtorStatement = ({
         </p>
       )}
     </>
-  ) : null;
+  );

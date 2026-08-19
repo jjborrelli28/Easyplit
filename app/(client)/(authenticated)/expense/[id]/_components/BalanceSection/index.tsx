@@ -71,6 +71,7 @@ const BalanceSection = ({ expense, loggedUser }: BalanceSectionProps) => {
               {...{
                 expenseParticipant,
                 expense,
+                allDebtsSettled,
                 loggedUser,
                 setFieldsToUpdate,
                 setSelectedParticipant,

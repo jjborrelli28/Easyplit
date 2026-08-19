@@ -7,11 +7,7 @@ import { BanknoteArrowUp, UserRoundX } from "lucide-react";
 import type { Session } from "next-auth";
 
 import type { Expense, ExpenseParticipant, User } from "@/lib/api/types";
-import {
-  areAllDebtsSettled,
-  getPersonalBalance,
-  getPositiveTruncatedNumber,
-} from "@/lib/utils";
+import { getPersonalBalance, getPositiveTruncatedNumber } from "@/lib/utils";
 
 import Button from "@/components/Button";
 import type { UpdateExpenseFieldKeys } from "@/components/UpdateExpenseForm";
@@ -20,6 +16,7 @@ import { DebtorStatement, PayerStatement } from "./statements";
 interface CardProps {
   expenseParticipant: ExpenseParticipant;
   expense: Expense;
+  allDebtsSettled: boolean;
   loggedUser: Session["user"];
   setFieldsToUpdate: Dispatch<SetStateAction<UpdateExpenseFieldKeys>>;
   setSelectedParticipant: Dispatch<SetStateAction<User | null>>;
@@ -31,6 +28,7 @@ interface CardProps {
 export const Card = ({
   expenseParticipant,
   expense,
+  allDebtsSettled,
   loggedUser,
   setFieldsToUpdate,
   setSelectedParticipant,
@@ -48,7 +46,6 @@ export const Card = ({
   const parsedPersonalBalance = getPositiveTruncatedNumber(personalBalance);
   const isPayer = user.id === expense.paidById;
   const isLoggedUser = user.id === loggedUser.id;
-  const allDebtsSettled = areAllDebtsSettled(expense);
   const debtSettled = parsedPersonalBalance === 0;
   const isUserEditor =
     loggedUser?.id === expense?.createdById ||
@@ -62,14 +59,14 @@ export const Card = ({
     !hasACreditBalance &&
     !allDebtsSettled &&
     !debtSettled &&
-    user.id !== expense.paidById &&
-    (isUserEditor || user.id === loggedUser.id);
+    !isPayer &&
+    (isUserEditor || isLoggedUser);
   const showRemoveButton =
     !hasACreditBalance &&
     !debtSettled &&
     !allDebtsSettled &&
     isUserEditor &&
-    user.id !== expense.paidById &&
+    !isPayer &&
     expense.participants.length > 2;
 
   return (

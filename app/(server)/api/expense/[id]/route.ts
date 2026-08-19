@@ -14,6 +14,7 @@ import { upsertContactsForRealUserIds } from "@/lib/contacts/helpers";
 import prisma from "@/lib/prisma";
 import {
     compareMembers,
+    getParticipantIds,
     getPersonalBalance,
     getPositiveTruncatedNumber,
     getSuccessMessage,
@@ -457,24 +458,26 @@ export const PATCH: UpdateExpenseHandler = async (req, context) => {
                 }
             }
 
-            await prisma.expenseParticipant.createMany({
-                data: participantsToAdd.map((userId) => ({
-                    expenseId: id,
-                    userId,
-                    amount: 0,
-                })),
-                skipDuplicates: true,
-            });
-
-            try {
-                await upsertContactsForRealUserIds([
-                    ...expense.participants.map((p) => p.userId),
+            await Promise.all([
+                prisma.expenseParticipant.createMany({
+                    data: participantsToAdd.map((userId) => ({
+                        expenseId: id,
+                        userId,
+                        amount: 0,
+                    })),
+                    skipDuplicates: true,
+                }),
+                upsertContactsForRealUserIds([
+                    ...getParticipantIds(expense.participants),
                     ...participantsToAdd,
                     expense.paidById,
-                ]);
-            } catch (error) {
-                console.error("Failed to upsert contacts for expense update", error);
-            }
+                ]).catch((error) => {
+                    console.error(
+                        "Failed to upsert contacts for expense update",
+                        error,
+                    );
+                }),
+            ]);
         }
 
         if (participantPayment) {
@@ -540,39 +543,40 @@ export const PATCH: UpdateExpenseHandler = async (req, context) => {
             ...(participantPayment && { participantPayment }),
         });
 
-        if (changedFields.length > 0) {
-            await prisma.expenseHistory.createMany({
-                data: changedFields.map((fieldChange) => ({
-                    expenseId: id,
-                    field: fieldChange.field,
-                    oldValue: fieldChange.oldValue,
-                    newValue: fieldChange.newValue,
-                    updatedById,
-                })),
-            });
-        }
-
-        const updatedExpense = await prisma.expense.update({
-            where: { id },
-            data: {
-                ...(name && { name }),
-                ...(type && { type }),
-                ...(amount && { amount }),
-                ...(paidById && {
-                    paidBy: {
-                        connect: { id: paidById },
-                    },
-                }),
-                ...(paymentDate && {
-                    paymentDate,
-                }),
-                ...(groupId && {
-                    group: {
-                        connect: { id: groupId },
-                    },
-                }),
-            },
-        });
+        const [, updatedExpense] = await Promise.all([
+            changedFields.length > 0
+                ? prisma.expenseHistory.createMany({
+                    data: changedFields.map((fieldChange) => ({
+                        expenseId: id,
+                        field: fieldChange.field,
+                        oldValue: fieldChange.oldValue,
+                        newValue: fieldChange.newValue,
+                        updatedById,
+                    })),
+                })
+                : Promise.resolve(null),
+            prisma.expense.update({
+                where: { id },
+                data: {
+                    ...(name && { name }),
+                    ...(type && { type }),
+                    ...(amount && { amount }),
+                    ...(paidById && {
+                        paidBy: {
+                            connect: { id: paidById },
+                        },
+                    }),
+                    ...(paymentDate && {
+                        paymentDate,
+                    }),
+                    ...(groupId && {
+                        group: {
+                            connect: { id: groupId },
+                        },
+                    }),
+                },
+            }),
+        ]);
 
         return NextResponse.json({
             success: true,

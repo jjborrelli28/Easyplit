@@ -13,6 +13,7 @@ import AuthOptions from "@/lib/auth/options";
 import { upsertContactsForRealUserIds } from "@/lib/contacts/helpers";
 import prisma from "@/lib/prisma";
 import {
+    getParticipantIds,
     getPersonalBalance,
     getPositiveTruncatedNumber,
     getSuccessMessage,
@@ -388,27 +389,26 @@ export const PATCH: UpdateGroupHandler = async (req, context) => {
         }
 
         if (membersToAdd) {
-            await prisma.groupMember.createMany({
-                data: membersToAdd.map((userId) => ({
-                    groupId: id,
-                    userId,
-                })),
-                skipDuplicates: true,
-            });
-
-            try {
-                await upsertContactsForRealUserIds([
-                    ...group.members.map((m) => m.userId),
+            await Promise.all([
+                prisma.groupMember.createMany({
+                    data: membersToAdd.map((userId) => ({
+                        groupId: id,
+                        userId,
+                    })),
+                    skipDuplicates: true,
+                }),
+                upsertContactsForRealUserIds([
+                    ...getParticipantIds(group.members),
                     ...membersToAdd,
-                ]);
-            } catch (error) {
-                console.error("Failed to upsert contacts for group update", error);
-            }
+                ]).catch((error) => {
+                    console.error("Failed to upsert contacts for group update", error);
+                }),
+            ]);
         }
 
         if (expensesToAdd) {
             const effectiveMemberIds = new Set(
-                group.members.map((m) => m.userId),
+                getParticipantIds(group.members),
             );
 
             if (memberToRemove) effectiveMemberIds.delete(memberToRemove);
@@ -503,25 +503,26 @@ export const PATCH: UpdateGroupHandler = async (req, context) => {
             ...(expenseToRemove && { expenseToRemove }),
         });
 
-        if (changedFields.length > 0) {
-            await prisma.groupHistory.createMany({
-                data: changedFields.map((fieldChange) => ({
-                    groupId: id,
-                    field: fieldChange.field,
-                    oldValue: fieldChange.oldValue,
-                    newValue: fieldChange.newValue,
-                    updatedById,
-                })),
-            });
-        }
-
-        const updatedGroup = await prisma.group.update({
-            where: { id },
-            data: {
-                ...(name && { name }),
-                ...(type && { type }),
-            },
-        });
+        const [, updatedGroup] = await Promise.all([
+            changedFields.length > 0
+                ? prisma.groupHistory.createMany({
+                    data: changedFields.map((fieldChange) => ({
+                        groupId: id,
+                        field: fieldChange.field,
+                        oldValue: fieldChange.oldValue,
+                        newValue: fieldChange.newValue,
+                        updatedById,
+                    })),
+                })
+                : Promise.resolve(null),
+            prisma.group.update({
+                where: { id },
+                data: {
+                    ...(name && { name }),
+                    ...(type && { type }),
+                },
+            }),
+        ]);
 
         return NextResponse.json({
             success: true,

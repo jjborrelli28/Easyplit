@@ -123,23 +123,18 @@ export const getParticipantObjs = (participants: ExpenseParticipant[]) => {
         });
 };
 
-export const areAllDebtsSettled = (expense: Expense) => {
-    return expense.participants
-        .filter((p) => p.userId !== expense.paidById)
-        .every((p) => {
-            const personalBalance = getPersonalBalance(
-                p.amount,
-                expense.amount,
-                expense.participants.length,
-            );
+interface SettleableExpense {
+    amount: number;
+    paidById: string;
+    participants: { userId: string; amount: number }[];
+}
 
-            return Math.round(personalBalance * 100) <= 0;
-        });
-};
-
-export const isExpenseComplete = (
-    expense: PrismaExpense & { participants: PrismaExpenseParticipant[] },
-) => {
+// Structural (not `Expense`/`PrismaExpense`-typed) on purpose: whether an
+// expense is settled only ever depends on these four fields, so this one
+// definition works for both the app's `Expense` type (participants include
+// `user`) and Prisma's raw query results (participants don't) — no need for
+// a second, separately-maintained copy of this calculation.
+export const areAllDebtsSettled = (expense: SettleableExpense) => {
     return expense.participants
         .filter((p) => p.userId !== expense.paidById)
         .every((p) => {
@@ -173,39 +168,41 @@ export type UpdatedField = {
     newValue: string | null;
 };
 
-export const getUpdatedExpenseFields: (
-    expense: PrismaExpense & { participants: ExpenseParticipant[] },
-    updated: UpdateExpenseTypes,
-) => UpdatedField[] = (expense, updated) => {
-    const fieldsToCheck: (keyof UpdateExpenseTypes)[] = [
-        "name",
-        "type",
-        "participantsToAdd",
-        "participantToRemove",
-        "paidById",
-        "paymentDate",
-        "groupId",
-        "amount",
-        "participantPayment",
-    ];
+type FieldResolver<Entity, Updated> = (
+    entity: Entity,
+    updated: Updated,
+) => { oldValue: unknown; newValue: unknown };
 
+/**
+ * Shared diffing algorithm behind `getUpdatedExpenseFields` and
+ * `getUpdatedGroupFields`: for each field to check, either treat it as an
+ * "action" field (add/remove list, no meaningful old value), resolve it with
+ * a custom resolver (fields whose old value isn't just `entity[field]`), or
+ * fall back to comparing `entity[field]` against `updated[field]`.
+ */
+const getUpdatedFields = <
+    Entity extends object,
+    Updated extends Record<string, unknown>,
+>(
+    entity: Entity,
+    updated: Updated,
+    fieldsToCheck: (keyof Updated)[],
+    actionFields: (keyof Updated)[],
+    customResolvers: Partial<Record<keyof Updated, FieldResolver<Entity, Updated>>> = {},
+): UpdatedField[] => {
     return fieldsToCheck.reduce<UpdatedField[]>((acc, field) => {
+        const customResolver = customResolvers[field];
+
         let oldValue: unknown;
         let newValue: unknown;
 
-        if (field === "participantsToAdd" || field === "participantToRemove") {
+        if (customResolver) {
+            ({ oldValue, newValue } = customResolver(entity, updated));
+        } else if (actionFields.includes(field)) {
             oldValue = null;
             newValue = updated[field];
-        } else if (field === "participantPayment") {
-            const userId = updated[field]?.userId;
-            const oldAmount = expense.participants.find(
-                (p) => p.userId === userId,
-            )?.amount;
-
-            oldValue = { userId, amount: oldAmount };
-            newValue = updated[field];
         } else {
-            oldValue = expense[field];
+            oldValue = (entity as Record<string, unknown>)[field as string];
             newValue = updated[field];
         }
 
@@ -223,6 +220,40 @@ export const getUpdatedExpenseFields: (
         return acc;
     }, []);
 };
+
+export const getUpdatedExpenseFields = (
+    expense: PrismaExpense & { participants: ExpenseParticipant[] },
+    updated: UpdateExpenseTypes,
+): UpdatedField[] =>
+    getUpdatedFields(
+        expense,
+        updated,
+        [
+            "name",
+            "type",
+            "participantsToAdd",
+            "participantToRemove",
+            "paidById",
+            "paymentDate",
+            "groupId",
+            "amount",
+            "participantPayment",
+        ],
+        ["participantsToAdd", "participantToRemove"],
+        {
+            participantPayment: (expense, updated) => {
+                const userId = updated.participantPayment?.userId;
+                const oldAmount = expense.participants.find(
+                    (p) => p.userId === userId,
+                )?.amount;
+
+                return {
+                    oldValue: { userId, amount: oldAmount },
+                    newValue: updated.participantPayment,
+                };
+            },
+        },
+    );
 
 const SUCCESS_MESSAGE_VARIANT = {
     expense: "gasto",
@@ -357,50 +388,23 @@ type UpdateGroupTypes = {
     expenseToRemove?: string;
 };
 
-export const getUpdatedGroupFields: (
+export const getUpdatedGroupFields = (
     group: PrismaGroup & { members: GroupMember[] },
     updated: UpdateGroupTypes,
-) => UpdatedField[] = (group, updated) => {
-    const fieldsToCheck: (keyof UpdateGroupTypes)[] = [
-        "name",
-        "type",
-        "membersToAdd",
-        "memberToRemove",
-        "expensesToAdd",
-        "expenseToRemove",
-    ];
-
-    return fieldsToCheck.reduce<UpdatedField[]>((acc, field) => {
-        let oldValue: unknown;
-        let newValue: unknown;
-
-        if (
-            field === "membersToAdd" ||
-            field === "memberToRemove" ||
-            field === "expensesToAdd" ||
-            field === "expenseToRemove"
-        ) {
-            oldValue = null;
-            newValue = updated[field];
-        } else {
-            oldValue = group[field];
-            newValue = updated[field];
-        }
-
-        const oldStr = oldValue !== undefined ? JSON.stringify(oldValue) : null;
-        const newStr = newValue !== undefined ? JSON.stringify(newValue) : null;
-
-        if (newStr !== null && oldStr !== newStr) {
-            acc.push({
-                field: field.toString(),
-                oldValue: oldStr,
-                newValue: newStr,
-            });
-        }
-
-        return acc;
-    }, []);
-};
+): UpdatedField[] =>
+    getUpdatedFields(
+        group,
+        updated,
+        [
+            "name",
+            "type",
+            "membersToAdd",
+            "memberToRemove",
+            "expensesToAdd",
+            "expenseToRemove",
+        ],
+        ["membersToAdd", "memberToRemove", "expensesToAdd", "expenseToRemove"],
+    );
 
 export interface UserBalance extends User {
     id: string;

@@ -151,59 +151,60 @@ export const POST: CreateExpenseHandler = async (req) => {
       }
     }
 
-    const expense = await prisma.expense.create({
-      data: {
-        name,
-        type: type ?? EXPENSE_TYPE.UNCATEGORIZED,
-        amount,
-        participants: {
-          create: participantIds.map((participantId) => ({
-            userId: participantId,
-            amount: participantId === paidById ? amount : 0,
-          })),
-        },
-        paidBy: {
-          connect: { id: paidById },
-        },
-        paymentDate,
-        ...(groupId && {
-          group: {
-            connect: { id: groupId },
+    const [expense] = await Promise.all([
+      prisma.expense.create({
+        data: {
+          name,
+          type: type ?? EXPENSE_TYPE.UNCATEGORIZED,
+          amount,
+          participants: {
+            create: participantIds.map((participantId) => ({
+              userId: participantId,
+              amount: participantId === paidById ? amount : 0,
+            })),
           },
-        }),
-        createdBy: {
-          connect: { id: createdById },
+          paidBy: {
+            connect: { id: paidById },
+          },
+          paymentDate,
+          ...(groupId && {
+            group: {
+              connect: { id: groupId },
+            },
+          }),
+          createdBy: {
+            connect: { id: createdById },
+          },
         },
-      },
-      include: {
-        participants: {
-          include: {
-            user: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-                image: true,
+        include: {
+          participants: {
+            include: {
+              user: {
+                select: {
+                  id: true,
+                  name: true,
+                  email: true,
+                  image: true,
+                },
               },
             },
           },
-        },
-        paidBy: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            image: true,
+          paidBy: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              image: true,
+            },
           },
         },
-      },
-    });
-
-    try {
-      await upsertContactsForRealUserIds([...participantIds, paidById]);
-    } catch (error) {
-      console.error("Failed to upsert contacts for expense creation", error);
-    }
+      }),
+      upsertContactsForRealUserIds([...participantIds, paidById]).catch(
+        (error) => {
+          console.error("Failed to upsert contacts for expense creation", error);
+        },
+      ),
+    ]);
 
     return NextResponse.json({
       success: true,

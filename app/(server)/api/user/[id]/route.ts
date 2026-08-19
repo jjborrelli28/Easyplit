@@ -18,7 +18,7 @@ import {
 } from "@/lib/auth/helpers";
 import AuthOptions from "@/lib/auth/options";
 import prisma from "@/lib/prisma";
-import { isExpenseComplete } from "@/lib/utils";
+import { areAllDebtsSettled } from "@/lib/utils";
 import { parseZodErrors } from "@/lib/validations/helpers";
 import { deleteUserSchema, updateUserSchema } from "@/lib/validations/schemas";
 
@@ -346,7 +346,7 @@ export const DELETE: DeleteUserHandler = async (req, context) => {
         });
 
         const hasIncompleteExpenses = expenses.some(
-            (expense) => !isExpenseComplete(expense),
+            (expense) => !areAllDebtsSettled(expense),
         );
 
         if (hasIncompleteExpenses) {
