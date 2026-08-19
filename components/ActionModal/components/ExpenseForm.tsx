@@ -7,15 +7,14 @@ import { useQueryClient } from "@tanstack/react-query";
 
 import useCreateExpense from "@/hooks/data/expense/useCreateExpense";
 import useResolveDraftUsers from "@/hooks/data/users/useResolveDraftUsers";
+import useSnackbar from "@/hooks/useSnackbar";
 
 import type {
   CreateExpenseFields,
   ExpenseCreationFieldErrors,
-  ResponseMessage,
   ServerErrorResponse,
   User,
 } from "@/lib/api/types";
-import ICON_MAP from "@/lib/icons";
 import { today } from "@/lib/utils";
 import { createExpenseSchema } from "@/lib/validations/schemas";
 
@@ -28,7 +27,6 @@ import FormErrorMessage from "@/components/FormErrorMessage";
 import GroupPicker from "@/components/GroupPicker";
 import Input from "@/components/Input";
 import InputErrorMessage from "@/components/InputErrorMessage";
-import MessageCard from "@/components/MessageCard";
 import Select from "@/components/Select";
 import UserPicker from "@/components/UserPicker";
 import { getParticipantOptions } from "..";
@@ -36,22 +34,16 @@ import { getParticipantOptions } from "..";
 interface ExpenseFromProps {
   user: Session["user"];
   onClose: VoidFunction;
-  handleShowModalHeader: (state: boolean) => void;
 }
 
-const ExpenseForm = ({
-  user,
-  onClose,
-  handleShowModalHeader,
-}: ExpenseFromProps) => {
+const ExpenseForm = ({ user, onClose }: ExpenseFromProps) => {
   const { mutate: createExpense, isPending } = useCreateExpense();
   const resolveDraftUsers = useResolveDraftUsers();
   const queryClient = useQueryClient();
+  const { showSnackbar } = useSnackbar();
 
   const [participants, setParticipants] = useState<User[]>([user as User]);
-  const [message, setMessage] = useState<ResponseMessage | null>(null);
-  const [isResolvingParticipants, setIsResolvingParticipants] =
-    useState(false);
+  const [isResolvingParticipants, setIsResolvingParticipants] = useState(false);
 
   const form = useForm<
     CreateExpenseFields,
@@ -110,9 +102,13 @@ const ExpenseForm = ({
               queryKey: ["my-expenses-and-groups", user.id!],
             });
 
-            handleShowModalHeader(false);
+            if (res?.message) {
+              showSnackbar(res.message.title as string, {
+                color: res.message.color,
+              });
+            }
 
-            res?.message && setMessage(res.message);
+            handleCloseModal();
           },
           onError: (res) => {
             const {
@@ -135,216 +131,200 @@ const ExpenseForm = ({
 
   const handleCloseModal = () => {
     onClose();
-    handleShowModalHeader(true);
-
     form.reset();
   };
 
   return (
     <>
-      {message ? (
-        <MessageCard
-          {...message}
-          icon={ICON_MAP[message?.icon]}
-          countdown={{
-            color: message.color,
-            start: 3,
-            onComplete: () => handleCloseModal(),
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          form.handleSubmit();
+        }}
+        className="grid grid-cols-1 gap-y-1 lg:grid-cols-2 lg:gap-x-8"
+      >
+        <form.Field
+          name="name"
+          validators={{
+            onBlur: createExpenseSchema.shape.name,
           }}
         >
-          {message.content}
-        </MessageCard>
-      ) : (
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            form.handleSubmit();
+          {(field) => (
+            <Input
+              id="name"
+              label="Nombre del gasto"
+              placeholder="Nombre del gasto"
+              value={field.state.value}
+              onChange={(e) => field.handleChange(e.target.value)}
+              onBlur={field.handleBlur}
+              autoComplete="name"
+              required
+              error={
+                field.state.meta.errors[0]?.message ||
+                field.state.meta.errorMap.onSubmit
+              }
+              containerClassName="col-span-1"
+            />
+          )}
+        </form.Field>
+
+        <form.Field
+          name="type"
+          validators={{
+            onChange: createExpenseSchema.shape.type,
           }}
-          className="grid grid-cols-1 gap-y-1 lg:grid-cols-2 lg:gap-x-8"
         >
-          <form.Field
-            name="name"
-            validators={{
-              onBlur: createExpenseSchema.shape.name,
-            }}
-          >
-            {(field) => (
-              <Input
-                id="name"
-                label="Nombre del gasto"
-                placeholder="Nombre del gasto"
-                value={field.state.value}
-                onChange={(e) => field.handleChange(e.target.value)}
-                onBlur={field.handleBlur}
-                autoComplete="name"
-                required
-                error={
-                  field.state.meta.errors[0]?.message ||
-                  field.state.meta.errorMap.onSubmit
-                }
-                containerClassName="col-span-1"
-              />
-            )}
-          </form.Field>
+          {(field) => (
+            <ExpenseTypeSelect
+              label="Tipo de gasto:"
+              value={field.state.value}
+              onChange={(e) => field.handleChange(e)}
+              error={
+                field.state.meta.errors[0]?.message ||
+                field.state.meta.errorMap.onSubmit
+              }
+              containerClassName="col-span-1"
+            />
+          )}
+        </form.Field>
 
-          <form.Field
-            name="type"
-            validators={{
-              onChange: createExpenseSchema.shape.type,
-            }}
-          >
-            {(field) => (
-              <ExpenseTypeSelect
-                label="Tipo de gasto:"
-                value={field.state.value}
-                onChange={(e) => field.handleChange(e)}
-                error={
-                  field.state.meta.errors[0]?.message ||
-                  field.state.meta.errorMap.onSubmit
-                }
-                containerClassName="col-span-1"
-              />
-            )}
-          </form.Field>
+        <form.Field
+          name="participantIds"
+          validators={{
+            onChange: createExpenseSchema.shape.participantIds,
+            onBlur: createExpenseSchema.shape.participantIds,
+          }}
+        >
+          {(field) => (
+            <UserPicker
+              label="Participantes del gasto"
+              user={user}
+              value={field.state.value}
+              onChange={field.handleChange}
+              onUserListChange={(e) => setParticipants(e)}
+              onBlur={field.handleBlur}
+              excludeUserIds={field.state.value}
+              modalTitle="Buscar participantes"
+              modalListTitle="Participantes"
+              allowVirtualUsers
+              error={
+                field.state.meta.errors[0]?.message ||
+                field.state.meta.errorMap.onSubmit
+              }
+              containerClassName="col-span-1 lg:col-span-2"
+            />
+          )}
+        </form.Field>
 
-          <form.Field
-            name="participantIds"
-            validators={{
-              onChange: createExpenseSchema.shape.participantIds,
-              onBlur: createExpenseSchema.shape.participantIds,
-            }}
-          >
-            {(field) => (
-              <UserPicker
-                label="Participantes del gasto"
-                user={user}
+        <form.Field
+          name="paidById"
+          validators={{
+            onChange: createExpenseSchema.shape.paidById,
+          }}
+        >
+          {(field) => (
+            <div className="col-span-1 flex flex-col">
+              <Select
+                options={getParticipantOptions(participants)}
                 value={field.state.value}
                 onChange={field.handleChange}
-                onUserListChange={(e) => setParticipants(e)}
-                onBlur={field.handleBlur}
-                excludeUserIds={field.state.value}
-                modalTitle="Buscar participantes"
-                modalListTitle="Participantes"
-                allowVirtualUsers
-                error={
+                label="Pagado por:"
+                placeholder="Selecciona un participante"
+              />
+
+              <InputErrorMessage
+                message={
                   field.state.meta.errors[0]?.message ||
                   field.state.meta.errorMap.onSubmit
                 }
-                containerClassName="col-span-1 lg:col-span-2"
               />
-            )}
-          </form.Field>
+            </div>
+          )}
+        </form.Field>
 
-          <form.Field
-            name="paidById"
-            validators={{
-              onChange: createExpenseSchema.shape.paidById,
-            }}
-          >
-            {(field) => (
-              <div className="col-span-1 flex flex-col">
-                <Select
-                  options={getParticipantOptions(participants)}
-                  value={field.state.value}
-                  onChange={field.handleChange}
-                  label="Pagado por:"
-                  placeholder="Selecciona un participante"
-                />
+        <form.Field
+          name="paymentDate"
+          validators={{
+            onChange: createExpenseSchema.shape.paymentDate,
+          }}
+        >
+          {(field) => (
+            <DatePicker
+              value={field.state.value}
+              onChange={field.handleChange}
+              error={
+                field.state.meta.errors[0]?.message ||
+                field.state.meta.errorMap.onSubmit
+              }
+              containerClassName="col-span-1"
+            />
+          )}
+        </form.Field>
 
-                <InputErrorMessage
-                  message={
-                    field.state.meta.errors[0]?.message ||
-                    field.state.meta.errorMap.onSubmit
-                  }
-                />
-              </div>
-            )}
-          </form.Field>
+        <form.Field
+          name="groupId"
+          validators={{
+            onChange: createExpenseSchema.shape.groupId,
+            onBlur: createExpenseSchema.shape.groupId,
+          }}
+        >
+          {(field) => (
+            <GroupPicker
+              value={field.state.value}
+              onChange={field.handleChange}
+              pickedParticipants={participants}
+              onBlur={field.handleBlur}
+              error={
+                field.state.meta.errors[0]?.message ||
+                field.state.meta.errorMap.onSubmit
+              }
+              containerClassName="col-span-1 lg:col-span-2"
+            />
+          )}
+        </form.Field>
 
-          <form.Field
-            name="paymentDate"
-            validators={{
-              onChange: createExpenseSchema.shape.paymentDate,
-            }}
-          >
-            {(field) => (
-              <DatePicker
-                value={field.state.value}
-                onChange={field.handleChange}
-                error={
-                  field.state.meta.errors[0]?.message ||
-                  field.state.meta.errorMap.onSubmit
-                }
-                containerClassName="col-span-1"
+        <form.Field
+          name="amount"
+          validators={{
+            onChange: createExpenseSchema.shape.amount,
+            onBlur: createExpenseSchema.shape.amount,
+          }}
+        >
+          {(field) => (
+            <AmountInput
+              label="Monto"
+              value={field.state.value}
+              onChange={field.handleChange}
+              onBlur={field.handleBlur}
+              error={
+                field.state.meta.errors[0]?.message ||
+                field.state.meta.errorMap.onSubmit
+              }
+              containerClassName="col-span-1 mx-auto lg:col-span-2"
+            />
+          )}
+        </form.Field>
+
+        <Button
+          type="submit"
+          className="col-span-1 mt-4 lg:col-span-2 lg:mt-7"
+          loading={isPending || isResolvingParticipants}
+          fullWidth
+        >
+          Crear
+        </Button>
+
+        <form.Subscribe selector={(state) => [state.errorMap]}>
+          {([errorMap]) => {
+            return (
+              <FormErrorMessage
+                message={errorMap.onServer}
+                className="col-span-1 lg:col-span-2"
               />
-            )}
-          </form.Field>
-
-          <form.Field
-            name="groupId"
-            validators={{
-              onChange: createExpenseSchema.shape.groupId,
-              onBlur: createExpenseSchema.shape.groupId,
-            }}
-          >
-            {(field) => (
-              <GroupPicker
-                value={field.state.value}
-                onChange={field.handleChange}
-                pickedParticipants={participants}
-                onBlur={field.handleBlur}
-                error={
-                  field.state.meta.errors[0]?.message ||
-                  field.state.meta.errorMap.onSubmit
-                }
-                containerClassName="col-span-1 lg:col-span-2"
-              />
-            )}
-          </form.Field>
-
-          <form.Field
-            name="amount"
-            validators={{
-              onChange: createExpenseSchema.shape.amount,
-              onBlur: createExpenseSchema.shape.amount,
-            }}
-          >
-            {(field) => (
-              <AmountInput
-                label="Monto"
-                value={field.state.value}
-                onChange={field.handleChange}
-                onBlur={field.handleBlur}
-                error={
-                  field.state.meta.errors[0]?.message ||
-                  field.state.meta.errorMap.onSubmit
-                }
-                containerClassName="col-span-1 mx-auto lg:col-span-2"
-              />
-            )}
-          </form.Field>
-
-          <Button
-            type="submit"
-            className="col-span-1 mt-4 lg:col-span-2 lg:mt-7"
-            loading={isPending || isResolvingParticipants}
-            fullWidth
-          >
-            Crear
-          </Button>
-
-          <form.Subscribe selector={(state) => [state.errorMap]}>
-            {([errorMap]) => {
-              return (
-                <FormErrorMessage
-                  message={errorMap.onServer}
-                  className="col-span-1 lg:col-span-2"
-                />
-              );
-            }}
-          </form.Subscribe>
-        </form>
-      )}
+            );
+          }}
+        </form.Subscribe>
+      </form>
     </>
   );
 };

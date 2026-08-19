@@ -530,7 +530,7 @@ export const PATCH: UpdateGroupHandler = async (req, context) => {
             message: {
                 color: "success",
                 icon: "CheckCircle",
-                title: "Grupo actualizado con éxito!",
+                title: "¡Grupo actualizado con éxito!",
                 content: [
                     ...(name ? getSuccessMessage.name(name, "group") : []),
                     ...(type ? getSuccessMessage.type(type, "group") : []),
@@ -666,7 +666,7 @@ export const DELETE: DeleteGroupHandler = async (req, context) => {
             message: {
                 color: "success",
                 icon: "Trash",
-                title: "Grupo eliminado",
+                title: "¡Grupo eliminado con éxito!",
                 content: [
                     {
                         text: "El grupo fue eliminado correctamente.",

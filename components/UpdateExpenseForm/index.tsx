@@ -18,16 +18,15 @@ import { X } from "lucide-react";
 
 import useUpdateExpense from "@/hooks/data/expense/useUpdateExpense";
 import useResolveDraftUsers from "@/hooks/data/users/useResolveDraftUsers";
+import useSnackbar from "@/hooks/useSnackbar";
 
 import type {
   Expense,
   ExpenseUpdateFieldErrors,
-  ResponseMessage,
   ServerErrorResponse,
   UpdateExpenseFields,
   User,
 } from "@/lib/api/types";
-import ICON_MAP from "@/lib/icons";
 import { getParticipantIds } from "@/lib/utils";
 import { updateExpenseSchema } from "@/lib/validations/schemas";
 
@@ -43,7 +42,6 @@ import FormErrorMessage from "../FormErrorMessage";
 import GroupPicker from "../GroupPicker";
 import Input from "../Input";
 import InputErrorMessage from "../InputErrorMessage";
-import MessageCard from "../MessageCard";
 import Modal from "../Modal";
 import Select from "../Select";
 import Tooltip from "../Tooltip";
@@ -101,9 +99,9 @@ const UpdateExpenseForm = ({
   const { mutate: updateExpense, isPending } = useUpdateExpense(expense.id);
   const resolveDraftUsers = useResolveDraftUsers();
   const queryClient = useQueryClient();
+  const { showSnackbar } = useSnackbar();
 
   const [newParticipants, setNewParticipants] = useState<User[]>([]);
-  const [message, setMessage] = useState<ResponseMessage | null>(null);
   const [isSendeable, setIsSendeable] = useState(false);
   const [isResolvingParticipants, setIsResolvingParticipants] = useState(false);
 
@@ -224,7 +222,13 @@ const UpdateExpenseForm = ({
             queryKey: ["expense", expense.id],
           });
 
-          res?.message && setMessage(res.message);
+          if (res?.message) {
+            showSnackbar(res.message.title as string, {
+              color: res.message.color,
+            });
+          }
+
+          handleClose();
         },
         onError: (res) => {
           const {
@@ -285,7 +289,6 @@ const UpdateExpenseForm = ({
   const handleClose = () => {
     setIsOpen(false);
     setNewParticipants([]);
-    setMessage(null);
     setIsSendeable(false);
     form.reset();
   };
@@ -310,376 +313,357 @@ const UpdateExpenseForm = ({
             : modalTitles.default
           : modalTitles[fieldsToUpdate[0]]
       }
-      showHeader={!message}
-      unstyled={!!message}
       className="!gap-y-4 lg:!gap-y-8"
     >
       <>
-        {message ? (
-          <MessageCard
-            {...message}
-            icon={ICON_MAP[message?.icon]}
-            countdown={{
-              color: message.color,
-              start: 3,
-              onComplete: () => handleClose(),
-            }}
-          >
-            {message.content}
-          </MessageCard>
-        ) : (
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              form.handleSubmit();
-            }}
-            className="flex flex-col gap-y-1"
-          >
-            {editName && (
-              <form.Field
-                name="name"
-                validators={{
-                  onChange: updateExpenseSchema.shape.name,
-                  onBlur: updateExpenseSchema.shape.name,
-                }}
-              >
-                {(field) => (
-                  <Input
-                    id="name"
-                    label="Nombre del gasto"
-                    placeholder="Nombre del gasto"
-                    value={field.state.value}
-                    onChange={(e) => {
-                      field.handleChange(e.target.value);
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            form.handleSubmit();
+          }}
+          className="flex flex-col gap-y-1"
+        >
+          {editName && (
+            <form.Field
+              name="name"
+              validators={{
+                onChange: updateExpenseSchema.shape.name,
+                onBlur: updateExpenseSchema.shape.name,
+              }}
+            >
+              {(field) => (
+                <Input
+                  id="name"
+                  label="Nombre del gasto"
+                  placeholder="Nombre del gasto"
+                  value={field.state.value}
+                  onChange={(e) => {
+                    field.handleChange(e.target.value);
 
-                      toggleIsSendeable(
-                        e.target.value,
-                        expense.name,
-                        field.state.meta.isValid,
-                      );
-                    }}
-                    onBlur={field.handleBlur}
-                    autoComplete="name"
-                    required
-                    error={
-                      field.state.meta.errors[0]?.message ||
-                      field.state.meta.errorMap.onSubmit
+                    toggleIsSendeable(
+                      e.target.value,
+                      expense.name,
+                      field.state.meta.isValid,
+                    );
+                  }}
+                  onBlur={field.handleBlur}
+                  autoComplete="name"
+                  required
+                  error={
+                    field.state.meta.errors[0]?.message ||
+                    field.state.meta.errorMap.onSubmit
+                  }
+                />
+              )}
+            </form.Field>
+          )}
+
+          {editType && (
+            <form.Field
+              name="type"
+              validators={{
+                onChange: updateExpenseSchema.shape.type,
+              }}
+            >
+              {(field) => (
+                <ExpenseTypeSelect
+                  label="Tipo de gasto:"
+                  value={field.state.value}
+                  onChange={(e) => {
+                    field.handleChange(e);
+
+                    toggleIsSendeable(
+                      e,
+                      expense.type,
+                      field.state.meta.isValid,
+                    );
+                  }}
+                  error={
+                    field.state.meta.errors[0]?.message ||
+                    field.state.meta.errorMap.onSubmit
+                  }
+                />
+              )}
+            </form.Field>
+          )}
+
+          {addParticipants && (
+            <form.Field
+              name="participantsToAdd"
+              validators={{
+                onChange: updateExpenseSchema.shape.participantsToAdd,
+                onBlur: updateExpenseSchema.shape.participantsToAdd,
+              }}
+            >
+              {(field) => (
+                <div className="flex flex-col gap-y-8">
+                  <UserSearchEngine
+                    user={user}
+                    onSelect={(p) =>
+                      handleSelectNewParticipants(p, field.handleChange)
                     }
+                    excludeUserIds={[...participantIds, ...newParticipantIds]}
+                    excludeUserNames={participantNames}
+                    onBlur={field.handleBlur}
+                    allowVirtualUsers
                   />
-                )}
-              </form.Field>
-            )}
 
-            {editType && (
-              <form.Field
-                name="type"
-                validators={{
-                  onChange: updateExpenseSchema.shape.type,
-                }}
-              >
-                {(field) => (
-                  <ExpenseTypeSelect
-                    label="Tipo de gasto:"
+                  <Collapse
+                    isOpen={newParticipantIds.length > 0}
+                    contentClassName={clsx(
+                      "relative transition-[padding] duration-300",
+                      newParticipantIds.length > 0 ? "pt-7" : "pt-0",
+                    )}
+                  >
+                    <label
+                      className={clsx(
+                        "absolute left-0 transform font-semibold transition-all duration-300",
+                        !!field.state.value
+                          ? "translate-x-1 -translate-y-6 text-sm"
+                          : "text-md translate-x-3 translate-y-2.5 text-lg",
+                        field.state.value &&
+                          field.state.value.length > 1 &&
+                          "text-primary",
+                      )}
+                    >
+                      Nuevos participantes
+                    </label>
+
+                    <div className="flex max-h-50 flex-wrap gap-2 overflow-y-scroll pt-3">
+                      {newParticipants.map((p) => (
+                        <Tooltip key={p.id} color="info" content={p.name}>
+                          <Badge
+                            color="info"
+                            leftItem={
+                              p.image && (
+                                <Image
+                                  alt="User avatar"
+                                  src={p.image}
+                                  height={14}
+                                  width={14}
+                                  className="-ml-1.5 h-3.5 w-3.5 flex-shrink-0 rounded-full"
+                                />
+                              )
+                            }
+                            rightItem={
+                              participantIds.length > 1 && (
+                                <Button
+                                  aria-label="Remove selected user"
+                                  type="button"
+                                  onClick={() =>
+                                    handleRemoveNewParticipant(p.id)
+                                  }
+                                  unstyled
+                                  className="hover:text-background/90 text-background cursor-pointer rounded-full transition-colors duration-300"
+                                >
+                                  <X className="-mr-1 h-3.5 w-3.5 stroke-3" />
+                                </Button>
+                              )
+                            }
+                          >
+                            {p.id === user.id ? "Tu" : p.name}
+                          </Badge>
+                        </Tooltip>
+                      ))}
+                    </div>
+                  </Collapse>
+                </div>
+              )}
+            </form.Field>
+          )}
+
+          {removeParticipant && (
+            <p>
+              ¿Estas seguro que deseas eliminar a{" "}
+              <span className="text-semibold">{selectedParticipant.name}</span>{" "}
+              del gasto?
+            </p>
+          )}
+
+          {editPaidById && (
+            <form.Field
+              name="paidById"
+              validators={{
+                onChange: updateExpenseSchema.shape.paidById,
+              }}
+            >
+              {(field) => (
+                <div className="col-span-1 flex flex-col">
+                  <Select
+                    options={getParticipantOptions(participants)}
                     value={field.state.value}
                     onChange={(e) => {
                       field.handleChange(e);
 
                       toggleIsSendeable(
                         e,
-                        expense.type,
+                        expense.paidById,
                         field.state.meta.isValid,
                       );
                     }}
-                    error={
+                    label="Pagado por:"
+                    placeholder="Selecciona un participante"
+                  />
+
+                  <InputErrorMessage
+                    message={
                       field.state.meta.errors[0]?.message ||
                       field.state.meta.errorMap.onSubmit
                     }
                   />
-                )}
-              </form.Field>
-            )}
+                </div>
+              )}
+            </form.Field>
+          )}
 
-            {addParticipants && (
+          {editPaymentDate && (
+            <form.Field
+              name="paymentDate"
+              validators={{
+                onChange: updateExpenseSchema.shape.paymentDate,
+              }}
+            >
+              {(field) => (
+                <DatePicker
+                  value={field.state.value}
+                  onChange={(e) => {
+                    field.handleChange(e);
+
+                    toggleIsSendeable(
+                      e.toISOString(),
+                      expense.paymentDate,
+                      field.state.meta.isValid,
+                    );
+                  }}
+                  error={
+                    field.state.meta.errors[0]?.message ||
+                    field.state.meta.errorMap.onSubmit
+                  }
+                />
+              )}
+            </form.Field>
+          )}
+
+          {editGroupId && (
+            <form.Field
+              name="groupId"
+              validators={{
+                onChange: updateExpenseSchema.shape.groupId,
+                onBlur: updateExpenseSchema.shape.groupId,
+              }}
+            >
+              {(field) => (
+                <GroupPicker
+                  version="v2"
+                  value={field.state.value}
+                  onChange={(e) => {
+                    field.handleChange(e);
+
+                    toggleIsSendeable(e, "", field.state.meta.isValid);
+                  }}
+                  pickedParticipants={participants}
+                  onBlur={field.handleBlur}
+                  error={
+                    field.state.meta.errors[0]?.message ||
+                    field.state.meta.errorMap.onSubmit
+                  }
+                />
+              )}
+            </form.Field>
+          )}
+
+          {editAmount && (
+            <form.Field
+              name="amount"
+              validators={{
+                onChange: updateExpenseSchema.shape.amount,
+                onBlur: updateExpenseSchema.shape.amount,
+              }}
+            >
+              {(field) => (
+                <AmountInput
+                  label="Monto"
+                  value={field.state.value}
+                  onChange={(e) => {
+                    field.handleChange(e);
+
+                    toggleIsSendeable(
+                      e,
+                      Number.isInteger(expense.amount)
+                        ? Number(expense.amount.toFixed(2))
+                        : expense.amount,
+                      field.state.meta.isValid,
+                    );
+                  }}
+                  onBlur={field.handleBlur}
+                  error={
+                    field.state.meta.errors[0]?.message ||
+                    field.state.meta.errorMap.onSubmit
+                  }
+                />
+              )}
+            </form.Field>
+          )}
+
+          {addParticipantPayment && (
+            <div className="flex flex-col gap-8">
+              <div className="flex flex-col gap-2">
+                <p>
+                  Se marcará como <span className="font-semibold">pagado</span>{" "}
+                  el total del monto adeudado.
+                </p>
+
+                <p className="text-foreground/75 text-sm">
+                  El monto no es editable y esta acción no se puede deshacer.
+                </p>
+              </div>
+
               <form.Field
-                name="participantsToAdd"
+                name="participantPayment"
                 validators={{
-                  onChange: updateExpenseSchema.shape.participantsToAdd,
-                  onBlur: updateExpenseSchema.shape.participantsToAdd,
-                }}
-              >
-                {(field) => (
-                  <div className="flex flex-col gap-y-8">
-                    <UserSearchEngine
-                      user={user}
-                      onSelect={(p) =>
-                        handleSelectNewParticipants(p, field.handleChange)
-                      }
-                      excludeUserIds={[...participantIds, ...newParticipantIds]}
-                      excludeUserNames={participantNames}
-                      onBlur={field.handleBlur}
-                      allowVirtualUsers
-                    />
-
-                    <Collapse
-                      isOpen={newParticipantIds.length > 0}
-                      contentClassName={clsx(
-                        "relative transition-[padding] duration-300",
-                        newParticipantIds.length > 0 ? "pt-7" : "pt-0",
-                      )}
-                    >
-                      <label
-                        className={clsx(
-                          "absolute left-0 transform font-semibold transition-all duration-300",
-                          !!field.state.value
-                            ? "translate-x-1 -translate-y-6 text-sm"
-                            : "text-md translate-x-3 translate-y-2.5 text-lg",
-                          field.state.value &&
-                            field.state.value.length > 1 &&
-                            "text-primary",
-                        )}
-                      >
-                        Nuevos participantes
-                      </label>
-
-                      <div className="flex max-h-50 flex-wrap gap-2 overflow-y-scroll pt-3">
-                        {newParticipants.map((p) => (
-                          <Tooltip key={p.id} color="info" content={p.name}>
-                            <Badge
-                              color="info"
-                              leftItem={
-                                p.image && (
-                                  <Image
-                                    alt="User avatar"
-                                    src={p.image}
-                                    height={14}
-                                    width={14}
-                                    className="-ml-1.5 h-3.5 w-3.5 flex-shrink-0 rounded-full"
-                                  />
-                                )
-                              }
-                              rightItem={
-                                participantIds.length > 1 && (
-                                  <Button
-                                    aria-label="Remove selected user"
-                                    type="button"
-                                    onClick={() =>
-                                      handleRemoveNewParticipant(p.id)
-                                    }
-                                    unstyled
-                                    className="hover:text-background/90 text-background cursor-pointer rounded-full transition-colors duration-300"
-                                  >
-                                    <X className="-mr-1 h-3.5 w-3.5 stroke-3" />
-                                  </Button>
-                                )
-                              }
-                            >
-                              {p.id === user.id ? "Tu" : p.name}
-                            </Badge>
-                          </Tooltip>
-                        ))}
-                      </div>
-                    </Collapse>
-                  </div>
-                )}
-              </form.Field>
-            )}
-
-            {removeParticipant && (
-              <p>
-                ¿Estas seguro que deseas eliminar a{" "}
-                <span className="text-semibold">
-                  {selectedParticipant.name}
-                </span>{" "}
-                del gasto?
-              </p>
-            )}
-
-            {editPaidById && (
-              <form.Field
-                name="paidById"
-                validators={{
-                  onChange: updateExpenseSchema.shape.paidById,
-                }}
-              >
-                {(field) => (
-                  <div className="col-span-1 flex flex-col">
-                    <Select
-                      options={getParticipantOptions(participants)}
-                      value={field.state.value}
-                      onChange={(e) => {
-                        field.handleChange(e);
-
-                        toggleIsSendeable(
-                          e,
-                          expense.paidById,
-                          field.state.meta.isValid,
-                        );
-                      }}
-                      label="Pagado por:"
-                      placeholder="Selecciona un participante"
-                    />
-
-                    <InputErrorMessage
-                      message={
-                        field.state.meta.errors[0]?.message ||
-                        field.state.meta.errorMap.onSubmit
-                      }
-                    />
-                  </div>
-                )}
-              </form.Field>
-            )}
-
-            {editPaymentDate && (
-              <form.Field
-                name="paymentDate"
-                validators={{
-                  onChange: updateExpenseSchema.shape.paymentDate,
-                }}
-              >
-                {(field) => (
-                  <DatePicker
-                    value={field.state.value}
-                    onChange={(e) => {
-                      field.handleChange(e);
-
-                      toggleIsSendeable(
-                        e.toISOString(),
-                        expense.paymentDate,
-                        field.state.meta.isValid,
-                      );
-                    }}
-                    error={
-                      field.state.meta.errors[0]?.message ||
-                      field.state.meta.errorMap.onSubmit
-                    }
-                  />
-                )}
-              </form.Field>
-            )}
-
-            {editGroupId && (
-              <form.Field
-                name="groupId"
-                validators={{
-                  onChange: updateExpenseSchema.shape.groupId,
-                  onBlur: updateExpenseSchema.shape.groupId,
-                }}
-              >
-                {(field) => (
-                  <GroupPicker
-                    version="v2"
-                    value={field.state.value}
-                    onChange={(e) => {
-                      field.handleChange(e);
-
-                      toggleIsSendeable(e, "", field.state.meta.isValid);
-                    }}
-                    pickedParticipants={participants}
-                    onBlur={field.handleBlur}
-                    error={
-                      field.state.meta.errors[0]?.message ||
-                      field.state.meta.errorMap.onSubmit
-                    }
-                  />
-                )}
-              </form.Field>
-            )}
-
-            {editAmount && (
-              <form.Field
-                name="amount"
-                validators={{
-                  onChange: updateExpenseSchema.shape.amount,
-                  onBlur: updateExpenseSchema.shape.amount,
+                  onChange: updateExpenseSchema.shape.participantPayment,
+                  onBlur: updateExpenseSchema.shape.participantPayment,
                 }}
               >
                 {(field) => (
                   <AmountInput
-                    label="Monto"
-                    value={field.state.value}
-                    onChange={(e) => {
-                      field.handleChange(e);
-
-                      toggleIsSendeable(
-                        e,
-                        Number.isInteger(expense.amount)
-                          ? Number(expense.amount.toFixed(2))
-                          : expense.amount,
-                        field.state.meta.isValid,
-                      );
-                    }}
+                    label="Total a liquidar"
+                    value={field.state.value?.amount}
+                    onChange={(value) =>
+                      field.handleChange((e) => e && { ...e, amount: value })
+                    }
                     onBlur={field.handleBlur}
                     error={
                       field.state.meta.errors[0]?.message ||
                       field.state.meta.errorMap.onSubmit
                     }
+                    disabled
                   />
                 )}
               </form.Field>
-            )}
+            </div>
+          )}
 
-            {addParticipantPayment && (
-              <div className="flex flex-col gap-8">
-                <div className="flex flex-col gap-2">
-                  <p>
-                    Se marcará como{" "}
-                    <span className="font-semibold">pagado</span> el total del
-                    monto adeudado.
-                  </p>
+          <Button
+            type="submit"
+            className="mt-4 lg:mt-7"
+            loading={isPending || isResolvingParticipants}
+            disabled={!isSendeable}
+            fullWidth
+          >
+            {fieldsToUpdate.length > 1
+              ? editPaymentData
+                ? buttonLabels.paymentData
+                : buttonLabels.default
+              : buttonLabels[fieldsToUpdate[0]]}
+          </Button>
 
-                  <p className="text-foreground/75 text-sm">
-                    El monto no es editable y esta acción no se puede deshacer.
-                  </p>
-                </div>
-
-                <form.Field
-                  name="participantPayment"
-                  validators={{
-                    onChange: updateExpenseSchema.shape.participantPayment,
-                    onBlur: updateExpenseSchema.shape.participantPayment,
-                  }}
-                >
-                  {(field) => (
-                    <AmountInput
-                      label="Total a liquidar"
-                      value={field.state.value?.amount}
-                      onChange={(value) =>
-                        field.handleChange((e) => e && { ...e, amount: value })
-                      }
-                      onBlur={field.handleBlur}
-                      error={
-                        field.state.meta.errors[0]?.message ||
-                        field.state.meta.errorMap.onSubmit
-                      }
-                      disabled
-                    />
-                  )}
-                </form.Field>
-              </div>
-            )}
-
-            <Button
-              type="submit"
-              className="mt-4 lg:mt-7"
-              loading={isPending || isResolvingParticipants}
-              disabled={!isSendeable}
-              fullWidth
-            >
-              {fieldsToUpdate.length > 1
-                ? editPaymentData
-                  ? buttonLabels.paymentData
-                  : buttonLabels.default
-                : buttonLabels[fieldsToUpdate[0]]}
-            </Button>
-
-            <form.Subscribe selector={(state) => [state.errorMap]}>
-              {([errorMap]) => {
-                return <FormErrorMessage message={errorMap.onServer} />;
-              }}
-            </form.Subscribe>
-          </form>
-        )}
+          <form.Subscribe selector={(state) => [state.errorMap]}>
+            {([errorMap]) => {
+              return <FormErrorMessage message={errorMap.onServer} />;
+            }}
+          </form.Subscribe>
+        </form>
       </>
     </Modal>
   );

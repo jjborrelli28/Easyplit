@@ -8,19 +8,14 @@ import { useSession } from "next-auth/react";
 import { useForm } from "@tanstack/react-form";
 
 import useUpdateUser from "@/hooks/data/user/useUpdateUser";
+import useSnackbar from "@/hooks/useSnackbar";
 
-import type {
-  ResponseMessage,
-  ServerErrorResponse,
-  UpdateUserFields,
-} from "@/lib/api/types";
-import ICON_MAP from "@/lib/icons";
+import type { ServerErrorResponse, UpdateUserFields } from "@/lib/api/types";
 import { updateUserSchema } from "@/lib/validations/schemas";
 
 import Button from "@/components/Button";
 import FormErrorMessage from "@/components/FormErrorMessage";
 import Input from "@/components/Input";
-import MessageCard from "@/components/MessageCard";
 import Modal from "@/components/Modal";
 
 interface MyAccountSectionProps {
@@ -31,9 +26,9 @@ const MyAccountSection = ({ user }: MyAccountSectionProps) => {
   const { update } = useSession();
 
   const { mutate: updateUser, isPending } = useUpdateUser(user.id);
+  const { showSnackbar } = useSnackbar();
 
   const [modalIsOpen, setModalIsOpen] = useState(false);
-  const [message, setMessage] = useState<ResponseMessage | null>(null);
 
   const form = useForm<
     UpdateUserFields,
@@ -64,10 +59,17 @@ const MyAccountSection = ({ user }: MyAccountSectionProps) => {
       };
 
       updateUser(body, {
-        onSuccess: (res) => {
+        onSuccess: async (res) => {
           form.reset();
 
-          res?.message && setMessage(res.message);
+          if (res?.message) {
+            showSnackbar(res.message.title as string, {
+              color: res.message.color,
+            });
+          }
+
+          await update();
+          handleCloseModal();
         },
         onError: (res) => {
           const {
@@ -215,111 +217,87 @@ const MyAccountSection = ({ user }: MyAccountSectionProps) => {
         isOpen={modalIsOpen}
         onClose={handleCloseModal}
         title="Confirmar cambios"
-        showHeader={!message}
-        unstyled={!!message}
       >
-        {message ? (
-          <MessageCard
-            {...message}
-            icon={ICON_MAP[message.icon]}
-            countdown={{
-              color: message.color,
-              start: 3,
-              onComplete: async () => {
-                await update();
+        <>
+          <p>
+            Para guardar los cambios en tus datos personales, por favor ingresá
+            tu contraseña actual.
+          </p>
 
-                handleCloseModal();
-              },
+          <p className="text-sm italic">
+            {nameUpdated && passwordUpdated
+              ? "“Estás por modificar tu nombre y tu contraseña.”"
+              : nameUpdated
+                ? "“Estás a punto de actualizar tu nombre.”"
+                : "“Estás a punto de cambiar tu contraseña.”"}
+          </p>
+
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              form.handleSubmit();
             }}
+            className="flex flex-col gap-y-8"
           >
-            {message.content}
-          </MessageCard>
-        ) : (
-          <>
-            <p>
-              Para guardar los cambios en tus datos personales, por favor
-              ingresá tu contraseña actual.
-            </p>
-
-            <p className="text-sm italic">
-              {nameUpdated && passwordUpdated
-                ? "“Estás por modificar tu nombre y tu contraseña.”"
-                : nameUpdated
-                  ? "“Estás a punto de actualizar tu nombre.”"
-                  : "“Estás a punto de cambiar tu contraseña.”"}
-            </p>
-
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                form.handleSubmit();
-              }}
-              className="flex flex-col gap-y-8"
-            >
-              {passwordUpdated && (
-                <form.Field
-                  name="currentPassword"
-                  validators={{
-                    onBlur: updateUserSchema.shape.currentPassword,
-                  }}
-                >
-                  {(field) => (
-                    <>
-                      <Input
-                        id="currentPassword"
-                        type="password"
-                        label="Contraseña actual"
-                        placeholder="Contraseña actual"
-                        value={field.state.value}
-                        onChange={(e) =>
-                          field.handleChange(e.target.value.trim())
-                        }
-                        onBlur={field.handleBlur}
-                        autoComplete="currentPassword"
-                        required
-                        error={
-                          field.state.meta.errors[0]?.message ||
-                          field.state.meta.errorMap.onSubmit
-                        }
-                        containerClassName="!pt-4"
-                      />
-                    </>
-                  )}
-                </form.Field>
-              )}
-
-              <div className="flex flex-col">
-                <div className="flex flex-col gap-y-4">
-                  <Button
-                    type="submit"
-                    color="success"
-                    loading={isPending}
-                    fullWidth
-                  >
-                    Aceptar
-                  </Button>
-
-                  <Button
-                    onClick={handleCloseModal}
-                    color="secondary"
-                    fullWidth
-                  >
-                    Cancelar
-                  </Button>
-                </div>
-
-                <form.Subscribe selector={(state) => [state.errorMap]}>
-                  {([errorMap]) => (
-                    <FormErrorMessage
-                      message={errorMap.onServer}
-                      contentClassName="!mt-4 !mb-0"
+            {passwordUpdated && (
+              <form.Field
+                name="currentPassword"
+                validators={{
+                  onBlur: updateUserSchema.shape.currentPassword,
+                }}
+              >
+                {(field) => (
+                  <>
+                    <Input
+                      id="currentPassword"
+                      type="password"
+                      label="Contraseña actual"
+                      placeholder="Contraseña actual"
+                      value={field.state.value}
+                      onChange={(e) =>
+                        field.handleChange(e.target.value.trim())
+                      }
+                      onBlur={field.handleBlur}
+                      autoComplete="currentPassword"
+                      required
+                      error={
+                        field.state.meta.errors[0]?.message ||
+                        field.state.meta.errorMap.onSubmit
+                      }
+                      containerClassName="!pt-4"
                     />
-                  )}
-                </form.Subscribe>
+                  </>
+                )}
+              </form.Field>
+            )}
+
+            <div className="flex flex-col">
+              <div className="flex flex-col gap-y-4">
+                <Button
+                  type="submit"
+                  color="success"
+                  loading={isPending}
+                  fullWidth
+                >
+                  Aceptar
+                </Button>
+
+                <Button onClick={handleCloseModal} color="secondary" fullWidth>
+                  Cancelar
+                </Button>
               </div>
-            </form>
-          </>
-        )}
+
+              <form.Subscribe selector={(state) => [state.errorMap]}>
+                {([errorMap]) => (
+                  <FormErrorMessage
+                    message={errorMap.onServer}
+                    contentClassName="!mt-4 !mb-0"
+                  />
+                )}
+              </form.Subscribe>
+            </div>
+          </form>
+        </>
       </Modal>
     </>
   );

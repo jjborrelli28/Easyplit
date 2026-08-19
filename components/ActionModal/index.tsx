@@ -1,5 +1,3 @@
-import { useState } from "react";
-
 import Image from "next/image";
 
 import type { Session } from "next-auth";
@@ -27,11 +25,7 @@ const ActionModal = ({
   onClose,
   ...restProps
 }: ActionModalProps) => {
-  const [showHeader, setShowHeader] = useState(true);
-
   if (!user) return null;
-
-  const handleShowModalHeader = (state: boolean) => setShowHeader(state);
 
   return (
     <Modal
@@ -42,29 +36,17 @@ const ActionModal = ({
           ? "Crear un gasto"
           : "Crear un grupo"
       }
-      showHeader={showHeader}
-      unstyled={!showHeader}
       className={clsx(
         "!gap-y-4 lg:!gap-y-8",
-        type === ACTION_TYPE.CREATE_EXPENSE &&
-          showHeader &&
-          "lg:!w-3xl lg:!max-w-3xl",
+        type === ACTION_TYPE.CREATE_EXPENSE && "lg:!w-3xl lg:!max-w-3xl",
       )}
     >
       {type === ACTION_TYPE.CREATE_EXPENSE && (
-        <ExpenseForm
-          user={user}
-          onClose={onClose}
-          handleShowModalHeader={handleShowModalHeader}
-        />
+        <ExpenseForm user={user} onClose={onClose} />
       )}
 
       {type === ACTION_TYPE.CREATE_GROUP && (
-        <GroupForm
-          user={user}
-          onClose={onClose}
-          handleShowModalHeader={handleShowModalHeader}
-        />
+        <GroupForm user={user} onClose={onClose} />
       )}
     </Modal>
   );

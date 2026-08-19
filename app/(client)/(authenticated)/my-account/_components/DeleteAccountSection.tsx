@@ -29,6 +29,9 @@ const DeleteAccountSection = ({ user }: DeleteAccountSectionProps) => {
   const { mutate: deleteUser, isPending } = useDeleteUser(user.id);
 
   const [modalIsOpen, setModalIsOpen] = useState(false);
+  // This deletion signs the user out and redirects to the homepage, so the
+  // countdown (instead of an instant snackbar) gives them a beat to see
+  // that's about to happen.
   const [message, setMessage] = useState<ResponseMessage | null>(null);
   // Accounts without a password (Google) skip the password field, so typing
   // the account's own email back is what stands in as the deliberate

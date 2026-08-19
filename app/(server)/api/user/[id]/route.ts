@@ -401,7 +401,7 @@ export const DELETE: DeleteUserHandler = async (req, context) => {
             message: {
                 color: "success",
                 icon: "Trash",
-                title: "Cuenta eliminada",
+                title: "¡Cuenta eliminada con éxito!",
                 content: [
                     {
                         text: "Tu cuenta fue eliminada correctamente.",

@@ -3,6 +3,7 @@ import { type FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import useDeleteExpense from "@/hooks/data/expense/useDeleteExpense";
+import useSnackbar from "@/hooks/useSnackbar";
 
 import type { ResponseMessage } from "@/lib/api/types";
 import ICON_MAP from "@/lib/icons";
@@ -18,8 +19,12 @@ interface DeleteAccountSectionProps {
 const DeleteExpenseSection = ({ expenseId }: DeleteAccountSectionProps) => {
   const router = useRouter();
   const { mutate: deleteExpense, isPending } = useDeleteExpense(expenseId);
+  const { showSnackbar } = useSnackbar();
 
   const [modalIsOpen, setModalIsOpen] = useState(false);
+  // Only the success path sets this: it redirects away, so the countdown
+  // gives the user a beat to see that's about to happen. Errors don't
+  // redirect, so they go straight to a snackbar instead.
   const [message, setMessage] = useState<ResponseMessage | null>(null);
 
   const handleDelete = (e: FormEvent) => {
@@ -34,14 +39,8 @@ const DeleteExpenseSection = ({ expenseId }: DeleteAccountSectionProps) => {
           error: { message },
         } = res.response.data;
 
-        setMessage({
-          color: "danger",
-          icon: "CircleX",
-          title: "No se puedo eliminar el gasto",
-          content: message.map((paragraph) => ({
-            text: paragraph,
-          })),
-        });
+        showSnackbar(message.join(" "), { color: "danger" });
+        setModalIsOpen(false);
       },
     });
   };

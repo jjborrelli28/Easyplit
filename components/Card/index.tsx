@@ -20,9 +20,9 @@ import { CheckCircle, CircleChevronDown, Clock, Trash } from "lucide-react";
 
 import useDeleteExpense from "@/hooks/data/expense/useDeleteExpense";
 import useDeleteGroup from "@/hooks/data/group/useDeleteGroup";
+import useSnackbar from "@/hooks/useSnackbar";
 
-import type { Expense, Group, ResponseMessage } from "@/lib/api/types";
-import ICON_MAP from "@/lib/icons";
+import type { Expense, Group } from "@/lib/api/types";
 import { areAllDebtsSettled } from "@/lib/utils";
 
 import AmountNumber from "../AmountNumber";
@@ -31,7 +31,6 @@ import Button from "../Button";
 import Collapse from "../Collapse";
 import { EXPENSE_TYPE, EXPENSE_TYPES } from "../ExpenseTypeSelect/constants";
 import { GROUP_TYPE, GROUP_TYPES } from "../GroupTypeSelect/constants";
-import MessageCard from "../MessageCard";
 import Modal from "../Modal";
 import Tooltip from "../Tooltip";
 
@@ -61,6 +60,7 @@ const Card = ({
 }: CardProps) => {
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { showSnackbar } = useSnackbar();
 
   const { mutate: deleteExpense, isPending: expenseIsPending } =
     useDeleteExpense(data.id);
@@ -70,8 +70,6 @@ const Card = ({
 
   const [deleteModalIsOpen, setDeleteModalIsOpen] = useState(false);
   const [participantsIsOpen, setParticipantsIsOpen] = useState(false);
-
-  const [message, setMessage] = useState<ResponseMessage | null>(null);
 
   if (!data || !loggedUser) return null;
 
@@ -107,21 +105,21 @@ const Card = ({
             queryKey: ["my-expenses-and-groups", loggedUser.id!],
           });
 
-          res?.message && setMessage(res.message);
+          if (res?.message) {
+            showSnackbar(res.message.title as string, {
+              color: res.message.color,
+            });
+          }
+
+          setDeleteModalIsOpen(false);
         },
         onError: (res) => {
           const {
             error: { message },
           } = res.response.data;
 
-          setMessage({
-            color: "danger",
-            icon: "CircleX",
-            title: "No se puedo eliminar el gasto",
-            content: message.map((paragraph) => ({
-              text: paragraph,
-            })),
-          });
+          showSnackbar(message.join(" "), { color: "danger" });
+          setDeleteModalIsOpen(false);
         },
       });
     } else {
@@ -131,21 +129,21 @@ const Card = ({
             queryKey: ["my-expenses-and-groups", loggedUser.id!],
           });
 
-          res?.message && setMessage(res.message);
+          if (res?.message) {
+            showSnackbar(res.message.title as string, {
+              color: res.message.color,
+            });
+          }
+
+          setDeleteModalIsOpen(false);
         },
         onError: (res) => {
           const {
             error: { message },
           } = res.response.data;
 
-          setMessage({
-            color: "danger",
-            icon: "CircleX",
-            title: "No se puedo eliminar el grupo",
-            content: message.map((paragraph) => ({
-              text: paragraph,
-            })),
-          });
+          showSnackbar(message.join(" "), { color: "danger" });
+          setDeleteModalIsOpen(false);
         },
       });
     }
@@ -336,64 +334,42 @@ const Card = ({
       <Modal
         isOpen={deleteModalIsOpen}
         onClose={() => setDeleteModalIsOpen(false)}
-        showHeader={!message}
         title={`¿Estás seguro de que quieres eliminar este
                   ${type === CARD_TYPE.EXPENSE ? "gasto" : "grupo"}?`}
-        unstyled={!!message}
       >
-        {message ? (
-          <MessageCard
-            {...message}
-            icon={ICON_MAP[message.icon]}
-            countdown={{
-              color: message.color,
-              start: 3,
-              onComplete: async () => {
-                setDeleteModalIsOpen(false);
-                setMessage(null);
-              },
-            }}
-            className="w-md"
+        <div className="flex flex-col gap-y-8">
+          <div className="flex flex-col gap-y-2">
+            <p className="text-sm">
+              Esta acción eliminará tu{" "}
+              {type === CARD_TYPE.EXPENSE ? "gasto" : "grupo"}{" "}
+              <span className="font-semibold">{data.name}</span> de forma
+              permanente para todos los{" "}
+              {type === CARD_TYPE.EXPENSE
+                ? "participantes del mismo."
+                : "miembros del grupo."}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-y-4">
+          <Button
+            onClick={handleDelete}
+            color="danger"
+            loading={isDeleting}
+            fullWidth
           >
-            {message.content}
-          </MessageCard>
-        ) : (
-          <>
-            <div className="flex flex-col gap-y-8">
-              <div className="flex flex-col gap-y-2">
-                <p className="text-sm">
-                  Esta acción eliminará tu{" "}
-                  {type === CARD_TYPE.EXPENSE ? "gasto" : "grupo"}{" "}
-                  <span className="font-semibold">{data.name}</span> de forma
-                  permanente para todos los{" "}
-                  {type === CARD_TYPE.EXPENSE
-                    ? "participantes del mismo."
-                    : "miembros del grupo."}
-                </p>
-              </div>
-            </div>
+            Eliminar {type === CARD_TYPE.EXPENSE ? "gasto" : "grupo"}
+          </Button>
 
-            <div className="flex flex-col gap-y-4">
-              <Button
-                onClick={handleDelete}
-                color="danger"
-                loading={isDeleting}
-                fullWidth
-              >
-                Eliminar {type === CARD_TYPE.EXPENSE ? "gasto" : "grupo"}
-              </Button>
-
-              <Button
-                onClick={() => setDeleteModalIsOpen(false)}
-                variant="outlined"
-                color="secondary"
-                fullWidth
-              >
-                Cancelar
-              </Button>
-            </div>
-          </>
-        )}
+          <Button
+            onClick={() => setDeleteModalIsOpen(false)}
+            variant="outlined"
+            color="secondary"
+            fullWidth
+          >
+            Cancelar
+          </Button>
+        </div>
       </Modal>
     </>
   );

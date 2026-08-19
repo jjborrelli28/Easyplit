@@ -763,7 +763,7 @@ export const DELETE: DeleteExpenseHandler = async (req, context) => {
             message: {
                 color: "success",
                 icon: "Trash",
-                title: "Gasto eliminado",
+                title: "¡Gasto eliminado con éxito!",
                 content: [
                     {
                         text: "El gasto fue eliminado correctamente.",
