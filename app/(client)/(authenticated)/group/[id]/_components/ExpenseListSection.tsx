@@ -23,17 +23,11 @@ const ExpenseListSection = ({ group, loggedUser }: ExpenseListSectionProps) => {
     [],
   );
   const [isCreateExpenseOpen, setIsCreateExpenseOpen] = useState(false);
+  const [isExpenseListOpen, setIsExpenseListOpen] = useState(true);
 
   return (
     <>
       <section className="flex flex-col gap-y-8">
-        <PanelList
-          type={CARD_TYPE.EXPENSE}
-          list={group.expenses}
-          group={group}
-          isActive
-        />
-
         <div className="flex flex-wrap justify-end gap-4">
           <Button
             aria-label="Create expense"
@@ -53,6 +47,15 @@ const ExpenseListSection = ({ group, loggedUser }: ExpenseListSectionProps) => {
             Añadir gastos
           </Button>
         </div>
+
+        <PanelList
+          type={CARD_TYPE.EXPENSE}
+          list={group.expenses}
+          group={group}
+          isActive={isExpenseListOpen}
+          handleTogglePanel={() => setIsExpenseListOpen((prev) => !prev)}
+          forceOpenOnDesktop={false}
+        />
       </section>
 
       {group && loggedUser && (

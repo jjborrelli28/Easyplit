@@ -9,6 +9,10 @@ import type {
     ServerErrorResponse,
     SuccessResponse,
 } from "@/lib/api/types";
+import {
+    isGroupAccessible,
+    isGroupPrivilegedEditor,
+} from "@/lib/auth/authorization";
 import AuthOptions from "@/lib/auth/options";
 import { upsertContactsForRealUserIds } from "@/lib/contacts/helpers";
 import prisma from "@/lib/prisma";
@@ -132,6 +136,20 @@ export const GET: GetGroupHandler = async (req, context) => {
                     },
                 },
                 { status: 404 },
+            );
+        }
+
+        if (!isGroupAccessible(group, loggedUserId)) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: {
+                        code: API_RESPONSE_CODE.FORBIDDEN,
+                        message: ["No tenés permisos para ver este grupo."],
+                        statusCode: 403,
+                    },
+                },
+                { status: 403 },
             );
         }
 
@@ -277,11 +295,7 @@ export const PATCH: UpdateGroupHandler = async (req, context) => {
             );
         }
 
-        const isAuthorized =
-            updatedById === group.createdById ||
-            group.members.some((m) => m.userId === updatedById);
-
-        if (!isAuthorized) {
+        if (!isGroupAccessible(group, updatedById)) {
             return NextResponse.json(
                 {
                     success: false,
@@ -297,10 +311,14 @@ export const PATCH: UpdateGroupHandler = async (req, context) => {
 
         // Only the group's creator can rename it or manage its members —
         // mirrors `isUserEditor` in the client, which already hides these
-        // actions from any other member that `isAuthorized` above still lets
-        // in. Adding/removing an expense from the group stays open to any
-        // member, matching the existing (ungated) client behavior for those.
-        const isPrivilegedEditor = updatedById === group.createdById;
+        // actions from any other member that `isGroupAccessible` above still
+        // lets in. Adding/removing an expense from the group stays open to
+        // any member, matching the existing (ungated) client behavior for
+        // those.
+        const isPrivilegedEditor = isGroupPrivilegedEditor(
+            group,
+            updatedById,
+        );
 
         const isSelfRemoval =
             memberToRemove !== undefined && memberToRemove === updatedById;
@@ -541,6 +559,7 @@ export const PATCH: UpdateGroupHandler = async (req, context) => {
                     memberToRemove,
                     expensesToAdd,
                     expenseToRemove,
+                    isSelfRemoval,
                 }),
                 content: [
                     ...(name ? getSuccessMessage.name(name, "group") : []),
@@ -550,6 +569,7 @@ export const PATCH: UpdateGroupHandler = async (req, context) => {
                         ? getSuccessMessage.memberToRemove(
                             group.members.find((p) => p.userId === memberToRemove)?.user
                                 ?.name,
+                            isSelfRemoval,
                         )
                         : []),
                     ...(expensesToAdd
@@ -660,6 +680,20 @@ export const DELETE: DeleteGroupHandler = async (req, context) => {
                     },
                 },
                 { status: 404 },
+            );
+        }
+
+        if (!isGroupPrivilegedEditor(group, createdById)) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: {
+                        code: API_RESPONSE_CODE.FORBIDDEN,
+                        message: ["Solo quien creó el grupo puede eliminarlo."],
+                        statusCode: 403,
+                    },
+                },
+                { status: 403 },
             );
         }
 

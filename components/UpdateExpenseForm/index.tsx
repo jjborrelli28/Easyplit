@@ -7,6 +7,7 @@ import {
 } from "react";
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 import type { Session } from "next-auth";
 
@@ -23,10 +24,12 @@ import useSnackbar from "@/hooks/useSnackbar";
 import type {
   Expense,
   ExpenseUpdateFieldErrors,
+  ResponseMessage,
   ServerErrorResponse,
   UpdateExpenseFields,
   User,
 } from "@/lib/api/types";
+import ICON_MAP from "@/lib/icons";
 import { getParticipantIds } from "@/lib/utils";
 import { updateExpenseSchema } from "@/lib/validations/schemas";
 
@@ -43,6 +46,7 @@ import FormErrorMessage from "../FormErrorMessage";
 import GroupPicker from "../GroupPicker";
 import Input from "../Input";
 import InputErrorMessage from "../InputErrorMessage";
+import MessageCard from "../MessageCard";
 import Modal from "../Modal";
 import Select from "../Select";
 import Tooltip from "../Tooltip";
@@ -97,6 +101,7 @@ const UpdateExpenseForm = ({
   selectedParticipant,
   amountToBeSettled,
 }: UpdateExpenseFormProps) => {
+  const router = useRouter();
   const { mutate: updateExpense, isPending } = useUpdateExpense(expense.id);
   const resolveDraftUsers = useResolveDraftUsers();
   const queryClient = useQueryClient();
@@ -105,12 +110,18 @@ const UpdateExpenseForm = ({
   const [newParticipants, setNewParticipants] = useState<User[]>([]);
   const [isSendeable, setIsSendeable] = useState(false);
   const [isResolvingParticipants, setIsResolvingParticipants] = useState(false);
+  // Only the self-removal success path sets this: it redirects away, so the
+  // countdown gives the user a beat to see that's about to happen. Every
+  // other update keeps the existing snackbar-only behavior.
+  const [message, setMessage] = useState<ResponseMessage | null>(null);
 
   const editName = fieldsToUpdate.includes("name");
   const editType = fieldsToUpdate.includes("type");
   const addParticipants = fieldsToUpdate.includes("participantsToAdd");
   const removeParticipant =
     fieldsToUpdate.includes("participantToRemove") && selectedParticipant;
+  const isSelfRemoval =
+    !!removeParticipant && selectedParticipant.id === user.id;
   const editPaidById = fieldsToUpdate.includes("paidById");
   const editPaymentDate = fieldsToUpdate.includes("paymentDate");
   const editPaymentData =
@@ -219,6 +230,11 @@ const UpdateExpenseForm = ({
 
       updateExpense(body, {
         onSuccess: (res) => {
+          if (isSelfRemoval) {
+            res?.message && setMessage(res.message);
+            return;
+          }
+
           queryClient.invalidateQueries({
             queryKey: ["expense", expense.id],
           });
@@ -311,8 +327,6 @@ const UpdateExpenseForm = ({
   const removeParticipantAmount = expense.participants.find(
     (p) => p.userId === selectedParticipant?.id,
   )?.amount;
-  const isSelfRemoval =
-    !!removeParticipant && selectedParticipant.id === user.id;
   // Group members (real or virtual) are already known within the group's
   // context — offering them directly here avoids the contact-network search,
   // which can't see a virtual user someone ELSE in the group created.
@@ -328,6 +342,7 @@ const UpdateExpenseForm = ({
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
+      showHeader={!message}
       title={
         fieldsToUpdate.length > 1
           ? editPaymentData
@@ -337,9 +352,27 @@ const UpdateExpenseForm = ({
             ? "Salir del gasto"
             : modalTitles[fieldsToUpdate[0]]
       }
-      className="!gap-y-4 lg:!gap-y-8"
+      unstyled={!!message}
+      className={message ? undefined : "!gap-y-4 lg:!gap-y-8"}
     >
-      <>
+      {message ? (
+        <MessageCard
+          {...message}
+          icon={ICON_MAP[message.icon]}
+          countdown={{
+            color: message.color,
+            start: 3,
+            onComplete: async () => {
+              handleClose();
+              setMessage(null);
+              router.push("/dashboard");
+            },
+          }}
+          className="w-md"
+        >
+          {message.content}
+        </MessageCard>
+      ) : (
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -770,7 +803,7 @@ const UpdateExpenseForm = ({
             }}
           </form.Subscribe>
         </form>
-      </>
+      )}
     </Modal>
   );
 };

@@ -7,6 +7,7 @@ import {
 } from "react";
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 import type { Session } from "next-auth";
 
@@ -23,10 +24,12 @@ import useSnackbar from "@/hooks/useSnackbar";
 import type {
   Group,
   GroupUpdateFieldErrors,
+  ResponseMessage,
   ServerErrorResponse,
   UpdateGroupFields,
   User,
 } from "@/lib/api/types";
+import ICON_MAP from "@/lib/icons";
 import { compareMembers, getParticipantIds } from "@/lib/utils";
 import { updateGroupSchema } from "@/lib/validations/schemas";
 
@@ -40,6 +43,7 @@ import FormErrorMessage from "../FormErrorMessage";
 import GroupTypeSelect from "../GroupTypeSelect";
 import { GROUP_TYPE } from "../GroupTypeSelect/constants";
 import Input from "../Input";
+import MessageCard from "../MessageCard";
 import Modal from "../Modal";
 import Tooltip from "../Tooltip";
 import UserSearchEngine from "../UserSearchEngine";
@@ -86,6 +90,7 @@ const UpdateGroupForm = ({
   selectedMember,
   selectedExpense,
 }: UpdateGroupFormProps) => {
+  const router = useRouter();
   const { mutate: updateGroup, isPending } = useUpdateGroup(group.id);
   const resolveDraftUsers = useResolveDraftUsers();
   const queryClient = useQueryClient();
@@ -98,12 +103,17 @@ const UpdateGroupForm = ({
   );
   const [isSendeable, setIsSendeable] = useState(false);
   const [isResolvingMembers, setIsResolvingMembers] = useState(false);
+  // Only the self-removal success path sets this: it redirects away, so the
+  // countdown gives the user a beat to see that's about to happen. Every
+  // other update keeps the existing snackbar-only behavior.
+  const [message, setMessage] = useState<ResponseMessage | null>(null);
 
   const editName = fieldsToUpdate.includes("name");
   const editType = fieldsToUpdate.includes("type");
   const addMembers = fieldsToUpdate.includes("membersToAdd");
   const removeMember =
     fieldsToUpdate.includes("memberToRemove") && selectedMember;
+  const isSelfRemoval = !!removeMember && selectedMember.id === user.id;
   const addExpenses = fieldsToUpdate.includes("expensesToAdd");
   const removeExpense =
     fieldsToUpdate.includes("expenseToRemove") && selectedExpense;
@@ -201,6 +211,11 @@ const UpdateGroupForm = ({
         { ...value, membersToAdd },
         {
           onSuccess: (res) => {
+            if (isSelfRemoval) {
+              res?.message && setMessage(res.message);
+              return;
+            }
+
             queryClient.invalidateQueries({
               queryKey: ["group", group.id],
             });
@@ -323,12 +338,12 @@ const UpdateGroupForm = ({
         ?.amount ?? 0),
     0,
   );
-  const isSelfRemoval = !!removeMember && selectedMember.id === user.id;
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
+      showHeader={!message}
       title={
         fieldsToUpdate.length > 1
           ? modalTitles.default
@@ -336,9 +351,27 @@ const UpdateGroupForm = ({
             ? "Salir del grupo"
             : modalTitles[fieldsToUpdate[0]]
       }
-      className="!gap-y-4 lg:!gap-y-8"
+      unstyled={!!message}
+      className={message ? undefined : "!gap-y-4 lg:!gap-y-8"}
     >
-      <>
+      {message ? (
+        <MessageCard
+          {...message}
+          icon={ICON_MAP[message.icon]}
+          countdown={{
+            color: message.color,
+            start: 3,
+            onComplete: async () => {
+              handleClose();
+              setMessage(null);
+              router.push("/dashboard");
+            },
+          }}
+          className="w-md"
+        >
+          {message.content}
+        </MessageCard>
+      ) : (
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -631,7 +664,7 @@ const UpdateGroupForm = ({
             {([errorMap]) => <FormErrorMessage message={errorMap.onServer} />}
           </form.Subscribe>
         </form>
-      </>
+      )}
     </Modal>
   );
 };

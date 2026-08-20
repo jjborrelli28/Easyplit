@@ -310,11 +310,20 @@ export const getSuccessMessage = {
             text: `Se ${participants.length > 1 ? "agregaron" : "agregó"} ${participants.length} participante${participants.length > 1 ? "s" : ""} al gasto.`,
         },
     ],
-    participantToRemove: (participantName?: string | null) => [
-        {
-            text: `${participantName} fue removido del gasto.`,
-        },
-    ],
+    participantToRemove: (
+        participantName?: string | null,
+        isSelfRemoval?: boolean,
+    ) =>
+        isSelfRemoval
+            ? [
+                  { text: "Tu salida del gasto fue registrada correctamente." },
+                  { text: "Serás redirigido al dashboard.", style: "muted" },
+              ]
+            : [
+                  {
+                      text: `${participantName} fue removido del gasto.`,
+                  },
+              ],
     paidById: (participantName?: string | null) => [
         {
             text: `Ahora ${participantName} figura como quien pagó el gasto.`,
@@ -373,11 +382,20 @@ export const getSuccessMessage = {
             text: `Se ${members.length > 1 ? "agregaron" : "agregó"} ${members.length} mimenbro${members.length > 1 ? "s" : ""} al grupo.`,
         },
     ],
-    memberToRemove: (memberName?: string | null) => [
-        {
-            text: `${memberName} fue removido del grupo.`,
-        },
-    ],
+    memberToRemove: (
+        memberName?: string | null,
+        isSelfRemoval?: boolean,
+    ) =>
+        isSelfRemoval
+            ? [
+                  { text: "Tu salida del grupo fue registrada correctamente." },
+                  { text: "Serás redirigido al dashboard.", style: "muted" },
+              ]
+            : [
+                  {
+                      text: `${memberName} fue removido del grupo.`,
+                  },
+              ],
     expensesToAdd: (expenses: string[]) => [
         {
             text: `Se ${expenses.length > 1 ? "agregaron" : "agregó"} ${expenses.length} gasto${expenses.length > 1 ? "s" : ""} al grupo.`,
@@ -404,6 +422,7 @@ export const getExpenseUpdateTitle = (fields: {
     groupId?: string;
     amount?: number;
     participantPayment?: { userId: string; amount: number };
+    isSelfRemoval?: boolean;
 }): string => {
     if (fields.participantPayment) {
         return `¡Pago de $${formatAmount(fields.participantPayment.amount)} registrado!`;
@@ -418,7 +437,11 @@ export const getExpenseUpdateTitle = (fields: {
             : "¡Participante agregado!";
     }
 
-    if (fields.participantToRemove) return "¡Participante eliminado!";
+    if (fields.participantToRemove) {
+        return fields.isSelfRemoval
+            ? "¡Saliste del gasto!"
+            : "¡Participante eliminado!";
+    }
     if (fields.paidById && fields.paymentDate) {
         return "¡Datos del pago actualizados!";
     }
@@ -438,6 +461,7 @@ export const getGroupUpdateTitle = (fields: {
     memberToRemove?: string;
     expensesToAdd?: string[];
     expenseToRemove?: string;
+    isSelfRemoval?: boolean;
 }): string => {
     if (fields.name) return "¡Nombre del grupo actualizado!";
     if (fields.type) return "¡Categoría del grupo actualizada!";
@@ -448,7 +472,11 @@ export const getGroupUpdateTitle = (fields: {
             : "¡Miembro agregado!";
     }
 
-    if (fields.memberToRemove) return "¡Miembro eliminado!";
+    if (fields.memberToRemove) {
+        return fields.isSelfRemoval
+            ? "¡Saliste del grupo!"
+            : "¡Miembro eliminado!";
+    }
 
     if (fields.expensesToAdd) {
         return fields.expensesToAdd.length > 1

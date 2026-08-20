@@ -35,6 +35,11 @@ interface PanelListProps {
   group?: Group;
   isActive: boolean;
   handleTogglePanel?: VoidFunction;
+  // The dashboard's two-column layout always shows both panels on desktop
+  // (isActive there just toggles which one takes the single mobile column),
+  // so desktop is force-opened by default. Pass false for a panel that
+  // should genuinely collapse/expand on desktop too.
+  forceOpenOnDesktop?: boolean;
 }
 
 const PanelList = ({
@@ -43,6 +48,7 @@ const PanelList = ({
   group,
   isActive: rawIsActive,
   handleTogglePanel,
+  forceOpenOnDesktop = true,
 }: PanelListProps) => {
   const { status, data } = useSession();
 
@@ -68,7 +74,7 @@ const PanelList = ({
   const { width } = useWindowsDimensions();
 
   const isMobile = width < 1024;
-  const isActive = isMobile ? rawIsActive : true;
+  const isActive = !isMobile && forceOpenOnDesktop ? true : rawIsActive;
 
   const isGroupExpense = type === CARD_TYPE.EXPENSE && loggedUser && group;
 
@@ -93,7 +99,10 @@ const PanelList = ({
             aria-label="Toggle show panel list"
             onClick={handleTogglePanel}
             unstyled
-            className="hover:text-foreground/90 inline-block h-6 w-6 cursor-pointer align-middle transition-colors duration-300 lg:hidden"
+            className={clsx(
+              "hover:text-foreground/90 inline-block h-6 w-6 cursor-pointer align-middle transition-colors duration-300",
+              forceOpenOnDesktop && "lg:hidden",
+            )}
           >
             <CircleChevronDown
               className={clsx(
@@ -109,7 +118,8 @@ const PanelList = ({
       <Collapse
         isOpen={isActive}
         className={clsx(
-          "lg:row-start-2 lg:grid-rows-[1fr] lg:opacity-100",
+          "lg:row-start-2",
+          forceOpenOnDesktop && "lg:grid-rows-[1fr] lg:opacity-100",
           PANEL_TYPE_STYLES.list[type],
         )}
         contentClassName={clsx("flex flex-1 flex-col gap-y-4")}

@@ -9,6 +9,10 @@ import type {
     ServerErrorResponse,
     SuccessResponse,
 } from "@/lib/api/types";
+import {
+    isExpenseAccessible,
+    isExpensePrivilegedEditor,
+} from "@/lib/auth/authorization";
 import AuthOptions from "@/lib/auth/options";
 import { upsertContactsForRealUserIds } from "@/lib/contacts/helpers";
 import prisma from "@/lib/prisma";
@@ -131,6 +135,20 @@ export const GET: GetExpenseHandler = async (req, context) => {
                     },
                 },
                 { status: 404 },
+            );
+        }
+
+        if (!isExpenseAccessible(expense, loggedUserId)) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: {
+                        code: API_RESPONSE_CODE.FORBIDDEN,
+                        message: ["No tenés permisos para ver este gasto."],
+                        statusCode: 403,
+                    },
+                },
+                { status: 403 },
             );
         }
 
@@ -287,14 +305,7 @@ export const PATCH: UpdateExpenseHandler = async (req, context) => {
             );
         }
 
-        const isAuthorized =
-            updatedById === expense.createdById ||
-            updatedById === expense.paidById ||
-            expense.participants.some((p) => p.userId === updatedById) ||
-            (expense.group?.members.some((m) => m.userId === updatedById) ??
-                false);
-
-        if (!isAuthorized) {
+        if (!isExpenseAccessible(expense, updatedById)) {
             return NextResponse.json(
                 {
                     success: false,
@@ -313,11 +324,12 @@ export const PATCH: UpdateExpenseHandler = async (req, context) => {
         // Only the expense's creator or payer can touch anything beyond
         // settling a debt or removing yourself — mirrors `isUserEditor` in
         // the client, which already hides these actions from any other
-        // participant/group member that the broader `isAuthorized` check
-        // above still lets in.
-        const isPrivilegedEditor =
-            updatedById === expense.createdById ||
-            updatedById === expense.paidById;
+        // participant/group member that the broader `isExpenseAccessible`
+        // check above still lets in.
+        const isPrivilegedEditor = isExpensePrivilegedEditor(
+            expense,
+            updatedById,
+        );
 
         const isSelfRemoval =
             participantToRemove !== undefined &&
@@ -706,6 +718,7 @@ export const PATCH: UpdateExpenseHandler = async (req, context) => {
                     groupId: groupId && group ? groupId : undefined,
                     amount,
                     participantPayment,
+                    isSelfRemoval,
                 }),
                 content: [
                     ...(name ? getSuccessMessage.name(name, "expense") : []),
@@ -718,6 +731,7 @@ export const PATCH: UpdateExpenseHandler = async (req, context) => {
                               expense.participants.find(
                                   (p) => p.userId === participantToRemove,
                               )?.user?.name,
+                              isSelfRemoval,
                           )
                         : []),
                     ...(paidById && paymentDate
@@ -884,6 +898,22 @@ export const DELETE: DeleteExpenseHandler = async (req, context) => {
                     },
                 },
                 { status: 404 },
+            );
+        }
+
+        if (!isExpensePrivilegedEditor(expense, loggedUserId)) {
+            return NextResponse.json(
+                {
+                    success: false,
+                    error: {
+                        code: API_RESPONSE_CODE.FORBIDDEN,
+                        message: [
+                            "Solo quien creó el gasto o lo pagó puede eliminarlo.",
+                        ],
+                        statusCode: 403,
+                    },
+                },
+                { status: 403 },
             );
         }
 
