@@ -331,6 +331,14 @@ export const getSuccessMessage = {
             text: `El gasto fue asignado al grupo “${groupName}”.`,
         },
     ],
+    participantPayment: (
+        participantName: string | null | undefined,
+        amount: number,
+    ) => [
+        {
+            text: `Se registró un pago de $${formatAmount(amount)} de ${participantName}.`,
+        },
+    ],
     amount: (amount: number) => [
         {
             text: `El monto del gasto fue actualizado a $${formatAmount(amount)}.`,
@@ -356,6 +364,77 @@ export const getSuccessMessage = {
             text: `${expenseName} fue removido del grupo.`,
         },
     ],
+};
+
+// Picks a single, specific snackbar title for a PATCH /api/expense/[id]
+// request — mirrors the same field-priority order used to build `content`
+// above, since the client only ever submits one of these at a time (except
+// paidById+paymentDate together, handled as its own case).
+export const getExpenseUpdateTitle = (fields: {
+    name?: string;
+    type?: string;
+    participantsToAdd?: string[];
+    participantToRemove?: string;
+    paidById?: string;
+    paymentDate?: Date;
+    groupId?: string;
+    amount?: number;
+    participantPayment?: { userId: string; amount: number };
+}): string => {
+    if (fields.participantPayment) {
+        return `¡Pago de $${formatAmount(fields.participantPayment.amount)} registrado!`;
+    }
+
+    if (fields.name) return "¡Nombre del gasto actualizado!";
+    if (fields.type) return "¡Categoría del gasto actualizada!";
+
+    if (fields.participantsToAdd) {
+        return fields.participantsToAdd.length > 1
+            ? "¡Participantes agregados!"
+            : "¡Participante agregado!";
+    }
+
+    if (fields.participantToRemove) return "¡Participante eliminado!";
+    if (fields.paidById && fields.paymentDate) {
+        return "¡Datos del pago actualizados!";
+    }
+    if (fields.paidById) return "¡Pagador actualizado!";
+    if (fields.paymentDate) return "¡Fecha de pago actualizada!";
+    if (fields.groupId) return "¡Gasto asignado al grupo!";
+    if (fields.amount) return "¡Monto del gasto actualizado!";
+
+    return "¡Gasto actualizado con éxito!";
+};
+
+// Same idea as getExpenseUpdateTitle, for PATCH /api/group/[id].
+export const getGroupUpdateTitle = (fields: {
+    name?: string;
+    type?: string;
+    membersToAdd?: string[];
+    memberToRemove?: string;
+    expensesToAdd?: string[];
+    expenseToRemove?: string;
+}): string => {
+    if (fields.name) return "¡Nombre del grupo actualizado!";
+    if (fields.type) return "¡Categoría del grupo actualizada!";
+
+    if (fields.membersToAdd) {
+        return fields.membersToAdd.length > 1
+            ? "¡Miembros agregados!"
+            : "¡Miembro agregado!";
+    }
+
+    if (fields.memberToRemove) return "¡Miembro eliminado!";
+
+    if (fields.expensesToAdd) {
+        return fields.expensesToAdd.length > 1
+            ? "¡Gastos agregados al grupo!"
+            : "¡Gasto agregado al grupo!";
+    }
+
+    if (fields.expenseToRemove) return "¡Gasto eliminado del grupo!";
+
+    return "¡Grupo actualizado con éxito!";
 };
 
 export const getTotalAmountOfExpenses = (expenses?: Expense[]) =>

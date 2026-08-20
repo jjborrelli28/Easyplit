@@ -26,6 +26,7 @@ interface AmountInputProps {
   id?: string;
   name?: string;
   disabled?: boolean;
+  max?: number;
   error?: string | null;
   className?: string;
   containerClassName?: string;
@@ -41,6 +42,7 @@ const AmountInput = ({
   id,
   name,
   disabled = false,
+  max,
   error,
   className,
   containerClassName,
@@ -118,7 +120,9 @@ const AmountInput = ({
     const formattedNumber = +formattedString;
 
     if (formattedNumber <= 1_000_000_000_000_000) {
-      onChange(formattedNumber);
+      onChange(
+        max !== undefined ? Math.min(formattedNumber, max) : formattedNumber,
+      );
     }
   };
 

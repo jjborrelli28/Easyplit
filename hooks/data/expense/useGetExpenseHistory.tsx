@@ -1,12 +1,16 @@
 import { useQuery } from "@tanstack/react-query";
 
-import type { ExpenseHistory } from "@prisma/client";
+import type { ExpenseHistory, User } from "@prisma/client";
 
 import type { SuccessResponse } from "@/lib/api/types";
 import api from "@/lib/axios";
 
+export type ExpenseHistoryEntry = ExpenseHistory & {
+  updatedBy: Pick<User, "id" | "name" | "email" | "image">;
+};
+
 const getExpenseHistory = async (expenseId?: string | null) => {
-  const { data } = await api.get<SuccessResponse<ExpenseHistory[]>>(
+  const { data } = await api.get<SuccessResponse<ExpenseHistoryEntry[]>>(
     `/expense/${expenseId}/history`,
   );
 

@@ -11,6 +11,7 @@ import Spinner from "@/components/Spinner";
 import BalanceSection from "./_components/BalanceSection";
 import DeleteExpenseSection from "./_components/DeleteExpenseSection";
 import HeaderSection from "./_components/HeaderSection";
+import PaymentHistorySection from "./_components/PaymentHistorySection";
 
 const ExpensePage = () => {
   const params = useParams();
@@ -45,6 +46,8 @@ const ExpensePage = () => {
               <hr className="border-h-background" />
 
               <BalanceSection expense={expense} loggedUser={loggedUser} />
+
+              <PaymentHistorySection expense={expense} />
 
               {isUserEditor && (
                 <>

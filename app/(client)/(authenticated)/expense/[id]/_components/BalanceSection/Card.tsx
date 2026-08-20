@@ -131,7 +131,7 @@ export const Card = ({
                 unstyled
                 className="text-primary hover:text-primary/90 flex w-fit cursor-pointer items-center gap-x-2 text-sm font-semibold text-nowrap transition-colors duration-300"
               >
-                <BanknoteArrowUp className="h-5 w-5" /> Liquidar deuda
+                <BanknoteArrowUp className="h-5 w-5" /> Registrar pago
               </Button>
             )}
 

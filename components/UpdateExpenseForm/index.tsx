@@ -59,7 +59,7 @@ const modalTitles = {
   participantToRemove: "Eliminar participante",
   groupId: "Asignar gasto a un grupo",
   default: "Modificar datos del gasto",
-  participantPayment: "Liquidar deuda",
+  participantPayment: "Registrar pago",
 };
 
 const buttonLabels = {
@@ -73,7 +73,7 @@ const buttonLabels = {
   participantToRemove: "Eliminar participante",
   groupId: "Agregar a grupo",
   default: "Aplicar cambios",
-  participantPayment: "Agregar pago",
+  participantPayment: "Registrar pago",
 };
 
 export type UpdateExpenseFieldKeys = (keyof UpdateExpenseFields)[];
@@ -222,6 +222,12 @@ const UpdateExpenseForm = ({
           queryClient.invalidateQueries({
             queryKey: ["expense", expense.id],
           });
+
+          if (addParticipantPayment) {
+            queryClient.invalidateQueries({
+              queryKey: ["expense-history", expense.id],
+            });
+          }
 
           if (res?.message) {
             showSnackbar(res.message.title as string, {
@@ -647,12 +653,17 @@ const UpdateExpenseForm = ({
             <div className="flex flex-col gap-8">
               <div className="flex flex-col gap-2">
                 <p>
-                  Se marcará como <span className="font-semibold">pagado</span>{" "}
-                  el total del monto adeudado.
+                  Registrá el pago de{" "}
+                  <span className="font-semibold">
+                    {selectedParticipant.name}
+                  </span>
+                  . Podés cargar el total adeudado o un pago parcial.
                 </p>
 
                 <p className="text-foreground/75 text-sm">
-                  El monto no es editable y esta acción no se puede deshacer.
+                  El monto no puede superar los{" "}
+                  <AmountNumber size="xs">{amountToBeSettled}</AmountNumber> que
+                  todavía debe, y esta acción no se puede deshacer.
                 </p>
               </div>
 
@@ -665,7 +676,7 @@ const UpdateExpenseForm = ({
               >
                 {(field) => (
                   <AmountInput
-                    label="Total a liquidar"
+                    label="Monto a registrar"
                     value={field.state.value?.amount}
                     onChange={(value) =>
                       field.handleChange((e) => e && { ...e, amount: value })
@@ -675,7 +686,7 @@ const UpdateExpenseForm = ({
                       field.state.meta.errors[0]?.message ||
                       field.state.meta.errorMap.onSubmit
                     }
-                    disabled
+                    max={amountToBeSettled}
                   />
                 )}
               </form.Field>

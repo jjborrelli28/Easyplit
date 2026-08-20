@@ -14,7 +14,10 @@ import { upsertContactsForRealUserIds } from "@/lib/contacts/helpers";
 import prisma from "@/lib/prisma";
 import {
     compareMembers,
+    getExpenseUpdateTitle,
     getParticipantIds,
+    getPersonalBalance,
+    getPositiveTruncatedNumber,
     getSuccessMessage,
     getUpdatedExpenseFields,
 } from "@/lib/utils";
@@ -538,6 +541,49 @@ export const PATCH: UpdateExpenseHandler = async (req, context) => {
                 );
             }
 
+            if (participantPayment.userId === expense.paidById) {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        error: {
+                            code: API_RESPONSE_CODE.INVALID_FIELD,
+                            message: ["El pagador no puede liquidarse a sí mismo."],
+                            statusCode: 400,
+                        },
+                    },
+                    { status: 400 },
+                );
+            }
+
+            // Custom/partial payments are allowed, but never past what's
+            // actually still owed — recomputed fresh here (not trusted from
+            // the client) against the participant's current cumulative
+            // amount, so it self-corrects across successive partial
+            // payments instead of drifting.
+            const outstandingBalance = getPositiveTruncatedNumber(
+                getPersonalBalance(
+                    existingParticipant.amount,
+                    expense.amount,
+                    expense.participants.length,
+                ),
+            );
+
+            if (participantPayment.amount - outstandingBalance > 0.005) {
+                return NextResponse.json(
+                    {
+                        success: false,
+                        error: {
+                            code: API_RESPONSE_CODE.INVALID_FIELD,
+                            message: [
+                                `El monto no puede superar la deuda pendiente ($${outstandingBalance.toFixed(2)}).`,
+                            ],
+                            statusCode: 400,
+                        },
+                    },
+                    { status: 400 },
+                );
+            }
+
             await prisma.expenseParticipant.update({
                 where: {
                     expenseId_userId: {
@@ -618,7 +664,17 @@ export const PATCH: UpdateExpenseHandler = async (req, context) => {
             message: {
                 color: "success",
                 icon: "CheckCircle",
-                title: "¡Gasto actualizado con éxito!",
+                title: getExpenseUpdateTitle({
+                    name,
+                    type,
+                    participantsToAdd,
+                    participantToRemove,
+                    paidById,
+                    paymentDate,
+                    groupId: groupId && group ? groupId : undefined,
+                    amount,
+                    participantPayment,
+                }),
                 content: [
                     ...(name ? getSuccessMessage.name(name, "expense") : []),
                     ...(type ? getSuccessMessage.type(type, "expense") : []),
@@ -648,6 +704,14 @@ export const PATCH: UpdateExpenseHandler = async (req, context) => {
                                 : []),
                     ...(groupId && group ? getSuccessMessage.groupId(group?.name) : []),
                     ...(amount ? getSuccessMessage.amount(amount) : []),
+                    ...(participantPayment
+                        ? getSuccessMessage.participantPayment(
+                            expense.participants.find(
+                                (p) => p.userId === participantPayment.userId,
+                            )?.user?.name,
+                            participantPayment.amount,
+                        )
+                        : []),
                 ],
             },
             data: updatedExpense,

@@ -13,6 +13,7 @@ import AuthOptions from "@/lib/auth/options";
 import { upsertContactsForRealUserIds } from "@/lib/contacts/helpers";
 import prisma from "@/lib/prisma";
 import {
+    getGroupUpdateTitle,
     getParticipantIds,
     getSuccessMessage,
     getUpdatedGroupFields,
@@ -533,7 +534,14 @@ export const PATCH: UpdateGroupHandler = async (req, context) => {
             message: {
                 color: "success",
                 icon: "CheckCircle",
-                title: "¡Grupo actualizado con éxito!",
+                title: getGroupUpdateTitle({
+                    name,
+                    type,
+                    membersToAdd,
+                    memberToRemove,
+                    expensesToAdd,
+                    expenseToRemove,
+                }),
                 content: [
                     ...(name ? getSuccessMessage.name(name, "group") : []),
                     ...(type ? getSuccessMessage.type(type, "group") : []),
