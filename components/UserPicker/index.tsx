@@ -24,6 +24,11 @@ interface UserPickerProps
   value: string[];
   onChange: (userIds: string[]) => void;
   onUserListChange?: (users: User[]) => void;
+  // Seeds the picker with more than just the current user — needed when
+  // `value` already comes pre-filled with ids (e.g. a whole group's
+  // members) the picker was never involved in adding, so it otherwise has
+  // no user objects to resolve those ids' badges (name, avatar) from.
+  initialUsers?: User[];
   modalTitle?: string;
   modalListTitle?: string;
   error?: string | null;
@@ -36,6 +41,7 @@ const UserPicker = ({
   onChange,
   onBlur,
   onUserListChange,
+  initialUsers,
   excludeUserIds = [],
   modalTitle = "Buscar usuario",
   modalListTitle = "Usuarios",
@@ -43,7 +49,7 @@ const UserPicker = ({
   containerClassName,
   allowVirtualUsers,
 }: UserPickerProps) => {
-  const [users, setUsers] = useState<User[]>([user as User]);
+  const [users, setUsers] = useState<User[]>(initialUsers ?? [user as User]);
   const [isOpen, setIsOpen] = useState(false);
 
   const selectedUserIds = useMemo(() => new Set(value), [value]);

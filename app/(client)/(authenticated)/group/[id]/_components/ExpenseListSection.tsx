@@ -4,6 +4,7 @@ import type { Session } from "next-auth";
 
 import type { Group } from "@/lib/api/types";
 
+import ActionModal, { ACTION_TYPE } from "@/components/ActionModal";
 import Button from "@/components/Button";
 import { CARD_TYPE } from "@/components/Card";
 import PanelList from "@/components/PanelList";
@@ -21,6 +22,7 @@ const ExpenseListSection = ({ group, loggedUser }: ExpenseListSectionProps) => {
   const [fieldsToUpdate, setFieldsToUpdate] = useState<UpdateGroupFieldKeys>(
     [],
   );
+  const [isCreateExpenseOpen, setIsCreateExpenseOpen] = useState(false);
 
   return (
     <>
@@ -32,15 +34,23 @@ const ExpenseListSection = ({ group, loggedUser }: ExpenseListSectionProps) => {
           isActive
         />
 
-        <div className="flex justify-end">
+        <div className="flex flex-wrap justify-end gap-4">
           <Button
+            aria-label="Create expense"
+            onClick={() => setIsCreateExpenseOpen(true)}
+          >
+            Crear gasto
+          </Button>
+
+          <Button
+            variant="outlined"
             aria-label="Add expense"
             onClick={() => {
               setFieldsToUpdate(["expensesToAdd"]);
               setIsOpen(true);
             }}
           >
-            Añadir gasto/s
+            Añadir gastos
           </Button>
         </div>
       </section>
@@ -54,6 +64,14 @@ const ExpenseListSection = ({ group, loggedUser }: ExpenseListSectionProps) => {
           fieldsToUpdate={fieldsToUpdate}
         />
       )}
+
+      <ActionModal
+        type={ACTION_TYPE.CREATE_EXPENSE}
+        user={loggedUser}
+        group={group}
+        isOpen={isCreateExpenseOpen}
+        onClose={() => setIsCreateExpenseOpen(false)}
+      />
     </>
   );
 };

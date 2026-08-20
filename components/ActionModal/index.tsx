@@ -2,7 +2,7 @@ import Image from "next/image";
 
 import type { Session } from "next-auth";
 
-import type { User } from "@/lib/api/types";
+import type { Group, User } from "@/lib/api/types";
 
 import Modal, { type ModalProps } from "../Modal";
 import ExpenseForm from "./components/ExpenseForm";
@@ -17,11 +17,15 @@ export enum ACTION_TYPE {
 interface ActionModalProps extends Omit<ModalProps, "children"> {
   type: ACTION_TYPE | null;
   user?: Session["user"];
+  // Only meaningful for CREATE_EXPENSE: pre-links the new expense to this
+  // group and pre-selects all of its current members as participants.
+  group?: Group;
 }
 
 const ActionModal = ({
   type,
   user,
+  group,
   onClose,
   ...restProps
 }: ActionModalProps) => {
@@ -33,7 +37,9 @@ const ActionModal = ({
       onClose={onClose}
       title={
         type === ACTION_TYPE.CREATE_EXPENSE
-          ? "Crear un gasto"
+          ? group
+            ? `Crear un gasto en "${group.name}"`
+            : "Crear un gasto"
           : "Crear un grupo"
       }
       className={clsx(
@@ -42,7 +48,7 @@ const ActionModal = ({
       )}
     >
       {type === ACTION_TYPE.CREATE_EXPENSE && (
-        <ExpenseForm user={user} onClose={onClose} />
+        <ExpenseForm user={user} onClose={onClose} group={group} />
       )}
 
       {type === ACTION_TYPE.CREATE_GROUP && (

@@ -12,6 +12,7 @@ import useSnackbar from "@/hooks/useSnackbar";
 import type {
   CreateExpenseFields,
   ExpenseCreationFieldErrors,
+  Group,
   ServerErrorResponse,
   User,
 } from "@/lib/api/types";
@@ -34,15 +35,28 @@ import { getParticipantOptions } from "..";
 interface ExpenseFromProps {
   user: Session["user"];
   onClose: VoidFunction;
+  // When creating an expense from within a group, it should start out
+  // linked to that group with every current member pre-selected — the user
+  // can still remove whoever shouldn't be in this particular expense.
+  group?: Group;
 }
 
-const ExpenseForm = ({ user, onClose }: ExpenseFromProps) => {
+const ExpenseForm = ({ user, onClose, group }: ExpenseFromProps) => {
   const { mutate: createExpense, isPending } = useCreateExpense();
   const resolveDraftUsers = useResolveDraftUsers();
   const queryClient = useQueryClient();
   const { showSnackbar } = useSnackbar();
 
-  const [participants, setParticipants] = useState<User[]>([user as User]);
+  const initialParticipants = group
+    ? [
+        user as User,
+        ...group.members
+          .map((member) => member.user)
+          .filter((member) => member.id !== user.id),
+      ]
+    : [user as User];
+
+  const [participants, setParticipants] = useState<User[]>(initialParticipants);
   const [isResolvingParticipants, setIsResolvingParticipants] = useState(false);
 
   const form = useForm<
@@ -61,10 +75,10 @@ const ExpenseForm = ({ user, onClose }: ExpenseFromProps) => {
       name: "",
       type: EXPENSE_TYPE.UNCATEGORIZED,
       amount: 0,
-      participantIds: [user.id!],
+      participantIds: initialParticipants.map((participant) => participant.id!),
       paidById: user.id!,
       paymentDate: today,
-      groupId: undefined,
+      groupId: group?.id,
     },
     onSubmit: async ({ value }) => {
       setIsResolvingParticipants(true);
@@ -101,6 +115,12 @@ const ExpenseForm = ({ user, onClose }: ExpenseFromProps) => {
             queryClient.invalidateQueries({
               queryKey: ["my-expenses-and-groups", user.id!],
             });
+
+            if (group) {
+              queryClient.invalidateQueries({
+                queryKey: ["group", group.id],
+              });
+            }
 
             if (res?.message) {
               showSnackbar(res.message.title as string, {
@@ -202,6 +222,7 @@ const ExpenseForm = ({ user, onClose }: ExpenseFromProps) => {
               value={field.state.value}
               onChange={field.handleChange}
               onUserListChange={(e) => setParticipants(e)}
+              initialUsers={initialParticipants}
               onBlur={field.handleBlur}
               excludeUserIds={field.state.value}
               modalTitle="Buscar participantes"
@@ -261,27 +282,29 @@ const ExpenseForm = ({ user, onClose }: ExpenseFromProps) => {
           )}
         </form.Field>
 
-        <form.Field
-          name="groupId"
-          validators={{
-            onChange: createExpenseSchema.shape.groupId,
-            onBlur: createExpenseSchema.shape.groupId,
-          }}
-        >
-          {(field) => (
-            <GroupPicker
-              value={field.state.value}
-              onChange={field.handleChange}
-              pickedParticipants={participants}
-              onBlur={field.handleBlur}
-              error={
-                field.state.meta.errors[0]?.message ||
-                field.state.meta.errorMap.onSubmit
-              }
-              containerClassName="col-span-1 lg:col-span-2"
-            />
-          )}
-        </form.Field>
+        {!group && (
+          <form.Field
+            name="groupId"
+            validators={{
+              onChange: createExpenseSchema.shape.groupId,
+              onBlur: createExpenseSchema.shape.groupId,
+            }}
+          >
+            {(field) => (
+              <GroupPicker
+                value={field.state.value}
+                onChange={field.handleChange}
+                pickedParticipants={participants}
+                onBlur={field.handleBlur}
+                error={
+                  field.state.meta.errors[0]?.message ||
+                  field.state.meta.errorMap.onSubmit
+                }
+                containerClassName="col-span-1 lg:col-span-2"
+              />
+            )}
+          </form.Field>
+        )}
 
         <form.Field
           name="amount"
