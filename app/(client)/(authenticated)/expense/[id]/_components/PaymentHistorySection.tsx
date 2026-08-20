@@ -1,13 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 
+import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import clsx from "clsx";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { ChevronDown, History } from "lucide-react";
+import { BanknoteArrowUp, ChevronDown, History, UserMinus } from "lucide-react";
 
-import useGetExpenseHistory from "@/hooks/data/expense/useGetExpenseHistory";
+import useGetExpenseHistory, {
+  type ExpenseHistoryEntry,
+} from "@/hooks/data/expense/useGetExpenseHistory";
 
 import type { Expense } from "@/lib/api/types";
 
@@ -19,59 +22,129 @@ interface PaymentHistorySectionProps {
   expense: Expense;
 }
 
-interface PaymentEntry {
+interface PaymentActivity {
+  type: "payment";
   id: string;
   participantName: string;
+  isCurrentParticipant: boolean;
   amount: number;
   createdAt: Date;
   recordedByName: string | null;
   recordedBySelf: boolean;
 }
 
-// `field`'s oldValue/newValue are JSON.stringify'd by getUpdatedExpenseFields
-// — for "participantPayment", newValue is exactly the {userId, amount} that
-// was submitted (the amount of THIS payment, not the participant's new
-// running total), which is exactly what a payment log entry needs.
-const parsePaymentEntries = (
-  history: ReturnType<typeof useGetExpenseHistory>["data"],
+interface RemovalActivity {
+  type: "removal";
+  id: string;
+  participantName: string;
+  amount: number;
+  createdAt: Date;
+  removedByName: string | null;
+  removedBySelf: boolean;
+}
+
+type Activity = PaymentActivity | RemovalActivity;
+
+// `field`'s oldValue/newValue are JSON.stringify'd by getUpdatedExpenseFields.
+// Both "participantPayment" and "participantToRemove" entries denormalize
+// the participant's name (and, for removals, what they had contributed) at
+// the time of the action — a participant can later be removed from the
+// expense entirely, and without that saved here, reading this history
+// afterward would show an unresolvable id with no explanation of who that
+// was or what happened to them.
+const parseActivity = (
+  history: ExpenseHistoryEntry[] | undefined,
   expense: Expense,
-): PaymentEntry[] => {
+): Activity[] => {
   if (!history) return [];
 
   return history
-    .filter((entry) => entry.field === "participantPayment")
-    .map((entry) => {
-      let payload: { userId?: string; amount?: number } = {};
+    .map((entry): Activity | null => {
+      if (entry.field === "participantPayment") {
+        let payload: { userId?: string; amount?: number; name?: string } = {};
 
-      try {
-        payload = entry.newValue ? JSON.parse(entry.newValue) : {};
-      } catch {
-        payload = {};
+        try {
+          payload = entry.newValue ? JSON.parse(entry.newValue) : {};
+        } catch {
+          payload = {};
+        }
+
+        if (!payload.amount) return null;
+
+        const currentParticipant = expense.participants.find(
+          (p) => p.userId === payload.userId,
+        );
+
+        return {
+          type: "payment",
+          id: entry.id,
+          participantName:
+            payload.name ?? currentParticipant?.user.name ?? "Un participante",
+          isCurrentParticipant: !!currentParticipant,
+          amount: payload.amount,
+          createdAt: new Date(entry.createdAt),
+          recordedByName: entry.updatedBy?.name ?? null,
+          recordedBySelf: entry.updatedBy?.id === payload.userId,
+        };
       }
 
-      const participant = expense.participants.find(
-        (p) => p.userId === payload.userId,
-      );
+      if (entry.field === "participantToRemove") {
+        let payload: { userId?: string; name?: string; amount?: number } = {};
 
-      return {
-        id: entry.id,
-        participantName: participant?.user.name ?? "Un participante",
-        amount: payload.amount ?? 0,
-        createdAt: new Date(entry.createdAt),
-        recordedByName: entry.updatedBy?.name ?? null,
-        recordedBySelf: entry.updatedBy?.id === payload.userId,
-      };
+        try {
+          payload = entry.newValue ? JSON.parse(entry.newValue) : {};
+        } catch {
+          payload = {};
+        }
+
+        return {
+          type: "removal",
+          id: entry.id,
+          participantName: payload.name ?? "Un participante",
+          amount: payload.amount ?? 0,
+          createdAt: new Date(entry.createdAt),
+          removedByName: entry.updatedBy?.name ?? null,
+          removedBySelf: entry.updatedBy?.id === payload.userId,
+        };
+      }
+
+      return null;
     })
-    .filter((payment) => payment.amount > 0);
+    .filter((activity): activity is Activity => activity !== null);
 };
 
 const PaymentHistorySection = ({ expense }: PaymentHistorySectionProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const { data: history } = useGetExpenseHistory(expense.id);
 
-  const payments = parsePaymentEntries(history, expense);
+  const activity = parseActivity(history, expense);
 
-  if (payments.length === 0) return null;
+  const containerRef = useRef<HTMLDivElement>(null);
+  // useWindowVirtualizer measures scroll against the whole page, so it needs
+  // to know how far down the page this list actually starts — without this,
+  // it assumes the list starts at the very top of the document, which
+  // (since this section sits well below the header/balance above it) makes
+  // it think the wrong items are in view while scrolling.
+  const [scrollMargin, setScrollMargin] = useState(0);
+
+  useLayoutEffect(() => {
+    if (containerRef.current) {
+      setScrollMargin(containerRef.current.offsetTop);
+    }
+    // Re-measure on open too: the section starts collapsed, and re-checking
+    // once it's actually expanded guards against the page above it having
+    // shifted (e.g. other content finishing its own layout) in the meantime.
+  }, [isOpen]);
+
+  const virtualizer = useWindowVirtualizer({
+    count: activity.length > 0 ? activity.length : 1,
+    estimateSize: () => 71,
+    gap: 0,
+    overscan: 5,
+    scrollMargin,
+  });
+
+  if (activity.length === 0) return null;
 
   return (
     <section className="flex flex-col gap-y-4">
@@ -93,41 +166,85 @@ const PaymentHistorySection = ({ expense }: PaymentHistorySectionProps) => {
         />
       </Button>
 
-      <Collapse isOpen={isOpen}>
-        <ul className="border-h-background flex flex-col border shadow-xl">
-          {payments.map((payment, i) => (
-            <li
-              key={payment.id}
-              className={clsx(
-                "flex items-center justify-between gap-4 p-4",
-                i === 0 ? "bg-h-background" : "bg-background",
-                i > 0 && "border-h-background border-t",
-              )}
-            >
-              <div className="flex flex-col gap-y-0.5">
-                <p className="text-sm">
-                  <span className="font-semibold">
-                    {payment.participantName}
-                  </span>{" "}
-                  registró un pago
-                </p>
+      <Collapse
+        isOpen={isOpen}
+        contentStyle={{
+          height: `${isOpen ? virtualizer.getTotalSize() : 0}px`,
+        }}
+      >
+        <div
+          ref={containerRef}
+          className="border-h-background relative flex w-full flex-col border shadow-xl"
+          style={{ height: `${virtualizer.getTotalSize()}px` }}
+        >
+          {virtualizer.getVirtualItems().map((virtualItem) => {
+            const item = activity[virtualItem.index];
 
-                <p className="text-foreground/75 text-xs">
-                  {format(payment.createdAt, "dd 'de' MMMM 'del' yyyy, HH:mm", {
-                    locale: es,
-                  })}
-                  {!payment.recordedBySelf &&
-                    payment.recordedByName &&
-                    ` — registrado por ${payment.recordedByName}`}
-                </p>
+            if (!item) return null;
+
+            return (
+              <div
+                ref={virtualizer.measureElement}
+                key={virtualItem.key}
+                data-index={virtualItem.index}
+                className={clsx(
+                  "absolute top-0 left-0 flex w-full items-center justify-between gap-4 p-4",
+                  virtualItem.index === 0
+                    ? "bg-h-background"
+                    : "border-h-background bg-background border-t",
+                )}
+                style={{
+                  transform: `translateY(${virtualItem.start - scrollMargin}px)`,
+                }}
+              >
+                <div className="flex flex-col gap-y-0.5">
+                  <p className="text-sm">
+                    <span className="font-semibold">
+                      {item.participantName}
+                    </span>{" "}
+                    {item.type === "payment"
+                      ? "registró un pago"
+                      : "fue eliminado del gasto"}
+                    {item.type === "payment" && !item.isCurrentParticipant && (
+                      <span className="text-foreground/75">
+                        {" "}
+                        (ya no participa del gasto)
+                      </span>
+                    )}
+                  </p>
+
+                  <p className="text-foreground/75 text-xs">
+                    {format(item.createdAt, "dd 'de' MMMM 'del' yyyy, HH:mm", {
+                      locale: es,
+                    })}
+                    {item.type === "payment" &&
+                      !item.recordedBySelf &&
+                      item.recordedByName &&
+                      ` — registrado por ${item.recordedByName}`}
+                    {item.type === "removal" &&
+                      !item.removedBySelf &&
+                      item.removedByName &&
+                      ` — eliminado por ${item.removedByName}`}
+                  </p>
+                </div>
+
+                {item.type === "payment" ? (
+                  <p className="text-success flex items-center gap-x-1.5 font-semibold">
+                    <BanknoteArrowUp className="h-5 w-5 flex-shrink-0" />
+                    <AmountNumber size="lg">{item.amount}</AmountNumber>
+                  </p>
+                ) : item.amount > 0 ? (
+                  <p className="text-danger flex items-center gap-x-1.5 font-semibold">
+                    <UserMinus className="h-5 w-5 flex-shrink-0" />
+                    <AmountNumber size="lg">{item.amount}</AmountNumber>
+                  </p>
+                ) : (
+                  <UserMinus className="text-danger h-6 w-6 flex-shrink-0" />
+                )}
               </div>
-
-              <AmountNumber size="lg" className="text-primary">
-                {payment.amount}
-              </AmountNumber>
-            </li>
-          ))}
-        </ul>
+            );
+          })}
+        </div>
       </Collapse>
     </section>
   );

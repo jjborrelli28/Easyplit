@@ -81,13 +81,13 @@ export const compareMembers = (
     const response =
         differences.length > 0
             ? {
-                haveDifferences: true,
-                differences: { missingMembers, excessParticipants },
-            }
+                  haveDifferences: true,
+                  differences: { missingMembers, excessParticipants },
+              }
             : {
-                haveDifferences: false,
-                differences: { missingMembers: [], excessParticipants: [] },
-            };
+                  haveDifferences: false,
+                  differences: { missingMembers: [], excessParticipants: [] },
+              };
 
     return response;
 };
@@ -188,7 +188,9 @@ const getUpdatedFields = <
     updated: Updated,
     fieldsToCheck: (keyof Updated)[],
     actionFields: (keyof Updated)[],
-    customResolvers: Partial<Record<keyof Updated, FieldResolver<Entity, Updated>>> = {},
+    customResolvers: Partial<
+        Record<keyof Updated, FieldResolver<Entity, Updated>>
+    > = {},
 ): UpdatedField[] => {
     return fieldsToCheck.reduce<UpdatedField[]>((acc, field) => {
         const customResolver = customResolvers[field];
@@ -241,15 +243,37 @@ export const getUpdatedExpenseFields = (
         ],
         ["participantsToAdd", "participantToRemove"],
         {
+            // Both resolvers denormalize the participant's name into the
+            // stored history entry (instead of just their id), since a
+            // participant can later be removed from the expense entirely —
+            // without this, reading the payment history afterward would
+            // show payments from an unresolvable id with no explanation of
+            // who that was or what happened to them.
             participantPayment: (expense, updated) => {
                 const userId = updated.participantPayment?.userId;
-                const oldAmount = expense.participants.find(
+                const participant = expense.participants.find(
                     (p) => p.userId === userId,
-                )?.amount;
+                );
 
                 return {
-                    oldValue: { userId, amount: oldAmount },
-                    newValue: updated.participantPayment,
+                    oldValue: { userId, amount: participant?.amount },
+                    newValue: {
+                        ...updated.participantPayment,
+                        name: participant?.user?.name,
+                    },
+                };
+            },
+            participantToRemove: (expense, updated) => {
+                const userId = updated.participantToRemove;
+                const participant = expense.participants.find(
+                    (p) => p.userId === userId,
+                );
+                const name = participant?.user?.name;
+                const amount = participant?.amount;
+
+                return {
+                    oldValue: null,
+                    newValue: { userId, name, amount },
                 };
             },
         },
@@ -446,7 +470,9 @@ export const getTotalPaidByParticipants = (expenses?: Expense[]) => {
             const paidInThisExpense = expense.participants.reduce(
                 (sum, participant) => {
                     if (participant.userId === expense.paidById)
-                        return sum + expense.amount / expense.participants.length;
+                        return (
+                            sum + expense.amount / expense.participants.length
+                        );
 
                     return sum + participant.amount;
                 },
@@ -528,12 +554,17 @@ export interface SimplifiedDebt {
 export const simplifyDebts: (balances: UserBalance[]) => SimplifiedDebt[] = (
     balances,
 ) => {
-    const debtors = balances.filter((u) => u.balance < 0).map((u) => ({ ...u }));
+    const debtors = balances
+        .filter((u) => u.balance < 0)
+        .map((u) => ({ ...u }));
     const creditors = balances
         .filter((u) => u.balance > 0)
         .map((u) => ({ ...u }));
-    const transactions: { from: UserBalance; to: UserBalance; amount: number }[] =
-        [];
+    const transactions: {
+        from: UserBalance;
+        to: UserBalance;
+        amount: number;
+    }[] = [];
 
     let i = 0,
         j = 0;
