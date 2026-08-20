@@ -89,7 +89,26 @@ export const GET: GetExpenseHandler = async (req, context) => {
                         image: true,
                     },
                 },
-                group: true,
+                // Members (real or virtual) let the client offer them as
+                // quick-add options when editing this expense's
+                // participants — no need to go through the contact-network
+                // search to find someone already known via the group.
+                group: {
+                    include: {
+                        members: {
+                            include: {
+                                user: {
+                                    select: {
+                                        id: true,
+                                        name: true,
+                                        email: true,
+                                        image: true,
+                                    },
+                                },
+                            },
+                        },
+                    },
+                },
                 createdBy: {
                     select: {
                         id: true,
@@ -190,7 +209,9 @@ export const PATCH: UpdateExpenseHandler = async (req, context) => {
         const res = updateExpenseSchema.safeParse(body);
 
         if (!res.success) {
-            const fields = parseZodErrors(res.error) as ExpenseUpdateFieldErrors;
+            const fields = parseZodErrors(
+                res.error,
+            ) as ExpenseUpdateFieldErrors;
 
             return NextResponse.json(
                 {
@@ -279,7 +300,9 @@ export const PATCH: UpdateExpenseHandler = async (req, context) => {
                     success: false,
                     error: {
                         code: API_RESPONSE_CODE.FORBIDDEN,
-                        message: ["No tenés permisos para modificar este gasto."],
+                        message: [
+                            "No tenés permisos para modificar este gasto.",
+                        ],
                         statusCode: 403,
                     },
                 },
@@ -404,18 +427,21 @@ export const PATCH: UpdateExpenseHandler = async (req, context) => {
                         }),
                     newPayerParticipant
                         ? prisma.expenseParticipant.update({
-                            where: {
-                                expenseId_userId: { expenseId: id, userId: paidById },
-                            },
-                            data: { amount: expense.amount },
-                        })
+                              where: {
+                                  expenseId_userId: {
+                                      expenseId: id,
+                                      userId: paidById,
+                                  },
+                              },
+                              data: { amount: expense.amount },
+                          })
                         : prisma.expenseParticipant.create({
-                            data: {
-                                expenseId: id,
-                                userId: paidById,
-                                amount: expense.amount,
-                            },
-                        }),
+                              data: {
+                                  expenseId: id,
+                                  userId: paidById,
+                                  amount: expense.amount,
+                              },
+                          }),
                 ].filter(Boolean),
             );
         }
@@ -477,7 +503,10 @@ export const PATCH: UpdateExpenseHandler = async (req, context) => {
                     targetGroup.members,
                 );
 
-                if (haveDifferences && differences.excessParticipants.length > 0) {
+                if (
+                    haveDifferences &&
+                    differences.excessParticipants.length > 0
+                ) {
                     return NextResponse.json(
                         {
                             success: false,
@@ -518,14 +547,15 @@ export const PATCH: UpdateExpenseHandler = async (req, context) => {
         }
 
         if (participantPayment) {
-            const existingParticipant = await prisma.expenseParticipant.findUnique({
-                where: {
-                    expenseId_userId: {
-                        expenseId: id,
-                        userId: participantPayment.userId,
+            const existingParticipant =
+                await prisma.expenseParticipant.findUnique({
+                    where: {
+                        expenseId_userId: {
+                            expenseId: id,
+                            userId: participantPayment.userId,
+                        },
                     },
-                },
-            });
+                });
 
             if (!existingParticipant) {
                 return NextResponse.json(
@@ -547,7 +577,9 @@ export const PATCH: UpdateExpenseHandler = async (req, context) => {
                         success: false,
                         error: {
                             code: API_RESPONSE_CODE.INVALID_FIELD,
-                            message: ["El pagador no puede liquidarse a sí mismo."],
+                            message: [
+                                "El pagador no puede liquidarse a sí mismo.",
+                            ],
                             statusCode: 400,
                         },
                     },
@@ -626,14 +658,14 @@ export const PATCH: UpdateExpenseHandler = async (req, context) => {
         const [, updatedExpense] = await Promise.all([
             changedFields.length > 0
                 ? prisma.expenseHistory.createMany({
-                    data: changedFields.map((fieldChange) => ({
-                        expenseId: id,
-                        field: fieldChange.field,
-                        oldValue: fieldChange.oldValue,
-                        newValue: fieldChange.newValue,
-                        updatedById,
-                    })),
-                })
+                      data: changedFields.map((fieldChange) => ({
+                          expenseId: id,
+                          field: fieldChange.field,
+                          oldValue: fieldChange.oldValue,
+                          newValue: fieldChange.newValue,
+                          updatedById,
+                      })),
+                  })
                 : Promise.resolve(null),
             prisma.expense.update({
                 where: { id },
@@ -683,34 +715,38 @@ export const PATCH: UpdateExpenseHandler = async (req, context) => {
                         : []),
                     ...(participantToRemove
                         ? getSuccessMessage.participantToRemove(
-                            expense.participants.find(
-                                (p) => p.userId === participantToRemove,
-                            )?.user?.name,
-                        )
+                              expense.participants.find(
+                                  (p) => p.userId === participantToRemove,
+                              )?.user?.name,
+                          )
                         : []),
                     ...(paidById && paymentDate
                         ? getSuccessMessage.paymentData(
-                            expense.participants.find((p) => p.userId === paidById)?.user
-                                ?.name,
-                            paymentDate,
-                        )
+                              expense.participants.find(
+                                  (p) => p.userId === paidById,
+                              )?.user?.name,
+                              paymentDate,
+                          )
                         : paidById
-                            ? getSuccessMessage.paidById(
-                                expense.participants.find((p) => p.userId === paidById)?.user
-                                    ?.name,
+                          ? getSuccessMessage.paidById(
+                                expense.participants.find(
+                                    (p) => p.userId === paidById,
+                                )?.user?.name,
                             )
-                            : paymentDate
-                                ? getSuccessMessage.paymentDate(paymentDate)
-                                : []),
-                    ...(groupId && group ? getSuccessMessage.groupId(group?.name) : []),
+                          : paymentDate
+                            ? getSuccessMessage.paymentDate(paymentDate)
+                            : []),
+                    ...(groupId && group
+                        ? getSuccessMessage.groupId(group?.name)
+                        : []),
                     ...(amount ? getSuccessMessage.amount(amount) : []),
                     ...(participantPayment
                         ? getSuccessMessage.participantPayment(
-                            expense.participants.find(
-                                (p) => p.userId === participantPayment.userId,
-                            )?.user?.name,
-                            participantPayment.amount,
-                        )
+                              expense.participants.find(
+                                  (p) => p.userId === participantPayment.userId,
+                              )?.user?.name,
+                              participantPayment.amount,
+                          )
                         : []),
                 ],
             },

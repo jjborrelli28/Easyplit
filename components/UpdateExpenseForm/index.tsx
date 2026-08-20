@@ -313,6 +313,16 @@ const UpdateExpenseForm = ({
   )?.amount;
   const isSelfRemoval =
     !!removeParticipant && selectedParticipant.id === user.id;
+  // Group members (real or virtual) are already known within the group's
+  // context — offering them directly here avoids the contact-network search,
+  // which can't see a virtual user someone ELSE in the group created.
+  const groupMembersToAdd = (expense.group?.members ?? [])
+    .map((member) => member.user)
+    .filter(
+      (member) =>
+        !participantIds.includes(member.id) &&
+        !newParticipantIds.includes(member.id),
+    );
 
   return (
     <Modal
@@ -411,6 +421,51 @@ const UpdateExpenseForm = ({
             >
               {(field) => (
                 <div className="flex flex-col gap-y-8">
+                  {groupMembersToAdd.length > 0 && (
+                    <div className="flex flex-col gap-y-2">
+                      <p className="text-foreground/75 text-sm">
+                        Miembros de {expense.group?.name}
+                      </p>
+
+                      <div className="flex flex-wrap gap-2">
+                        {groupMembersToAdd.map((member) => (
+                          <Button
+                            key={member.id}
+                            type="button"
+                            aria-label={`Add ${member.name} from group`}
+                            onClick={() =>
+                              handleSelectNewParticipants(
+                                member,
+                                field.handleChange,
+                              )
+                            }
+                            unstyled
+                            className="cursor-pointer"
+                          >
+                            <Tooltip color="info" content={member.name}>
+                              <Badge
+                                color="info"
+                                leftItem={
+                                  member.image && (
+                                    <Image
+                                      alt="User avatar"
+                                      src={member.image}
+                                      height={14}
+                                      width={14}
+                                      className="-ml-1.5 h-3.5 w-3.5 flex-shrink-0 rounded-full"
+                                    />
+                                  )
+                                }
+                              >
+                                {member.name}
+                              </Badge>
+                            </Tooltip>
+                          </Button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   <UserSearchEngine
                     user={user}
                     onSelect={(p) =>
