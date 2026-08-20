@@ -1,4 +1,3 @@
-import { CheckCircle } from "lucide-react";
 import type { Session } from "next-auth";
 
 import type { Expense, User } from "@/lib/api/types";
@@ -6,57 +5,30 @@ import type { Expense, User } from "@/lib/api/types";
 import AmountNumber from "@/components/AmountNumber";
 
 export const PayerStatement = ({
-  allDebtsSettled,
   isLoggedUser,
   user,
-  parsedPersonalBalance,
+  expense,
 }: {
-  allDebtsSettled: boolean;
   isLoggedUser: boolean;
   user: User;
-  parsedPersonalBalance: number;
-}) =>
-  allDebtsSettled ? (
-    isLoggedUser ? (
-      <>
-        <p className="text-primary font-semibold">Cubriste el gasto completo</p>
+  expense: Expense;
+}) => (
+  <>
+    <p className="font-semibold">
+      {isLoggedUser
+        ? "Cubriste el gasto completo"
+        : `${user.name} cubrió el gasto completo`}
+    </p>
 
-        <p className="text-success text-xs font-semibold">
-          No te deben nada <CheckCircle className="mb-0.5 inline h-3 w-3" />
-        </p>
-      </>
-    ) : (
-      <>
-        <p className="text-primary font-semibold">
-          {user.name} cubrió el gasto completo
-        </p>
-
-        <p className="text-success text-xs font-semibold">
-          No le deben nada <CheckCircle className="mb-0.5 inline h-3 w-3" />
-        </p>
-      </>
-    )
-  ) : isLoggedUser ? (
-    <>
-      <p className="text-primary font-semibold">Cubriste el gasto completo</p>
-
-      <p className="text-d-foreground text-xs font-semibold">
-        Aún te deben{" "}
-        <AmountNumber size="xs">{parsedPersonalBalance}</AmountNumber>
-      </p>
-    </>
-  ) : (
-    <>
-      <p className="text-primary font-semibold">
-        {user.name} cubrió el gasto completo
-      </p>
-
-      <p className="text-d-foreground text-xs font-semibold">
-        Aún le deben{" "}
-        <AmountNumber size="xs">{parsedPersonalBalance}</AmountNumber>
-      </p>
-    </>
-  );
+    {/* Always present (unlike DebtorStatement's payment subtext, which only
+    shows up once someone's paid something) so every row in the list keeps
+    the same height regardless of debt state. */}
+    <p className="text-foreground/75 text-xs">
+      {isLoggedUser ? "Pagaste" : "Pagó"}{" "}
+      <AmountNumber size="xs">{expense.amount}</AmountNumber>
+    </p>
+  </>
+);
 
 export const DebtorStatement = ({
   debtSettled,
@@ -65,7 +37,6 @@ export const DebtorStatement = ({
   expense,
   loggedUser,
   user,
-  parsedPersonalBalance,
   hasACreditBalance,
 }: {
   debtSettled: boolean;
@@ -74,131 +45,52 @@ export const DebtorStatement = ({
   expense: Expense;
   loggedUser: Session["user"];
   user: User;
-  parsedPersonalBalance: number;
   hasACreditBalance: boolean;
-}) =>
-  hasACreditBalance ? (
-    isLoggedUser ? (
-      <>
-        <p className="text-s-foreground">
-          Pagaste <AmountNumber>{amount}</AmountNumber> a {expense.paidBy.name}
-        </p>
+}) => {
+  // DebtorStatement only renders when user.id !== expense.paidById (Card.tsx
+  // picks PayerStatement otherwise), so isLoggedUser and payerIsViewer can
+  // never both be true here — there's no "you owe yourself" case.
+  const payerIsViewer = loggedUser.id === expense.paidById;
 
-        <p className="text-xs">
-          <span className="text-success">
-            Estás al día <CheckCircle className="mb-0.5 inline h-3 w-3" />
-          </span>
-          , pero pagaste de más.{" "}
-          <span className="text-d-foreground font-semibold">
-            {expense.paidBy.name} te debe{" "}
-            <AmountNumber size="xs">{parsedPersonalBalance}</AmountNumber>
-          </span>
-        </p>
-      </>
-    ) : loggedUser.id === expense.paidById ? (
-      <>
-        <p className="text-s-foreground">
-          {user.name} te pagó <AmountNumber>{amount}</AmountNumber>
-        </p>
+  const headline = hasACreditBalance
+    ? isLoggedUser
+      ? "Pagaste de más"
+      : payerIsViewer
+        ? `${user.name} te pagó de más`
+        : `${user.name} pagó de más a ${expense.paidBy.name}`
+    : debtSettled
+      ? isLoggedUser
+        ? "Ya pagaste tu parte"
+        : payerIsViewer
+          ? `${user.name} ya te pagó`
+          : `${user.name} ya le pagó a ${expense.paidBy.name}`
+      : isLoggedUser
+        ? `Debés a ${expense.paidBy.name}`
+        : payerIsViewer
+          ? `${user.name} te debe`
+          : `${user.name} debe a ${expense.paidBy.name}`;
 
-        <p className="text-success text-xs">
-          <span className="text-success">
-            Está al día <CheckCircle className="mb-0.5 inline h-3 w-3" />
-          </span>
-          , pero pagó de más.{" "}
-          <span className="text-d-foreground font-semibold">
-            Le debés{" "}
-            <AmountNumber size="xs">{parsedPersonalBalance}</AmountNumber>
-          </span>
-        </p>
-      </>
-    ) : (
-      <>
-        <p className="text-s-foreground">
-          {user.name} pagó <AmountNumber>{amount}</AmountNumber> a{" "}
-          {expense.paidBy.name}
-        </p>
+  // Always rendered, even at $0 (unpaid), so every row in the list keeps the
+  // same height regardless of how much this participant has paid so far.
+  const paymentSubtext = amount
+    ? `${isLoggedUser ? "Ya pagaste" : `${user.name} ya pagó`}`
+    : isLoggedUser
+      ? "Todavía no pagaste nada"
+      : `${user.name} todavía no pagó nada`;
 
-        <p className="text-xs">
-          <span className="text-success">
-            Está al día <CheckCircle className="mb-0.5 inline h-3 w-3" />
-          </span>
-          , pero pagó de más.{" "}
-          <span className="text-d-foreground font-semibold">
-            {expense.paidBy.name} le debe{" "}
-            <AmountNumber size="xs">{parsedPersonalBalance}</AmountNumber>
-          </span>
-        </p>
-      </>
-    )
-  ) : debtSettled ? (
-    isLoggedUser ? (
-      <>
-        <p className="text-s-foreground">
-          Pagaste <AmountNumber>{amount}</AmountNumber> a {expense.paidBy.name}
-        </p>
+  return (
+    <>
+      <p className="font-semibold">{headline}</p>
 
-        <p className="text-success text-xs">
-          Estás al día <CheckCircle className="mb-0.5 inline h-3 w-3" />
-        </p>
-      </>
-    ) : (
-      <>
-        {expense.paidById === loggedUser.id ? (
-          <p className="text-s-foreground">
-            {user.name} te pagó <AmountNumber>{amount}</AmountNumber>
-          </p>
-        ) : (
-          <p className="text-s-foreground">
-            {user.name} pagó <AmountNumber>{amount}</AmountNumber> a{" "}
-            {expense.paidBy.name}
-          </p>
+      <p className="text-foreground/75 text-xs">
+        {paymentSubtext}
+        {!!amount && (
+          <>
+            {" "}
+            <AmountNumber size="xs">{amount}</AmountNumber>
+          </>
         )}
-        <p className="text-success text-xs">
-          Está al día <CheckCircle className="mb-0.5 inline h-3 w-3" />
-        </p>
-      </>
-    )
-  ) : isLoggedUser ? (
-    // DebtorStatement only renders when user.id !== expense.paidById (Card.tsx
-    // picks PayerStatement otherwise), so isLoggedUser here always implies
-    // loggedUser.id !== expense.paidById — there's no "you owe yourself" case.
-    <>
-      <p className="text-d-foreground">
-        Debés <AmountNumber>{parsedPersonalBalance}</AmountNumber> a{" "}
-        {expense.paidBy.name}
       </p>
-
-      {!!amount && (
-        <p className="text-s-foreground text-xs">
-          Ya pagaste <AmountNumber size="xs">{amount}</AmountNumber>
-        </p>
-      )}
-    </>
-  ) : loggedUser.id === expense.paidById ? (
-    <>
-      <p className="text-d-foreground">
-        {user.name} te debe <AmountNumber>{parsedPersonalBalance}</AmountNumber>
-      </p>
-
-      {!!amount && (
-        <p className="text-s-foreground text-xs">
-          Ya pagó <AmountNumber size="xs">{amount}</AmountNumber>
-        </p>
-      )}
-    </>
-  ) : (
-    // Neither the debtor nor the payer, so a third party is viewing.
-    <>
-      <p className="text-d-foreground">
-        {user.name} debe <AmountNumber>{parsedPersonalBalance}</AmountNumber> a{" "}
-        {expense.paidBy.name}
-      </p>
-
-      {!!amount && (
-        <p className="text-s-foreground text-xs">
-          Ya pagó <AmountNumber size="xs">{amount}</AmountNumber>
-        </p>
-      )}
     </>
   );
+};
