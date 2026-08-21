@@ -11,6 +11,7 @@ import PanelList from "@/components/PanelList";
 import UpdateGroupForm, {
   type UpdateGroupFieldKeys,
 } from "@/components/UpdateGroupForm";
+import clsx from "clsx";
 
 interface ExpenseListSectionProps {
   group: Group;
@@ -27,8 +28,8 @@ const ExpenseListSection = ({ group, loggedUser }: ExpenseListSectionProps) => {
 
   return (
     <>
-      <section className="flex flex-col gap-y-8">
-        <div className="flex flex-wrap justify-end gap-4">
+      <section className="flex flex-col">
+        <div className="mb-8 flex flex-wrap justify-end gap-4">
           <Button
             aria-label="Create expense"
             onClick={() => setIsCreateExpenseOpen(true)}
@@ -48,6 +49,8 @@ const ExpenseListSection = ({ group, loggedUser }: ExpenseListSectionProps) => {
           </Button>
         </div>
 
+        <hr className="border-h-background mb-4" />
+
         <PanelList
           type={CARD_TYPE.EXPENSE}
           list={group.expenses}
@@ -55,6 +58,7 @@ const ExpenseListSection = ({ group, loggedUser }: ExpenseListSectionProps) => {
           isActive={isExpenseListOpen}
           handleTogglePanel={() => setIsExpenseListOpen((prev) => !prev)}
           forceOpenOnDesktop={false}
+          headerClassName={clsx("transition-all", !isExpenseListOpen && "pb-0")}
         />
       </section>
 

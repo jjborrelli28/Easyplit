@@ -40,6 +40,7 @@ interface PanelListProps {
   // so desktop is force-opened by default. Pass false for a panel that
   // should genuinely collapse/expand on desktop too.
   forceOpenOnDesktop?: boolean;
+  headerClassName?: string;
 }
 
 const PanelList = ({
@@ -49,6 +50,7 @@ const PanelList = ({
   isActive: rawIsActive,
   handleTogglePanel,
   forceOpenOnDesktop = true,
+  headerClassName,
 }: PanelListProps) => {
   const { status, data } = useSession();
 
@@ -87,6 +89,7 @@ const PanelList = ({
           PANEL_TYPE_STYLES.header[type],
           isActive && "text-primary lg:text-foreground",
           !isActive && type === CARD_TYPE.GROUP && "bottom-0",
+          headerClassName,
         )}
       >
         <p className="text-xl font-semibold">

@@ -55,8 +55,7 @@ const ExpensePage = () => {
   }
 
   const isUserEditor =
-    loggedUser.id === expense.createdById ||
-    loggedUser.id === expense.paidById;
+    loggedUser.id === expense.createdById || loggedUser.id === expense.paidById;
 
   return (
     <PageContainer className="border-h-background !px-0 md:border-r">
@@ -67,6 +66,8 @@ const ExpensePage = () => {
           <hr className="border-h-background" />
 
           <BalanceSection expense={expense} loggedUser={loggedUser} />
+
+          <hr className="border-h-background" />
 
           <PaymentHistorySection expense={expense} />
 

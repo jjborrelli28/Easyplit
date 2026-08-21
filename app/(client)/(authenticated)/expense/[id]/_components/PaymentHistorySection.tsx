@@ -6,7 +6,12 @@ import { useWindowVirtualizer } from "@tanstack/react-virtual";
 import clsx from "clsx";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { BanknoteArrowUp, ChevronDown, History, UserMinus } from "lucide-react";
+import {
+  BanknoteArrowUp,
+  CircleChevronDown,
+  History,
+  UserMinus,
+} from "lucide-react";
 
 import useGetExpenseHistory, {
   type ExpenseHistoryEntry,
@@ -147,27 +152,35 @@ const PaymentHistorySection = ({ expense }: PaymentHistorySectionProps) => {
   if (activity.length === 0) return null;
 
   return (
-    <section className="flex flex-col gap-y-4">
-      <Button
-        aria-label="Toggle payment history"
-        onClick={() => setIsOpen((prev) => !prev)}
-        unstyled
-        className="flex w-fit cursor-pointer items-center gap-x-1.5"
-      >
-        <History className="h-8 w-8" />
+    <section className="flex flex-col">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-x-1.5">
+          <History className="h-8 w-8 min-w-8" />
 
-        <h2 className="text-xl font-semibold">Historial de pagos</h2>
+          <h2 className="text-xl font-semibold">Historial de pagos</h2>
+        </div>
 
-        <ChevronDown
-          className={clsx(
-            "h-5 w-5 transition-transform duration-300",
-            isOpen && "-rotate-180",
-          )}
-        />
-      </Button>
+        <Button
+          aria-label="Toggle payment history"
+          onClick={() => setIsOpen((prev) => !prev)}
+          unstyled
+          className="flex w-fit cursor-pointer items-center"
+        >
+          <CircleChevronDown
+            className={clsx(
+              "h-6 w-6 transition-transform duration-300",
+              isOpen && "-rotate-180",
+            )}
+          />
+        </Button>
+      </div>
 
       <Collapse
         isOpen={isOpen}
+        className={clsx(
+          "transition-[grid-template-rows,opacity,margin-top]",
+          isOpen && "mt-4",
+        )}
         contentStyle={{
           height: `${isOpen ? virtualizer.getTotalSize() : 0}px`,
         }}
@@ -189,9 +202,7 @@ const PaymentHistorySection = ({ expense }: PaymentHistorySectionProps) => {
                 data-index={virtualItem.index}
                 className={clsx(
                   "absolute top-0 left-0 flex w-full items-center justify-between gap-4 p-4",
-                  virtualItem.index === 0
-                    ? "bg-h-background"
-                    : "border-h-background bg-background border-t",
+                  virtualItem.index % 2 === 0 && "bg-h-background",
                 )}
                 style={{
                   transform: `translateY(${virtualItem.start - scrollMargin}px)`,

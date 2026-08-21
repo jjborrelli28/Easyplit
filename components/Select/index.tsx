@@ -152,7 +152,7 @@ const Select = ({
               onClick={() => handleOptionClick(option.value)}
               unstyled
               className={clsx(
-                "flex w-full cursor-pointer justify-between p-3 font-semibold transition-colors duration-300",
+                "flex w-full cursor-pointer justify-between px-4 py-2 text-sm transition-colors duration-300",
                 i % 2 === 0 ? "bg-background/50" : "bg-h-background",
                 COLORS.option[color],
               )}

@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, type ReactNode, useEffect, useRef, useState } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 
 import clsx from "clsx";
 import { ChevronDown } from "lucide-react";
@@ -16,6 +16,14 @@ const COLORS = {
     success: "hover:bg-success hover:!text-background",
     warning: "hover:bg-warning hover:!text-background",
     danger: "hover:bg-danger hover:!text-background",
+  },
+  ring: {
+    primary: "ring-primary/50",
+    secondary: "ring-secondary/50",
+    info: "ring-info/50",
+    success: "ring-success/50",
+    warning: "ring-warning/50",
+    danger: "ring-danger/50",
   },
 };
 
@@ -76,30 +84,31 @@ const Dropdown = ({
 
       <Collapse
         isOpen={isOpen}
-        className="bg-h-background ring-foreground/50 absolute right-0 z-30 mt-2 w-full min-w-44 origin-top-right shadow-xl ring-1"
+        className={clsx(
+          "bg-h-background absolute right-0 z-30 mt-2 w-full min-w-44 origin-top-right shadow-xl ring-1",
+          COLORS.ring[variant],
+        )}
       >
         <div className="flex flex-col">
           {items.map((item, i) => (
-            <Fragment key={i}>
-              <Button
-                onClick={() => {
-                  setIsOpen(false);
-                  item.onClick();
-                }}
-                variant={itemVariant}
-                color={itemColor}
-                fullWidth
-                className={clsx(
-                  "hover:bg-background justify-start !text-sm !font-medium",
-                  COLORS.item[variant],
-                  itemClassName,
-                )}
-              >
-                {item.label}
-              </Button>
-
-              {items.length !== ++i && <hr className="text-foreground/50" />}
-            </Fragment>
+            <Button
+              key={i}
+              onClick={() => {
+                setIsOpen(false);
+                item.onClick();
+              }}
+              variant={itemVariant}
+              color={itemColor}
+              fullWidth
+              className={clsx(
+                "hover:bg-background justify-start !text-sm !font-medium",
+                i % 2 === 0 ? "bg-background/50" : "bg-h-background",
+                COLORS.item[variant],
+                itemClassName,
+              )}
+            >
+              {item.label}
+            </Button>
           ))}
         </div>
       </Collapse>
