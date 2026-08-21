@@ -158,7 +158,9 @@ export const Card = ({
             )}
           >
             {showAmount && (
-              <span className="text-xs">{owesMoney ? "Debe" : "Le deben"}</span>
+              <span className="text-xs">
+                {owesMoney ? "Debe" : isPayer ? "Te deben" : "Le deben"}
+              </span>
             )}
 
             {owesMoney ? (

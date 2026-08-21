@@ -7,11 +7,20 @@ const SIZES = {
   sm: { container: "text-sm", currency: "top-[-1.5px] mr-0.25 text-[9.5px]" },
   md: { container: "text-md", currency: "top-[-1.75px] mr-0.25 text-[11px]" },
   lg: { container: "text-lg", currency: "top-[-2px] mr-0.5 text-[12.5px]" },
+  xl: { container: "text-xl", currency: "top-[-2.25px] mr-0.5 text-[14px]" },
+  "2xl": {
+    container: "text-2xl",
+    currency: "top-[-2.5px] mr-0.5 text-[15.5px]",
+  },
+  "3xl": {
+    container: "text-3xl",
+    currency: "top-[-2.75px] mr-0.5 text-[17px]",
+  },
 };
 
 interface AmountNumberProps {
   children: number;
-  size?: "xs" | "sm" | "md" | "lg";
+  size?: "xs" | "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
   className?: string;
 }
 const AmountNumber = ({
