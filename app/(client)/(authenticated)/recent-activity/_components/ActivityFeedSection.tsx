@@ -277,6 +277,7 @@ const parseExpenseHistoryEntry = (
       const payload = parseJson<{
         userId?: string;
         name?: string | null;
+        isVirtual?: boolean;
       }>(entry.newValue);
       if (!payload?.userId) return null;
 
@@ -289,7 +290,10 @@ const parseExpenseHistoryEntry = (
         tail: isSelfRemoval ? (
           <>del gasto.</>
         ) : (
-          <>a {payload.name ?? "un participante"}.</>
+          <>
+            a {payload.name ?? "un participante"}
+            {payload.isVirtual && " (usuario virtual)"}.
+          </>
         ),
         category: ACTIVITY_CATEGORY.MEMBERSHIP,
         searchTerms: payload.name ? [payload.name] : [],
@@ -477,7 +481,15 @@ const parseGroupHistoryEntry = (
     }
 
     case "memberToRemove": {
-      const removedUserId = parseJson<string>(entry.newValue);
+      // `newValue` is either a plain id (manual "remove member") or
+      // `{ userId, name, isVirtual }` (a virtual user hard-deleted via
+      // /api/user/virtual-users/[id]) — either way, the removed member's
+      // id/name/isVirtual are already resolved server-side onto `entry`
+      // (see /api/user/group-histories), so only the id itself needs
+      // parsing here, just to tell a self-removal apart from being removed.
+      const parsed = parseJson<string | { userId: string }>(entry.newValue);
+      const removedUserId =
+        typeof parsed === "string" ? parsed : parsed?.userId;
       if (!removedUserId) return null;
 
       const isSelfRemoval = removedUserId === actorId;
@@ -489,7 +501,10 @@ const parseGroupHistoryEntry = (
         tail: isSelfRemoval ? (
           <>del grupo.</>
         ) : (
-          <>a {entry.removedMemberName ?? "un miembro"}.</>
+          <>
+            a {entry.removedMemberName ?? "un miembro"}
+            {entry.removedMemberIsVirtual && " (usuario virtual)"}.
+          </>
         ),
         category: ACTIVITY_CATEGORY.MEMBERSHIP,
         searchTerms: entry.removedMemberName ? [entry.removedMemberName] : [],

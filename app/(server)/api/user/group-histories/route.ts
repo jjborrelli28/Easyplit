@@ -10,6 +10,7 @@ import prisma from "@/lib/prisma";
 
 type GroupHistoryWithRemovedMember = GroupHistory & {
     removedMemberName?: string | null;
+    removedMemberIsVirtual?: boolean;
 };
 
 // Get a complete history of all groups the user belongs to
@@ -71,31 +72,50 @@ export const GET: GetAllUserGroupHistoryHandler = async () => {
             },
         });
 
-        // Unlike `participantToRemove` on expenses, `memberToRemove` never
-        // denormalizes the removed member's name at write time — and by the
-        // time this reads, they're no longer in `group.members` to resolve
-        // it from. Their `User` row still exists though, so batch-resolve
-        // it here instead of showing an unexplained id in the feed.
-        const removedMemberIds = Array.from(
+        // `memberToRemove`'s `newValue` comes in two shapes: a plain
+        // JSON-stringified id (the manual "remove member" action — never
+        // denormalized the name at write time, and by the time this reads,
+        // they're no longer in `group.members` to resolve it from either),
+        // or `{ userId, name, isVirtual }` (written when a virtual user is
+        // hard-deleted via /api/user/virtual-users/[id] — there the `User`
+        // row is gone by the time anyone reads this, so it HAS to be
+        // denormalized up front). Handle both: use the denormalized name
+        // directly when present, otherwise fall back to batch-resolving the
+        // (still-existing) `User` row for legacy plain-id entries.
+        type RemovedMemberPayload = { userId: string; name?: string; isVirtual?: boolean };
+
+        const parseRemovedMember = (
+            newValue: string | null,
+        ): RemovedMemberPayload | null => {
+            if (!newValue) return null;
+
+            try {
+                const parsed = JSON.parse(newValue);
+
+                return typeof parsed === "string"
+                    ? { userId: parsed }
+                    : parsed;
+            } catch {
+                return null;
+            }
+        };
+
+        const legacyIds = Array.from(
             new Set(
                 histories
                     .filter((history) => history.field === "memberToRemove")
-                    .map((history) => {
-                        if (!history.newValue) return null;
-
-                        try {
-                            return JSON.parse(history.newValue) as string;
-                        } catch {
-                            return null;
-                        }
-                    })
-                    .filter((id): id is string => !!id),
+                    .map((history) => parseRemovedMember(history.newValue))
+                    .filter(
+                        (payload): payload is RemovedMemberPayload =>
+                            !!payload && payload.name === undefined,
+                    )
+                    .map((payload) => payload.userId),
             ),
         );
 
-        const removedMembers = removedMemberIds.length
+        const removedMembers = legacyIds.length
             ? await prisma.user.findMany({
-                  where: { id: { in: removedMemberIds } },
+                  where: { id: { in: legacyIds } },
                   select: { id: true, name: true },
               })
             : [];
@@ -106,23 +126,20 @@ export const GET: GetAllUserGroupHistoryHandler = async () => {
 
         const enrichedHistories: GroupHistoryWithRemovedMember[] =
             histories.map((history) => {
-                if (history.field !== "memberToRemove" || !history.newValue) {
-                    return history;
-                }
+                if (history.field !== "memberToRemove") return history;
 
-                try {
-                    const removedUserId = JSON.parse(
-                        history.newValue,
-                    ) as string;
+                const payload = parseRemovedMember(history.newValue);
 
-                    return {
-                        ...history,
-                        removedMemberName:
-                            removedMemberNameById.get(removedUserId) ?? null,
-                    };
-                } catch {
-                    return history;
-                }
+                if (!payload) return history;
+
+                return {
+                    ...history,
+                    removedMemberName:
+                        payload.name ??
+                        removedMemberNameById.get(payload.userId) ??
+                        null,
+                    removedMemberIsVirtual: !!payload.isVirtual,
+                };
             });
 
         return NextResponse.json({

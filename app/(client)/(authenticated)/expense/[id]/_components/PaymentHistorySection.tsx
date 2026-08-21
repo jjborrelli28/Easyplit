@@ -42,6 +42,7 @@ interface RemovalActivity {
   type: "removal";
   id: string;
   participantName: string;
+  isVirtualParticipant: boolean;
   amount: number;
   createdAt: Date;
   removedByName: string | null;
@@ -94,7 +95,12 @@ const parseActivity = (
       }
 
       if (entry.field === "participantToRemove") {
-        let payload: { userId?: string; name?: string; amount?: number } = {};
+        let payload: {
+          userId?: string;
+          name?: string;
+          amount?: number;
+          isVirtual?: boolean;
+        } = {};
 
         try {
           payload = entry.newValue ? JSON.parse(entry.newValue) : {};
@@ -102,10 +108,17 @@ const parseActivity = (
           payload = {};
         }
 
+        // A legitimate removal always has a userId — this also filters out
+        // pre-existing phantom entries from a since-fixed bug where every
+        // unrelated update (e.g. registering a payment) spuriously logged
+        // an empty "participant removed" entry alongside it.
+        if (!payload.userId) return null;
+
         return {
           type: "removal",
           id: entry.id,
           participantName: payload.name ?? "Un participante",
+          isVirtualParticipant: !!payload.isVirtual,
           amount: payload.amount ?? 0,
           createdAt: new Date(entry.createdAt),
           removedByName: entry.updatedBy?.name ?? null,
@@ -221,6 +234,9 @@ const PaymentHistorySection = ({ expense }: PaymentHistorySectionProps) => {
                         {" "}
                         (ya no participa del gasto)
                       </span>
+                    )}
+                    {item.type === "removal" && item.isVirtualParticipant && (
+                      <span className="text-foreground/75"> (usuario virtual)</span>
                     )}
                   </p>
 

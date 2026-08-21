@@ -103,6 +103,8 @@ export const DELETE: DeleteVirtualUserHandler = async (req, context) => {
             const participations = await tx.expenseParticipant.findMany({
                 where: { userId: id },
                 select: {
+                    expenseId: true,
+                    amount: true,
                     expense: { select: { participants: { select: { id: true } } } },
                 },
             });
@@ -122,6 +124,7 @@ export const DELETE: DeleteVirtualUserHandler = async (req, context) => {
             const memberships = await tx.groupMember.findMany({
                 where: { userId: id },
                 select: {
+                    groupId: true,
                     group: { select: { members: { select: { id: true } } } },
                 },
             });
@@ -133,6 +136,50 @@ export const DELETE: DeleteVirtualUserHandler = async (req, context) => {
                     "Es el único miembro de al menos un grupo.",
                 );
             }
+
+            // ExpenseParticipant/GroupMember cascade silently — nothing else
+            // in that path writes history for us, unlike the manual
+            // "remove participant"/"remove member" actions (which log a
+            // participantToRemove/memberToRemove entry themselves). Without
+            // this, everyone else sharing that expense/group would just see
+            // this person vanish with no explanation. Denormalize name +
+            // isVirtual now, before the row disappears — mirrors the shape
+            // `getUpdatedExpenseFields`'s participantToRemove resolver
+            // already writes, and the shape group-histories' enrichment
+            // (see /api/user/group-histories) now also understands.
+            await Promise.all([
+                participations.length > 0
+                    ? tx.expenseHistory.createMany({
+                          data: participations.map((p) => ({
+                              expenseId: p.expenseId,
+                              field: "participantToRemove",
+                              oldValue: "null",
+                              newValue: JSON.stringify({
+                                  userId: id,
+                                  name: virtualUser.name,
+                                  amount: p.amount,
+                                  isVirtual: true,
+                              }),
+                              updatedById: loggedUserId,
+                          })),
+                      })
+                    : Promise.resolve(),
+                memberships.length > 0
+                    ? tx.groupHistory.createMany({
+                          data: memberships.map((m) => ({
+                              groupId: m.groupId,
+                              field: "memberToRemove",
+                              oldValue: "null",
+                              newValue: JSON.stringify({
+                                  userId: id,
+                                  name: virtualUser.name,
+                                  isVirtual: true,
+                              }),
+                              updatedById: loggedUserId,
+                          })),
+                      })
+                    : Promise.resolve(),
+            ]);
 
             await tx.user.delete({ where: { id } });
         });

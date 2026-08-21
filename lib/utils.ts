@@ -193,6 +193,17 @@ const getUpdatedFields = <
     > = {},
 ): UpdatedField[] => {
     return fieldsToCheck.reduce<UpdatedField[]>((acc, field) => {
+        // A field absent from this particular request (e.g. registering a
+        // payment doesn't touch `participantToRemove`) must be skipped
+        // outright, before any resolver runs — a custom resolver still gets
+        // called otherwise and, unaware the field wasn't actually part of
+        // this update, can build a `newValue` that differs from `oldValue`
+        // purely out of missing data (e.g. `participantToRemove`'s resolver
+        // returns a fixed `oldValue: null` but a `newValue` object full of
+        // `undefined`s, which stringify differently — see the "phantom
+        // participant removed" history bug this guards against).
+        if (!(field in updated)) return acc;
+
         const customResolver = customResolvers[field];
 
         let oldValue: unknown;
@@ -270,10 +281,11 @@ export const getUpdatedExpenseFields = (
                 );
                 const name = participant?.user?.name;
                 const amount = participant?.amount;
+                const isVirtual = participant?.user?.isVirtual;
 
                 return {
                     oldValue: null,
-                    newValue: { userId, name, amount },
+                    newValue: { userId, name, amount, isVirtual },
                 };
             },
         },

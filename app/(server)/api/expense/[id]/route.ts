@@ -284,6 +284,7 @@ export const PATCH: UpdateExpenseHandler = async (req, context) => {
                                 name: true,
                                 email: true,
                                 image: true,
+                                isVirtual: true,
                             },
                         },
                     },

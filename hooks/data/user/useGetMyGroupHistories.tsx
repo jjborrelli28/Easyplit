@@ -9,6 +9,7 @@ export type MyGroupHistoryEntry = GroupHistory & {
   updatedBy: Pick<User, "id" | "name" | "email" | "image">;
   group: { id: string; name: string };
   removedMemberName?: string | null;
+  removedMemberIsVirtual?: boolean;
 };
 
 const getMyGroupHistories = async () => {
