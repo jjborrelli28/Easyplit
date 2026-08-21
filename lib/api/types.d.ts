@@ -105,6 +105,17 @@ export interface UpdateUserFields {
 export interface DeleteUserFields {
     password?: string;
 }
+
+export interface ContactListItem extends User {
+    connectedAt: Date;
+    /** Virtual only: true while awaiting the invited real user's consent. */
+    pending?: boolean;
+}
+
+export interface ContactsResponse {
+    contacts: ContactListItem[];
+    virtualUsers: ContactListItem[];
+}
 /* End user types */
 
 /* Expense types */

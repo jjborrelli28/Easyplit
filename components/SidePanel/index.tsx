@@ -3,7 +3,13 @@
 import { usePathname } from "next/navigation";
 
 import clsx from "clsx";
-import { ClockFading, List, LucideIcon, MonitorCog } from "lucide-react";
+import {
+  ClockFading,
+  List,
+  LucideIcon,
+  MonitorCog,
+  UsersRound,
+} from "lucide-react";
 
 import Button, { type ButtonProps } from "../Button";
 
@@ -37,6 +43,15 @@ const SidePanel = () => {
           className="border-t-0"
         >
           Todos los gastos
+        </CTA>
+
+        <CTA
+          icon={UsersRound}
+          isActive={pathname === "/contacts"}
+          href="/contacts"
+          className="border-t-0"
+        >
+          Mis contactos
         </CTA>
       </nav>
     </aside>

@@ -119,7 +119,10 @@ export const POST: InviteUserHandler = async (req) => {
                     },
                 });
 
-                if (alreadyContact) {
+                // A removed contact must go through the consent flow again,
+                // exactly like a first-time interaction — never resolve it
+                // via the no-consent-needed fast path below.
+                if (alreadyContact && !alreadyContact.removed) {
                     // Already connected: no consent needed, resolve directly.
                     resolvedId = realUser.id;
 

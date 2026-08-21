@@ -68,7 +68,7 @@ export const GET: GetSearchUsersHandler = async (req) => {
                             // oracle.
                             {
                                 isVirtual: false,
-                                contactsReceived: { some: { userId } },
+                                contactsReceived: { some: { userId, removed: false } },
                                 OR: [
                                     { email: { contains: q, mode: "insensitive" } },
                                     { name: { contains: q, mode: "insensitive" } },

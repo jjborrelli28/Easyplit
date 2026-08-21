@@ -102,6 +102,15 @@ model Contact {
   userId        String   @map("user_id")
   contactUserId String   @map("contact_user_id")
   createdAt     DateTime @default(now()) @map("created_at")
+  /// Soft-delete flag: set when the owner removes this contact. Kept as a
+  /// flag (not a deleted row) because upsertContactsForRealUserIds() re-syncs
+  /// pairs from a group/expense's full member list on every unrelated
+  /// membership change using createMany+skipDuplicates — a hard-deleted row
+  /// would just get silently recreated the next time anyone else edits a
+  /// shared group/expense, undoing the removal without consent. Only cleared
+  /// by syncContactsForUser()'s reactivate path, which runs exclusively after
+  /// a genuine invite-accept/register consent event.
+  removed       Boolean  @default(false)
 
   user        User @relation("ContactOwner", fields: [userId], references: [id], onDelete: Cascade)
   contactUser User @relation("ContactTarget", fields: [contactUserId], references: [id], onDelete: Cascade)

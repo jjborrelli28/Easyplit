@@ -31,6 +31,7 @@ const AuthenticatedContent = ({ isOpen, user }: AuthenticatedContentProps) => {
   const isDashboardPage = pathname === "/dashboard";
   const isRecentActivityPage = pathname === "/recent-activity";
   const isAllExpensesPage = pathname === "/all-expenses";
+  const isContactsPage = pathname === "/contacts";
 
   return (
     <div className="container mx-auto flex w-full flex-col p-4 md:flex-row md:items-center md:justify-between">
@@ -69,6 +70,9 @@ const AuthenticatedContent = ({ isOpen, user }: AuthenticatedContentProps) => {
             </CTA>
             <CTA href="/all-expenses" isActive={isAllExpensesPage}>
               Todos los gastos
+            </CTA>
+            <CTA href="/contacts" isActive={isContactsPage}>
+              Mis contactos
             </CTA>
 
             <hr className="border-foreground" />
