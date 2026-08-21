@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 
 import type { Expense } from "@/lib/api/types";
+import { areAllDebtsSettled } from "@/lib/utils";
 
 import Button from "@/components/Button";
 import Card, { CARD_TYPE } from "@/components/Card";
@@ -37,6 +38,7 @@ import Select from "@/components/Select";
 
 type ExpenseCategory = keyof typeof EXPENSE_CATEGORIES;
 type OriginFilter = "all" | "personal" | "group";
+type StatusFilter = "all" | "completed" | "pending";
 type SortOption = "recent" | "oldest" | "amount-desc" | "amount-asc";
 
 interface ExpenseListSectionProps {
@@ -75,6 +77,15 @@ const ORIGIN_OPTIONS: { value: OriginFilter; label: string }[] = [
   { value: "group", label: "Grupales" },
 ];
 
+// Matches the wording already used on each expense's own badge
+// (Card.tsx / BalanceSection), so the filter reads consistently with what
+// the results actually show.
+const STATUS_OPTIONS: { value: StatusFilter; label: string }[] = [
+  { value: "all", label: "Todos" },
+  { value: "completed", label: "Completos" },
+  { value: "pending", label: "Incompletos" },
+];
+
 const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: "recent", label: "Más reciente primero" },
   { value: "oldest", label: "Más antiguo primero" },
@@ -86,6 +97,7 @@ const ExpenseListSection = ({ expenses, loggedUser }: ExpenseListSectionProps) =
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [originFilter, setOriginFilter] = useState<OriginFilter>("all");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [categoryFilter, setCategoryFilter] = useState<Set<ExpenseCategory>>(
     new Set(),
   );
@@ -140,11 +152,14 @@ const ExpenseListSection = ({ expenses, loggedUser }: ExpenseListSectionProps) =
 
   const clearFilters = () => {
     setOriginFilter("all");
+    setStatusFilter("all");
     setCategoryFilter(new Set());
   };
 
   const activeFilterCount =
-    (originFilter !== "all" ? 1 : 0) + categoryFilter.size;
+    (originFilter !== "all" ? 1 : 0) +
+    (statusFilter !== "all" ? 1 : 0) +
+    categoryFilter.size;
 
   const filteredExpenses = useMemo(() => {
     let result = expenses;
@@ -163,6 +178,14 @@ const ExpenseListSection = ({ expenses, loggedUser }: ExpenseListSectionProps) =
 
         return categoryFilter.has(category);
       });
+    }
+
+    if (statusFilter !== "all") {
+      result = result.filter((expense) =>
+        statusFilter === "completed"
+          ? areAllDebtsSettled(expense)
+          : !areAllDebtsSettled(expense),
+      );
     }
 
     const normalizedQuery = debouncedQuery.trim().toLowerCase();
@@ -195,14 +218,21 @@ const ExpenseListSection = ({ expenses, loggedUser }: ExpenseListSectionProps) =
           return a.amount - b.amount;
       }
     });
-  }, [expenses, originFilter, categoryFilter, debouncedQuery, sortOption]);
+  }, [
+    expenses,
+    originFilter,
+    statusFilter,
+    categoryFilter,
+    debouncedQuery,
+    sortOption,
+  ]);
 
   // Any change to the search/filter/sort criteria narrows or reshuffles the
   // result set, so the progressive "load more on scroll" window has to
   // restart from the first page instead of keeping a stale count.
   useEffect(() => {
     setVisibleCount(PAGE_SIZE);
-  }, [originFilter, categoryFilter, debouncedQuery, sortOption]);
+  }, [originFilter, statusFilter, categoryFilter, debouncedQuery, sortOption]);
 
   const visibleExpenses = useMemo(
     () => filteredExpenses.slice(0, visibleCount),
@@ -312,6 +342,28 @@ const ExpenseListSection = ({ expenses, loggedUser }: ExpenseListSectionProps) =
                       }
                       color={
                         originFilter === option.value ? "primary" : "secondary"
+                      }
+                      className="!min-w-0 !px-3 !py-1.5 text-xs"
+                    >
+                      {option.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-y-2">
+                <p className="text-sm font-semibold">Estado</p>
+
+                <div className="flex flex-wrap gap-2">
+                  {STATUS_OPTIONS.map((option) => (
+                    <Button
+                      key={option.value}
+                      onClick={() => setStatusFilter(option.value)}
+                      variant={
+                        statusFilter === option.value ? "contained" : "outlined"
+                      }
+                      color={
+                        statusFilter === option.value ? "primary" : "secondary"
                       }
                       className="!min-w-0 !px-3 !py-1.5 text-xs"
                     >

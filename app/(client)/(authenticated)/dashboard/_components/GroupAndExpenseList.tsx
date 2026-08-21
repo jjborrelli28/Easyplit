@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import clsx from "clsx";
 
 import useGetMyExpensesAndGroups from "@/hooks/data/user/useGetMyExpensesAndGroups";
+
+import { areAllDebtsSettled } from "@/lib/utils";
 
 import { CARD_TYPE } from "@/components/Card";
 import PanelList from "@/components/PanelList";
@@ -18,6 +20,14 @@ const ExpenseAndGroupList = () => {
       prevState === CARD_TYPE.EXPENSE ? CARD_TYPE.GROUP : CARD_TYPE.EXPENSE,
     );
 
+  // The dashboard is meant to surface what still needs attention — an
+  // expense that's already settled belongs in "Todos los gastos" instead of
+  // sitting alongside the ones actually pending action.
+  const pendingExpenses = useMemo(
+    () => data?.expenses?.filter((expense) => !areAllDebtsSettled(expense)),
+    [data?.expenses],
+  );
+
   if (isPending)
     return (
       <div className="flex flex-1 flex-col items-center justify-center">
@@ -29,7 +39,9 @@ const ExpenseAndGroupList = () => {
     <section className="border-h-background grid grid-cols-1 gap-x-4 border-t lg:grid-cols-[1fr_1px_1fr]">
       <PanelList
         type={CARD_TYPE.EXPENSE}
-        list={data?.expenses}
+        list={pendingExpenses}
+        label="Gastos pendientes"
+        emptyMessage="¡Estás al día! No tenés gastos pendientes."
         isActive={activePanel === CARD_TYPE.EXPENSE}
         handleTogglePanel={handleTogglePanel}
       />

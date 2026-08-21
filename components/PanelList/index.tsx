@@ -41,6 +41,12 @@ interface PanelListProps {
   // should genuinely collapse/expand on desktop too.
   forceOpenOnDesktop?: boolean;
   headerClassName?: string;
+  // Overrides the default "Gastos"/"Grupos" header title.
+  label?: string;
+  // Overrides the default empty-state copy shown when `list` is empty
+  // (ignored for a group's own expense panel, which always explains itself
+  // in terms of that group).
+  emptyMessage?: string;
 }
 
 const PanelList = ({
@@ -51,6 +57,8 @@ const PanelList = ({
   handleTogglePanel,
   forceOpenOnDesktop = true,
   headerClassName,
+  label,
+  emptyMessage,
 }: PanelListProps) => {
   const { status, data } = useSession();
 
@@ -93,7 +101,7 @@ const PanelList = ({
         )}
       >
         <p className="text-xl font-semibold">
-          {type === CARD_TYPE.EXPENSE ? "Gastos" : "Grupos"}{" "}
+          {label ?? (type === CARD_TYPE.EXPENSE ? "Gastos" : "Grupos")}{" "}
           {list && <span>{`(${list.length})`}</span>}
         </p>
 
@@ -173,11 +181,12 @@ const PanelList = ({
                         isGroupExpense && "mb-8",
                       )}
                     >
-                      {CARD_TYPE.EXPENSE
-                        ? isGroupExpense
-                          ? "No hay gastos registrados. Busca un gastos para añadir al grupo y empezar a organizarlos."
-                          : "No hay gastos registrados. Creá un gasto para empezar a organizar tus finanzas."
-                        : "No hay grupos disponibles. Creá un grupo para empezar a organizar tus gastos."}
+                      {isGroupExpense
+                        ? "No hay gastos registrados. Busca un gastos para añadir al grupo y empezar a organizarlos."
+                        : (emptyMessage ??
+                          (type === CARD_TYPE.EXPENSE
+                            ? "No hay gastos registrados. Creá un gasto para empezar a organizar tus finanzas."
+                            : "No hay grupos disponibles. Creá un grupo para empezar a organizar tus gastos."))}
                     </p>
                   )}
                 </div>
