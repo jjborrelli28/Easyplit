@@ -1,11 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import type { Session } from "next-auth";
 
 import { useWindowVirtualizer } from "@tanstack/react-virtual";
-import clsx from "clsx";
 import debounce from "lodash.debounce";
 import {
   CarFront,
@@ -28,12 +27,12 @@ import { areAllDebtsSettled } from "@/lib/utils";
 
 import Button from "@/components/Button";
 import Card, { CARD_TYPE } from "@/components/Card";
-import Collapse from "@/components/Collapse";
 import {
   EXPENSE_CATEGORIES,
   EXPENSE_TYPE,
 } from "@/components/ExpenseTypeSelect/constants";
 import Input from "@/components/Input";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/Popover";
 import Select from "@/components/Select";
 
 type ExpenseCategory = keyof typeof EXPENSE_CATEGORIES;
@@ -104,22 +103,6 @@ const ExpenseListSection = ({ expenses, loggedUser }: ExpenseListSectionProps) =
   const [sortOption, setSortOption] = useState<SortOption>("recent");
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
-  const filtersRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        filtersRef.current &&
-        !filtersRef.current.contains(event.target as Node)
-      ) {
-        setIsFiltersOpen(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   const debouncedSetQuery = useMemo(
     () => debounce((value: string) => setDebouncedQuery(value), 300),
@@ -305,29 +288,26 @@ const ExpenseListSection = ({ expenses, loggedUser }: ExpenseListSectionProps) =
             containerClassName="w-full min-w-[221px] !pt-0 lg:w-auto"
           />
 
-          <div ref={filtersRef} className="relative">
-            <Button
-              variant="outlined"
-              color="secondary"
-              onClick={() => setIsFiltersOpen((prev) => !prev)}
-              className="flex items-center gap-x-2 self-start"
-            >
-              <SlidersHorizontal className="h-4 w-4 min-w-4" />
-              Filtros
-              {activeFilterCount > 0 && (
-                <span className="bg-primary text-background flex h-5 w-5 min-w-5 items-center justify-center rounded-full text-xs font-semibold">
-                  {activeFilterCount}
-                </span>
-              )}
-            </Button>
+          <Popover open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outlined"
+                color="secondary"
+                className="flex items-center gap-x-2 self-start"
+              >
+                <SlidersHorizontal className="h-4 w-4 min-w-4" />
+                Filtros
+                {activeFilterCount > 0 && (
+                  <span className="bg-primary text-background flex h-5 w-5 min-w-5 items-center justify-center rounded-full text-xs font-semibold">
+                    {activeFilterCount}
+                  </span>
+                )}
+              </Button>
+            </PopoverTrigger>
 
-            <Collapse
-              isOpen={isFiltersOpen}
-              className="ring-primary bg-h-background absolute right-0 z-30 mt-2 w-screen max-w-[calc(100vw-2rem)] shadow-xl ring-1 sm:w-md"
-              contentClassName={clsx(
-                "flex flex-col gap-y-4 px-4 transition-[padding]",
-                isFiltersOpen && "py-4",
-              )}
+            <PopoverContent
+              align="end"
+              className="!w-[min(28rem,var(--radix-popover-content-available-width))] flex flex-col gap-y-4"
             >
               <div className="flex flex-col gap-y-2">
                 <p className="text-sm font-semibold">Origen</p>
@@ -409,8 +389,8 @@ const ExpenseListSection = ({ expenses, loggedUser }: ExpenseListSectionProps) =
                   Limpiar filtros
                 </Button>
               )}
-            </Collapse>
-          </div>
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 
